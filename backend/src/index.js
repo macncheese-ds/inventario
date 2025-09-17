@@ -21,8 +21,14 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// servir archivos estáticos de uploads (imágenes)
-app.use('/uploads', express.static(path.join(path.resolve(), 'uploads')));
+// servir archivos estáticos de uploads (imágenes) con headers CORS
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+}, express.static(path.join(path.resolve(), 'uploads')));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 

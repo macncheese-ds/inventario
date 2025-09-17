@@ -552,14 +552,27 @@ export default function Inventory() {
   }
   const apiBase = normalizeApiBase(import.meta.env.VITE_API_URL || '');
 
-  // Resuelve un link que puede ser absoluto (http...) o relativo (/uploads/...) a una URL completa
+  // Función simplificada para construir URLs de imágenes (como en skillmatrix)
   function resolveImageUrl(link) {
     if (!link) return null;
     if (link.startsWith('http://') || link.startsWith('https://')) return link;
-    const relative = link.startsWith('/') ? link : `/${link}`;
-    // strip accidental host prefix starting with '/HOST/' (e.g. '/10.229.52.84/uploads/...')
-    const maybe = relative.replace(/^\/((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?=\/)/, '');
-    return (apiBase + maybe).replace(/([^:]?)\/\//g,'$1/');
+    
+    // Limpiar cualquier prefijo de IP duplicado
+    let cleanPath = link;
+    if (link.includes('/uploads/')) {
+      // Extraer solo la parte después de uploads
+      const uploadIndex = link.indexOf('/uploads/');
+      cleanPath = link.substring(uploadIndex);
+    }
+    
+    // Asegurar que comience con /
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/' + cleanPath;
+    }
+    
+    // Usar la base de la API sin '/api'
+    const baseUrl = apiBase.replace('/api', '');
+    return baseUrl + cleanPath;
   }
 
   async function loadGavetas() {
@@ -640,8 +653,7 @@ export default function Inventory() {
           if (prevLink && newLink && prevLink !== newLink) {
             // extraer filename
             const prevFilename = prevLink.split('/').pop();
-            const base = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api$/, '') : window.location.origin;
-            await fetch((base + `/api/upload/delete/${prevFilename}`).replace(/([^:]?)\/\//g,'$1/'), { method: 'DELETE' });
+            await api.delete(`/upload/delete/${prevFilename}`);
           }
         } catch (err) {
           console.warn('No se pudo eliminar archivo anterior:', err);
@@ -800,9 +812,27 @@ export default function Inventory() {
                   </div>
                   <div className="flex items-center justify-center">
                     {modal.item.link ? (
-                      <img src={resolveImageUrl(modal.item.link)} alt={modal.item.articulo} className="max-h-80 object-contain" onError={(e) => { console.warn('Image failed to load', modal.item.link, e); e.currentTarget.src=''; }} />
+                      <>
+                        <img 
+                          src={resolveImageUrl(modal.item.link)} 
+                          alt={modal.item.articulo} 
+                          className="max-h-80 object-contain" 
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div 
+                          className="max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"
+                          style={{display: 'none'}}
+                        >
+                          <span>Error cargando imagen</span>
+                        </div>
+                      </>
                     ) : (
-                      <div className="text-gray-500">Sin imagen</div>
+                      <div className="max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                        <span>Sin imagen disponible</span>
+                      </div>
                     )}
                   </div>
                 </div>

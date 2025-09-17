@@ -134,12 +134,12 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
     }
     if (!sets.length) return res.json({ message: 'Sin cambios' });
 
-  // Obtener detalle anterior
-  const [prev] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
-  await pool.query(`UPDATE users SET ${sets.join(', ')} WHERE username=:u`, params);
-  const [rows] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
-  await logCambio(req.user.username, 'USER_UPDATE', rows[0], calcularTurno(), prev[0] || null);
-  res.json(rows[0]);
+    // Obtener detalle anterior
+    const [prev] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
+    await pool.query(`UPDATE users SET ${sets.join(', ')} WHERE username=:u`, params);
+    const [rows] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
+    await logCambio(req.user.username, 'USER_UPDATE', rows[0], calcularTurno(), prev[0] || null);
+    res.json(rows[0]);
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Error actualizando usuario' });
