@@ -1,0 +1,705 @@
+CREATE SCHEMA `inventario`;
+Select * from users;
+CREATE TABLE gavetas(
+id INT AUTO_INCREMENT PRIMARY KEY,
+ndp Varchar(100) not null,
+articulo varchar(100) not null,
+gaveta int not null,
+nivel int not null,
+cantidad int not null,
+max int not null,
+min int not null,
+equipo varchar(100) not null,
+tde int not null,
+link varchar(200),
+constraint chk_nivel CHECK (nivel between 1 and 6)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  username VARCHAR(50) PRIMARY KEY,
+  pass_hash VARBINARY(60) NOT NULL,
+  rol ENUM('admin','operador','guest') NOT NULL DEFAULT 'admin',
+  nombre VARCHAR(100) NOT NULL
+);
+
+
+
+drop table cambios;
+
+select * from users;
+select * from gavetas;
+ 
+select * from users;
+select * from users;
+
+
+
+CREATE TABLE IF NOT EXISTS cambios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL, 
+  accion VARCHAR(30) NOT NULL,
+  adetalle TEXT,
+  detalle TEXT,
+  fecha_hora DATETIME NOT NULL,
+  turno VARCHAR(20) NOT NULL
+);
+
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TOALLAS ANTIESTATICAS', 1, 1, 18, 30, 5, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MOTOR DE ELEVACIO', 1, 1, 1, 2, 1, 'ASMTP', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CENSORES ', 1, 1, 20, 20, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTROS H24', 1, 1, 400, 100, 50, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H24 WRM M', 1, 1, 85, 50, 20, 'FUJI', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N100-KLM01-001', 'VERNIER', 1, 1, 1, 1, 1, 'HOLEX', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CRISTALES PARA PAM', 1, 1, 137, 300, 50, 'FUJI', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'COFIA', 1, 1, 8, 100, 4, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ENMICADORA', 1, 1, 1, 1, 1, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MEMORIA KIC PARA CALIBRAR', 1, 1, 2, 4, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CUBRECALZADO', 1, 1, 10, 100, 4, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLES KIC', 1, 1, 2, 4, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A ', 'TOALLAS ANTIESTATICAS', 1, 2, 21, 30, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'WIPERS', 1, 2, 5, 15, 10, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'HOJAS BLANCAS  DOBLE CARTA', 1, 3, 4, 5, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PAPEL PARA EMICAR  CARTA', 1, 3, 1, 5, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES LATEX L', 1, 3, 15, 20, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES LATEX S', 1, 3, 7, 15, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TALONARIOS DE TIEMPO MUERTO ', 1, 3, 20, 30, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'HOJAS BLANCAS CARTA', 1, 3, 1, 10, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES WRM CALIBRACION S', 1, 3, 20, 50, 20, 'FUJI', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ULTRASONIC', 1, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CONOS DE PAPEL', 1, 4, 37, 45, 10, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N100-KLM01-002', 'VERNIER ', 1, 4, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('5931380', 'MOTOR', 1, 5, 2, 2, 1, 'HELLER', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BRAKETS PL CONVEYOR ', 1, 5, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E3136', 'Resistencia de Horno SMT', 1, 5, 2, 2, 2, 'HELLER', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('5157438', 'CLAMP', 1, 5, 3, 3, 1, 'VOLTECK', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('03130148-01', 'MOTOR DE MESA DE LEVANTAMIENTO', 1, 5, 1, 1, 1, 'DEK', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('2724', 'CARPETA 1''', 2, 1, 2, 5, 2, 'KINERA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('270821', 'LOCTITE (ROJO)', 2, 1, 5, 5, 3, 'HENKEL', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('2523', 'CARPETA  1/2''', 2, 1, 1, 1, 1, 'KINERA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BORRADOR', 2, 1, 1, 1, 1, 'MAGISTRAL', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MARCADOR ', 2, 1, 1, 10, 1, 'PENTEL', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GOGLES', 2, 1, 1, 1, 1, 'PIRAHEX', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('2500', 'PAD - LOCK', 2, 1, 10, 15, 5, 'SOL HARD', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PLUMAS ', 2, 1, 4, 15, 5, 'AZOR', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SHARPIE (DELGADO)', 2, 1, 1, 10, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BASES PARA ESCANEAR', 2, 1, 6, 10, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('1844', 'CD  ', 2, 1, 3, 5, 2, 'GLOBAL GLOVE', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES LATES  L', 2, 1, 4, 15, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES LATEX S', 2, 1, 10, 15, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES  LATEX M', 2, 1, 5, 15, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LOCTITE ADECIVO', 2, 2, 3, 5, 3, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUAMTES M ', 2, 2, 8, 15, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES XL ', 2, 2, 1, 15, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES L ', 2, 2, 3, 15, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES S ', 2, 2, 14, 15, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES XL ', 2, 3, 24, 15, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES G', 2, 3, 16, 15, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('55938', 'ATOMIZADOR', 2, 4, 2, 15, 5, 'KLIN TEC', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MONITOR', 2, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GUANTES DE LATEX L', 2, 4, 13, 15, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PUNTAS', 2, 4, 1, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SCOTCH-BRITE', 2, 4, 4, 10, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CEPILLO DE COPA DE ALAMBRE', 2, 4, 4, 10, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('1265', 'CONOS AZULES', 2, 4, 13, 20, 10, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'OVEROLES', 3, 1, 28, 40, 30, 'AEE', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KARDES SMT', 3, 1, 5, 15, 5, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CUBREBOCAS', 3, 1, 200, 300, 200, 'FACE MASK', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA VELCROCK', 3, 2, 5, 10, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTAS DE CELOFUN', 3, 2, 7, 10, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTAS PLATEADAS', 3, 2, 4, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA TRANSPARENTE', 3, 2, 1, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KATON', 3, 2, 5, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA DOBLE CARA', 3, 2, 2, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA AZUL 8MM', 3, 2, 5, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA DE PRECAUSION ', 3, 2, 1, 2, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA DOBLE CARA DE 3MM', 3, 2, 1, 2, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA AZUL 12 MM', 3, 2, 1, 2, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA PARA LIMITAR ROJA', 3, 2, 3, 5, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CRAYON INDUSTRIAL', 3, 2, 1, 2, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', ' MANUELES KOH YOUNG', 3, 3, 15, 15, 8, 'ZENITH UHS', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CD  KOH YOUNG', 3, 3, 14, 14, 14, 'ZENITH UHS', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANUALES Y CD YAMAHA', 3, 4, 1, 1, 1, 'YAMAHA ', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANUAL ZERO SMO', 3, 4, 1, 1, 1, 'WELLER', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LLAVES ', 3, 4, 20, 20, 20, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TPC MECHATRONICS', 3, 4, 2, 2, 2, 'INOVATION ', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CD PARTS ', 3, 4, 46, 46, 46, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'OM', 3, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABEZAL DE LECTURA', 3, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ACTUADOR', 3, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE GRIS', 3, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TARJETA SERIAL PCI 2 PTOS', 3, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MOUSE', 3, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SMEMA', 3, 5, 5, 5, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HP2161', 'POWER CABLE', 3, 5, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE BEIS', 3, 5, 5, 5, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NEGRAS', 3, 5, 3, 3, 3, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CRISTALES PARA PAM', 4, 1, 22, 18, 5, 'FUJI', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLOS', 4, 1, 44, 44, 44, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'AIR HEAD CHEANED', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BROCHAS DE MADERA', 4, 1, 5, 5, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CEPILLOS PARA LABAR ', 4, 1, 50, 50, 10, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('63383', 'MASTER LOCK', 4, 1, 19, 20, 2, 'TOUGH UNDER FIRE ', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TUBOS NARANJA', 4, 1, 12, 12, 12, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TUBOS AZUL', 4, 1, 12, 12, 12, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BROCHAS', 4, 1, 7, 7, 7, 'PROYECT SELECT ', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PORTA ETIQUETAS', 4, 1, 7, 7, 7, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GIS DE RESPUESTA PARA TIRA LINIAS ', 4, 1, 2, 2, 12, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('1632', 'PILA DE LITIO 3V 1632', 4, 1, 6, 6, 6, 'STEREN', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'COPLEX NEUMATICOS', 4, 1, 1, 1, 1, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA SELLA ROSCAS', 4, 1, 5, 5, 5, 'TRUPER', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BANDAS NEGRAS', 4, 1, 2, 2, 2, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PLACA MAGNETICA', 4, 1, 35, 35, 35, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BOQUILLA PARA PISTOLA DE TEMPERATURA', 4, 1, 3, 3, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCIONES H08', 4, 1, 45, 45, 45, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'HOLDER H08', 4, 1, 350, 400, 300, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'COVER CONECTOR', 4, 1, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE CLEANING CAMARA', 4, 1, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTRO HOUSING', 4, 1, 3, 3, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', '0 RING', 4, 1, 500, 500, 500, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTROS H24', 4, 1, 100, 100, 50, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTRO H08', 4, 1, 50, 5, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FUSIBLE DE CRISTAL', 4, 1, 13, 13, 13, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'VALVULA H24', 4, 1, 49, 49, 49, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'VALVULA H08', 4, 1, 16, 16, 16, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTRO H02', 4, 1, 46, 46, 46, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTROS ', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PICK -UP HIGHT', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'HOLDER H24', 4, 1, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'IMANES W08 F ', 4, 1, 35, 35, 35, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PIN DE GUIA ', 4, 1, 21, 21, 21, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE FUSIBLES', 4, 1, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FUSIBLES', 4, 1, 6, 6, 6, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BOMBAS(FUSIBLE)', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SCANER ', 4, 1, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CERAMICO', 4, 1, 10, 10, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CEPILLO DE METAL', 4, 1, 10, 10, 10, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('2MGKXE0035', 'PLUG COVER', 4, 1, 4, 4, 4, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PAD  ', 4, 1, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CEPILLO NORMAL DE PLASTICO', 4, 1, 32, 30, 10, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE PARA REPARAR', 4, 1, 5, 5, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE TORNILLOS', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE TUERCAS ', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SINGLE SPLICE', 4, 1, 20, 20, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PILA   + AAA ', 4, 1, 10, 10, 5, 'AMAZON', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PILA  +AA', 4, 1, 8, 8, 4, 'AMAZON', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ETIQUETADORA', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PILA ENERGIZER 375', 4, 1, 4, 4, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PILA ENERGIZER  3 VOL  2032', 4, 1, 3, 3, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('X0044EP9M3', 'DPORFIRS TARJETA GRAFICA GTXI ', 4, 1, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'WASHER SPRING 6M/M', 4, 1, 4, 4, 4, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'WASHER CONICAL M-6-H', 4, 1, 4, 4, 4, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLO BOLT HEX M6X18', 4, 1, 8, 8, 4, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLO BOLT HEX M5X16', 4, 1, 4, 4, 4, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLO BOLT HEX M6X15', 4, 1, 4, 4, 4, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TERMO-ANEMOMETER', 4, 2, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BALANCE POSTALE NUMERICA', 4, 2, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MASTER LOCK', 4, 2, 12, 12, 12, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SILICON HORNO', 4, 2, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PISTOLA DE CALOR', 4, 2, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BROCHAS ', 4, 2, 6, 6, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TERMOMETRO INFRAROJO', 4, 2, 2, 2, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE ALINIACION PLUMB BOB', 4, 2, 1, 1, 1, 'N/A', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('1632', 'PILA DE LITIO', 4, 2, 22, 22, 10, 'STEREN', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GOMAS PARA VENTOSA', 4, 2, 24, 24, 10, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'RESORTE', 4, 2, 12, 12, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ESPATULA AMARILLA', 4, 2, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'RED ROUND LABELS', 4, 2, 28, 30, 10, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BLACK COVER', 4, 2, 5, 5, 5, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'GIS DE RESPUESTA PARA TIRA LINIAS ', 4, 2, 1, 3, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CASQUILLO DOBLE ALUMINIO', 4, 2, 6, 6, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TIRALINEAS', 4, 2, 3, 3, 1, 'TRUPER', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PORTA  HOJAS  TAMA¥O CARTA  ', 4, 2, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PORTA  HOJAS TAMA¥O   DOBLE CARTA  ', 4, 2, 12, 7, 7, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TECLADOS', 4, 3, 5, 5, 4, 'LOGI TECH', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ADAPTADOR DISPLAYPORT A HOMI', 4, 3, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CARGADOR DE PILA', 4, 3, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LAN HUB ENTHERNET', 4, 3, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE SMEMA', 4, 3, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE HDMI', 4, 3, 4, 4, 4, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLEADO', 4, 3, 11, 11, 11, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CARGADOR DE LAPTO', 4, 3, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE LANSTAR 1.8M', 4, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLES VGA', 4, 3, 2, 5, 1, 'GIO', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SCANER ', 4, 3, 6, 6, 6, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CARGADOR ZEBRA', 4, 3, 1, 1, 1, 'ZEBRA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BASES PARA CARGADOR SCANER', 4, 3, 4, 4, 4, 'YAMAHA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE FUJI GRASE GUN', 4, 4, 2, 2, 2, 'KIT', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANGUERA PARA CABLEADO', 4, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANGUERA TRANSPARENTE', 4, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANGUERA AZUL', 4, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE CAUTIN', 4, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINCHO DE PLASTICO', 4, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BACE OARA CARGAR', 4, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SENSOR', 4, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE RUNDRIEMEN', 4, 4, 2, 2, 2, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE NEGRO', 4, 4, 1, 1, 1, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LAN HUB ETHERNET', 4, 4, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PWR - BGA', 4, 4, 1, 1, 1, 'ZEBRA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'RUEDAS TREX', 4, 4, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BAG FILTER ', 4, 4, 4, 4, 4, 'FALA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PKBN85', 'SPARE PART', 5, 1, 2, 2, 2, 'PLEOMAX', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SSD-980', 'SPARE PART', 5, 1, 4, 4, 4, 'SAMSUNG', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SNK3000', 'SPARE PART', 5, 1, 5, 5, 5, 'QSENM', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PS361', 'TERMOCOPLES', 5, 1, 5, 5, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('AO11510026A', 'VALEROS ', 5, 1, 2, 2, 2, 'CULLON', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BANDAS PARA CONVEYORS', 5, 1, 0, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'INTERLOCK P / AOI', 5, 1, 0, 2, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PG0190', 'ADHESIVOS', 5, 1, 4, 4, 4, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('M-3659-00-0N', 'BOMBA DE PRESION ', 5, 1, 1, 1, 1, 'YAMAHA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CD', 5, 1, 8, 8, 8, 'KOH YOUNG', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('552590', 'FILTRO SPARE PART', 5, 1, 20, 20, 20, 'KOH YOUNG', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('5400RPN', 'TARJETA ', 5, 1, 2, 2, 2, 'KOH YOUNG', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'USB 3.0', 5, 1, 2, 2, 2, 'SARING SWITECH', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('202049', 'USB 3.4 4K DISPLAY', 5, 1, 2, 2, 2, 'CABLEMATERS', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('88205767-01', 'IMAN DE MACNECTISMO', 5, 1, 1, 1, 1, 'ASN', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('1080P', 'USB ', 5, 1, 1, 1, 1, 'UGREEN', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PINES SOPORTE', 5, 1, 200, 200, 200, 'YAMAHA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('AES410', 'PINTURA AEROSOL PAGMENTO', 5, 2, 8, 3, 3, 'SURTEK', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PINTURA AEROSOL AZUL ', 5, 2, 3, 3, 3, 'RUST OLEUN', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SQUEGGE CLEANER', 5, 2, 12, 12, 12, 'YAMAHA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLERA', 5, 2, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('KGS-M3840-000', 'WIPER PARA CAMARA', 5, 2, 1, 1, 1, 'YAMAHA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BOLSA DE TUERCAS', 5, 2, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('1298HL', 'VENTOSAS', 5, 2, 10, 10, 10, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('KU7-M66U8-00', 'HNS, SNEMA, SHORT', 5, 2, 2, 2, 2, 'YAMAHA', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('KME-M4207-AIO', 'USB DRIVE 3ME', 5, 2, 1, 1, 1, 'INNODICK', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE USB   ', 5, 3, 5, 5, 5, 'STEREN', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE USB MACHO HEMBRA', 5, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PMOBEF', 'PART HOLDER BLOCK', 5, 3, 4, 4, 4, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0193593', 'WASHER FLAT', 5, 3, 10, 10, 10, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('140006-01-A', 'MAIN ROWER', 5, 3, 3, 3, 3, 'KOH YOUNG', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('230500013', 'TARJETA ELECTRONICA', 5, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LAMPARAS ', 5, 4, 5, 5, 5, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('37584', 'DEK CLAMPER', 5, 4, 6, 6, 6, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SQUEGGE 250', 5, 4, 4, 4, 4, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SQUEGGE 400', 5, 4, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SQUEGGE 350', 5, 4, 3, 3, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PPO226', 'MASTER TAPE (w8 W86)', 5, 4, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CLAMP', 5, 4, 6, 6, 6, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLES Y TORNILLERAS', 5, 5, 0, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 1.6', 6, 1, 3, 3, 3, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H24 M', 6, 1, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 434', 6, 1, 46, 46, 46, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'JIG ', 6, 1, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N074A053274', 'NIDOS DE NOZZLES ', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('NA74A058578', 'NIDOS DE NOZZLES ', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('ETH24', 'CALIBRADOR DE NOZZLES ', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 10.0', 6, 1, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 7.0', 6, 1, 13, 13, 13, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 J27', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 J23', 6, 1, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 J28', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 5.30', 6, 1, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 0.7', 6, 1, 12, 12, 12, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 3.7', 6, 1, 11, 11, 11, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  2.5', 6, 1, 7, 7, 7, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  3.7', 6, 1, 4, 4, 4, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  3.7 G', 6, 1, 5, 5, 5, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  5.0', 6, 1, 3, 3, 3, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  5.0 G', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 7.0 G', 6, 1, 6, 6, 6, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 10.0 G', 6, 1, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 10.0  ', 6, 1, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  10.0', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  J11', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  J12', 6, 1, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 J03', 6, 1, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 3.7', 6, 1, 37, 37, 37, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 7.G', 6, 2, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 1.8', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES H08 J27', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES J28', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 2.5', 6, 2, 16, 16, 16, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 1.36', 6, 2, 9, 9, 9, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 1.8', 6, 2, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 7.0', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 0.7', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 16, 16, 16, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J27', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 16, 16, 16, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J27', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J27', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J 23', 6, 2, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J27', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J2.5', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 7, 7, 7, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 8, 8, 8, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J27', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J23', 6, 2, 16, 16, 16, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J28', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J27', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J03', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J11', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J12', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J50', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 10.G', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('FU-3143', 'CABLE', 6, 2, 2, 2, 2, 'KEYENCE', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0193587', 'NOZZLE H24 J.34', 6, 2, 48, 48, 48, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0193581', 'NOZZLE H24 J34', 6, 2, 48, 48, 48, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0193588', 'NOZZLE H24 J34', 6, 2, 48, 48, 48, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 15.0G', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 15.0G', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J44 ', 6, 2, 11, 11, 11, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 10', 6, 2, 36, 36, 36, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 N ', 6, 2, 4, 4, 4, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 M', 6, 2, 48, 48, 48, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 25', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 18', 6, 2, 115, 115, 115, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE M', 6, 2, 4, 4, 4, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLRE 10', 6, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 L ', 6, 2, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 13', 6, 2, 98, 98, 98, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE J34', 6, 2, 91, 91, 91, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 25 G ', 6, 2, 24, 24, 24, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 25', 6, 2, 6, 6, 6, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 18 ', 6, 2, 4, 4, 4, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE 25', 6, 2, 50, 50, 50, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 25', 6, 2, 30, 30, 30, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 25', 6, 2, 50, 50, 50, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 25', 6, 2, 43, 43, 43, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLES 25', 6, 2, 49, 49, 49, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('S6DZ-BC80AN7A-FK-E', 'CPU', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PLATO DE SOPORTE MTO', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA DOBLE CARA', 6, 3, 3, 3, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0193593', 'SUMICO LUBRICANTE', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PG0190', 'ADESIVE SHEET', 6, 3, 0, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SDT20SA', 'CPU', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SGDZBC80AN7A-FK-E', 'CPU', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('EBCBCNY', 'CPU', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('NL07G-220812129H', 'CPU', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('NL07G-2208-12841H', 'CPU', 6, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('NL07G-2306-13225IH', 'CPU', 6, 3, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 J12', 6, 4, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 J03', 6, 4, 3, 3, 3, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 J50', 6, 4, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02  J11', 6, 4, 2, 2, 2, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 5.0', 6, 4, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H02 H.0 G ', 6, 4, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE G24 1.3', 6, 4, 4, 4, 4, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 1.8', 6, 4, 23, 23, 23, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 J34', 6, 4, 72, 72, 72, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 L ', 6, 4, 50, 50, 50, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 J34', 6, 4, 29, 29, 29, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 0.7', 6, 4, 24, 24, 24, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 10', 6, 4, 91, 91, 91, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 1.3', 6, 4, 63, 63, 63, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NOZZLE H24 1.8', 6, 4, 244, 244, 244, 'FUJI', 1);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('V100-KLM01-037', 'JIG CALIBRACION P/AOI', 6, 4, 1, 1, 1, 'XINO', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEZD2057341', 'CABEZAL H24S', 6, 4, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEZD2063031', 'CABEZAL H24S', 6, 4, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEDZ057339', 'CABEZAL H24S', 6, 4, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEZD2059834', 'CABEZAL H24 S', 6, 5, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HAOD1008150', 'CABEZAL H08 ', 6, 5, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('FKS2D230428012AA', 'MONITOR MXT', 6, 5, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BKT', 6, 5, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0193593', 'NXT3', 6, 5, 5, 5, 5, 'FUJI', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E38087', 'UPS -BAT', 7, 1, 1, 1, 1, 'POENIX', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('AA14X', 'WIPER', 7, 1, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('JPO588623', 'BOARD', 7, 1, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SMT SPLICE CLIP', 7, 1, 4, 4, 4, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SENSOR Z', 7, 1, 4, 2, 4, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SEO193593', 'CINTA CEBOLLA', 7, 1, 6, 6, 6, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('NA74A058579', 'NIDO DE NOZZLES', 7, 1, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('ZAGTBC000500', 'BOARD PRINTED CIRCUIT', 7, 1, 3, 3, 3, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('T63245', 'ROLLOS PARA CORRER PAM', 7, 1, 2, 3, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('T63245', 'ROLLOS', 7, 1, 8, 8, 8, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEZDZ063032', 'CABEZAL H24 S', 7, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('GPOB2013350', 'CABEZAL H02 F', 7, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HAOD1008284', 'CABEZAL H08 MQ', 7, 2, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('GPOB2012907', 'CABEZAL H02 F', 7, 2, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('VI00-KLM01-032', 'CALIBRATION TARGET', 7, 3, 1, 1, 1, 'XINO', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEZDZ057338', 'CABEZAL H02 45', 7, 3, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HA0D1008285', 'CABEZAL H08MQ', 7, 3, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEDZ057342', 'CABEZAL H24 S ', 7, 3, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('GPOB2013349', 'CABEZAL H02 F', 7, 4, 1, 1, 1, 'FUJI', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('GPOB2012137', 'CABEZAL H02 F', 7, 4, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HA0D1008157', 'CABEZAL H 08 MQ', 7, 4, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('HEZDZ057337', 'CABEZAL H245', 7, 5, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CPU', 7, 5, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('PKG000102711', 'BASCULA DIGITAL', 8, 1, 1, 1, 1, 'DYMO', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BASES P/COMPUTADORA', 8, 1, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('FOOM-1715', 'PLATO DE CALIBRACION ALTURA Y ESCALA', 8, 1, 1, 2, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('FKC-08983', 'CPU', 8, 1, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BOARD DE CALIBRACION (250mmx250mm)', 8, 1, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('S10402GN407E1', 'DEK', 8, 1, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'JIGS DE PCB', 8, 1, 3, 5, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('140403', 'BOARD  CLAMP SETTING PLATE', 8, 1, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PORTABASES', 8, 1, 9, 10, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SN2084', 'REEL ESTIMADOR', 8, 1, 1, 0, 0, 'SPOT', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('UDP102', 'PRESSURE SENSOR ', 8, 1, 1, 0, 0, 'PANASONIC', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('A1612GQ13D', 'PROGRAMER DISPLAY', 8, 1, 1, 0, 0, 'PANASONIC', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('R315965', 'MEDIDOR DE RADIACION', 8, 1, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BOLSA DE TORNILLERIA', 8, 1, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PINES', 8, 1, 1, 0, 0, 'DEK', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTRO DE LAVADORA ', 8, 2, 6, 10, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SENSORES DE CONVEYOR ', 8, 2, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLES PARA COMPUTADORA ', 8, 2, 2, 5, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE USB MACHO A MACHO ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SENSORES DE BANDERA ', 8, 2, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('703216', 'ADAPTADOR USB ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('CY5120-5M2-01', 'VALVULAS ELECTRO ', 8, 2, 3, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFLECTOR ANGULAR ', 8, 2, 5, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E35-LS3NOMBN', 'PHOTO ELECTIC SWICH', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCIONES DE SENSOR ', 8, 2, 8, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BANDERAS CABLE DE SENSOR ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLERA ', 8, 2, 3, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ADAPTADOR ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('OCX491', 'REFLECTOR ANGULAR ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ETIQUETAS MATERIAL NO CONFORME ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCION DE VENTOSA ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLERA ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('96N0179', 'CELDA DE CARGA KEYENCE ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BROCHES PARA INSTRUCCIONES ', 8, 2, 17, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE KEYENCE ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCIONES PARA REFLECTOR ANGULAR ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REELE 24CV', 8, 2, 10, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLERA DE FESTO ', 8, 2, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PHOTO SENSOR  ANGULOS REFLECTORES ', 8, 2, 3, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'VALERO ', 8, 2, 43, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CLAVIJAS ', 8, 2, 5, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CARATULA DED CONTACTO ', 8, 2, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CONECTORES ', 8, 3, 8, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'COJINETES DE RODAMIENTO', 8, 3, 4, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BUJE DE RODAMIENTO ', 8, 3, 8, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BANDAS DEK', 8, 3, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BANDAS CONVEYOR ', 8, 3, 3, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REELE ', 8, 3, 15, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'AMORTIGUADOR ', 8, 3, 4, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCIONES VENTOSAS ', 8, 3, 8, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'EMPAQUES VENTOSAS ', 8, 3, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CARCASA DE EMERGENCIA ', 8, 3, 7, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCIONES DE MANIJA DE LAVADORAS STENCIL ', 8, 3, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ADAPTADOR USB - SER ', 8, 3, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LLAVES ', 8, 3, 2, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'NAVAJAS DE IMRESORA ', 8, 3, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0189161', 'PLATO DE CALIBRACION ', 8, 3, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('CDQ2B20 - 15D2', 'PISTONES ', 8, 3, 2, 2, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ETIQUETETAS PARA MAGAZINES ', 8, 3, 7, 10, 2, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MODULO D/MEDICION DE TEMPERATURA Y HUMEDAD ', 8, 3, 0, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'DRY BOX ', 8, 3, 1, 1, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'VALEROS LINEALES ', 8, 3, 4, 5, 1, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('DB9', 'ADAPTADORES USB A SERIAL DB9 ', 8, 4, 9, 10, 3, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT MANUAL KOYOUNG ', 8, 4, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTROS ', 8, 4, 2, 0, 0, 'Fuji NXT III', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LASER MARKER TERMINAL BLOCK ', 8, 4, 1, 0, 0, 'Fuji NXT III', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'STICKERS NEGROS ', 8, 4, 1, 0, 0, 'Fuji NXT III', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LAMPARAS LED ', 8, 4, 4, 0, 0, 'Fuji NXT III', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REGULADOR DE VELOCIDAD ', 8, 4, 1, 0, 0, 'Fuji NXT III', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'EQUIPO  PARA SOLDAR ', 8, 4, 1, 0, 0, 'Fuji NXT III', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BANDAS ', 8, 4, 1, 0, 0, 'N/A', 2);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANGUERAS Y CABLES ', 8, 5, 2, 0, 0, 'Fuji NXT III', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'RESISTENCIA DE HORNO HELLER ', 9, 1, 4, 2, 1, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'HANDY 2D CODE SCANER ', 9, 1, 1, 0, 0, 'N/A', 0);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SE0189161', 'MANUAL LEGRAND ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E35479', 'LAMBDA SENSOR CALIBRTED ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'HULA SKIRT ', 9, 1, 4, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANUAL DE HORNO KIC', 9, 1, 2, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CERTIFICADO DE CALIBRACION KIC', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANUAL SENSOR PART ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'DOBLE SPLICE 12 MM', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BRACKETS ', 9, 1, 2, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('DS2208 - SR0000622WW', 'ESCANER ZEBRA INALAMBRICO ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('88205767001', 'TOOLING PIN SET MAGNETIC', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('WSX120 - 2000', 'TRIAD MAGNETICS ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('11949', 'ALSTRON MOTOR CONTROL BOARD ', 9, 1, 2, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'KIT DE MEMORIA PERFILADORA ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CINTA KAPTON ', 9, 1, 8, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTROS DE LAVADORA ', 9, 1, 3, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('322', 'PLUG , AMP , ', 9, 1, 4, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('5996', 'STR MALE ', 9, 1, 1, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('7119', 'SPG DC MOTOR BLUSH ', 9, 1, 2, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('4126733', 'SLOW BLOW TYPE FUSE ', 9, 1, 4, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('7922', 'FUSE SUBMIN SLOWBLOW ', 9, 1, 1, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'REFACCIONES HELLER ', 9, 1, 5, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('592048', 'GASKET MOTOR ', 9, 1, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('8939', 'STR MALE ', 9, 1, 1, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('9419', 'FAST ACTING FUSE ', 9, 1, 2, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('7922', 'FUSE SUBMIN SOLWBLOW ', 9, 1, 2, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('3323', 'AMP MALE PIN ', 9, 1, 32, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('7179', 'SPGDC MOTOR BRUSH ', 9, 1, 4, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('5996', 'STR MALE 1/4 STR MALE 1/2', 9, 1, 2, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'CABLE DINS EXTENSION M - F 10', 9, 2, 6, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('9449', 'LRG FILTER , ACTIVIDAD ', 9, 2, 7, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PEGAMENTO PLUNDAS FIVOL', 9, 2, 2, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 238420 - 200', 'SENSOR QS18 TER ', 9, 2, 2, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 1803655100', 'BACORDE SENSOR KIT QS18W 100MM', 9, 2, 2, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 180460 - 300', 'BACORDE SNSIR KIT QS18 -W ', 9, 2, 3, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 238110 - 000', 'ENCODER LONG BARREL TERM ', 9, 2, 1, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 271010 - 060', 'SMT THIN RAIL ADJUSTABLE PROBE BRACKET', 9, 2, 1, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ATTACHING THERMOCOPLES TO THE PVB  ALUMINIUM TAPE ', 9, 2, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('THK - 400207 -036', 'TYPE K GLASS INSULATED ', 9, 2, 0, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('57017605', 'TYPE K T/CASSY ', 9, 2, 13, 0, 0, 'HELLER', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 180460 - 300', 'BACORDE SENSOR KIT QS18 -W K', 9, 2, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SFK - 200502 - 000', 'SERVER SOFWARE ', 9, 2, 5, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'LICENSE SEAT FOR RPM ', 9, 2, 2, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SFT - 024009 - 000', 'SOFWARE RPI USB', 9, 2, 2, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'DRIVER INSTALLATION CD STARTECH', 9, 2, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 2500210 - 00', 'DAU - ETPU INSTALL KIT', 9, 2, 1, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('7448', 'KRYTOX XHT - BD2 20 TUBE ', 9, 2, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TORNILLERA ', 9, 2, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANUALES ', 9, 2, 2, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('SFK - 003012 - 000', 'SOFWARE KT - RPI ', 9, 2, 1, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('4192282', 'EMPAQUES DE HORNO SMT USE ', 9, 2, 2, 0, 0, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BOARD SENSOR KIT QS18 BRACKET ', 9, 2, 2, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'SOFWARE KEY PROFILING SODWARE  ', 9, 2, 1, 0, 0, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E30498', 'SENSOR QS18 TER ', 9, 2, 1, 1, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E7896', 'LIMIT SWITCH', 9, 2, 2, 2, 1, 'SMT', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PASTA P/ SOLDAR STEREN ', 9, 2, 2, 2, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('TFS - 271010 - 070', 'TRICK RAIL PROBE BRACKET ', 9, 2, 1, 1, 1, 'KIC', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'ESPONJAS ', 9, 3, 2, 5, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'TUBO DE SILICON ', 9, 3, 2, 3, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BLOWER ', 9, 3, 1, 2, 1, 'HORNO', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('E5695', 'BOBINAS', 9, 3, 2, 2, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'PIEDRAS PARA PIROLISIS', 9, 3, 4, 3, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BASCULA DYMO CPU ', 9, 4, 2, 3, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'EMPAQUES', 9, 5, 2, 5, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'MANGUERA', 9, 5, 2, 3, 1, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'FILTROS P/HORNO ', 9, 5, 7, 10, 3, 'N/A', 3);
+INSERT INTO gavetas (ndp, articulo, gaveta, nivel, cantidad, max, min, equipo, tde) VALUES ('N/A', 'BLOWER P/NXT', 9, 5, 1, 1, 1, 'N/A', 0);
+
+CREATE TABLE empleado(
+id INT AUTO_INCREMENT PRIMARY KEY,
+nde INT not null,
+link varchar(200),
+fi date not null,
+gaveta int not null,
+nombre varchar(200) not null,
+pos varchar(200) not null,
+line varchar(200) not null,
+op int not null,
+op1 int not null,
+op2 int not null,
+op3 int not null,
+op4 int not null,
+op5 int not null,
+op6 int not null,
+op7 int not null,
+op8 int not null,
+op9 int not null,
+op10 int not null,
+op11 int not null,
+op12 int not null,
+op13 int not null,
+op14 int not null,
+op15 int not null,
+op16 int not null,
+op17 int not null,
+op18 int not null
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  username VARCHAR(50) PRIMARY KEY,
+  pass_hash VARBINARY(60) NOT NULL,
+  rol ENUM('admin','guest') NOT NULL DEFAULT 'admin',
+  nombre VARCHAR(100) NOT NULL
+);
+
+select * from empleado;
+
+
+
+CREATE TABLE calibracion(
+id INT AUTO_INCREMENT PRIMARY KEY,
+linea varchar(200),
+descripcion varchar(200),
+ns varchar(200),
+fc date ,
+fv date ,
+estatus varchar(200)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  username VARCHAR(50) PRIMARY KEY,
+  pass_hash VARBINARY(60) NOT NULL,
+  rol ENUM('admin','guest') NOT NULL DEFAULT 'admin',
+  nombre VARCHAR(100) NOT NULL
+);
+select * from calibracion;
+
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'PRINTER DEK: NeoHorizon 03iX HTC', '855827', '2025-05-10 00:00:00', '2026-05-10 00:00:00', 'OK');
+
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo25123 ', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo25119', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo25121', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo25122', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo25214', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo25215', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H08M', 'M6IIIXNo25216', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H08M', 'M6IIIXNo25219', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H08M', 'M6IIIXNo25217', '2025-04-27 00:00:00', '2026-04-27 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('1', 'NXT M6 III: Fuji  Head H02F', 'M6IIIXNo25218', '2025-05-26 00:00:00', '2026-05-26 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'PRINTER DEK: NeoHorizon 03iX', '856362', '2024-01-24 00:00:00', '2025-06-24 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo27263', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo27262', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo27288', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo27287', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo27290', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H24', 'M6IIIXNo27289', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H08M', 'M6IIIXNo27292', '2025-02-17 00:00:00', '2026-02-17 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H08M', 'M6IIIXNo27291', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H08M', 'M6IIIXNo27285', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('2', 'NXT M6 III: Fuji  Head H02F', 'M6IIIXNo27286', '2025-02-07 00:00:00', '2026-02-08 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('3', 'SPI: KY8030-3', 'SS-DL-01717', '2025-08-11 00:00:00', '2026-02-11 00:00:00', 'OK');       
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('3', 'PRE AOI: Zenith 2', 'AS2-DL-00019', '2025-08-11 00:00:00', '2026-02-11 00:00:00', 'OK');  
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('3', 'POST AOI: Zenith UHS', 'ALP-DL-00048', '2025-08-11 00:00:00', '2026-02-11 00:00:00', 'OK');
+
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('3', 'NXT M6 III: Fuji  Head H02F', 'M6IIIXNo28452', '2025-09-09 00:00:00', '2026-09-09 00:00:00', 'OK');
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('4', 'SPI: KY8030-3', 'SS-DL-01718', '2025-08-14 00:00:00', '2026-02-14 00:00:00', 'OK');       
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('4', 'PRE AOI: Zenith 2', 'AS2-DL-00020', '2025-08-14 00:00:00', '2026-02-14 00:00:00', 'OK');  
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('4', 'POST AOI: Zenith UHS', 'ALP-DL-00049', '2025-08-14 00:00:00', '2026-02-14 00:00:00', 'OK');
+
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('KIC SPS', 'KIC SPS', 'SPS-012004', '2025-04-14 00:00:00', '2026-04-14 00:00:00', 'OK');        
+INSERT INTO calibracion (linea, descripcion, ns, fc, fv, estatus) VALUES ('KIC SPS', 'KIC SPS', 'SPS-012247', '2025-03-28 00:00:00', '2026-03-28 00:00:00', 'OK'); 
+
+
+
+
+
+CREATE TABLE magazines (
+    numero INT NOT NULL UNIQUE PRIMARY KEY,
+    area TEXT NOT NULL,
+    fecha_creacion DATE,
+    color text not null
+);
+
+CREATE TABLE mantenimientos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    magazine_id INT NOT NULL,
+    fecha DATETIME NOT NULL,
+    proximo_mantenimiento DATETIME NOT NULL,
+    tornillos_ok BOOLEAN NOT NULL,
+    gomas_ok BOOLEAN NOT NULL,
+    limpieza_ok BOOLEAN NOT NULL,
+    etiquetas_ok BOOLEAN NOT NULL,
+    observaciones TEXT,
+    FOREIGN KEY (magazine_id) REFERENCES magazines(numero)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  username VARCHAR(50) PRIMARY KEY,
+  pass_hash VARBINARY(60) NOT NULL,
+  rol ENUM('admin','guest') NOT NULL DEFAULT 'admin',
+  nombre VARCHAR(100) NOT NULL
+);
+
+INSERT INTO magazines (numero,area,fecha_creacion,color) VALUES (185,'SMT',2025-09-10,'Verde');
+INSERT INTO magazines (numero,area,fecha_creacion,color) VALUES (145,'SMT',2025-09-10,'Azul');
+INSERT INTO magazines (numero,area,fecha_creacion,color) VALUES (163,'SMT',2025-09-10,'Amarillo');
+INSERT INTO magazines (numero,area,fecha_creacion,color) VALUES (178,'SMT',2025-09-10,'Rojo');
+INSERT INTO magazines (numero,area,fecha_creacion,color) VALUES (135,'SMT',2025-09-10,'Azul');
+
+
+
+create schema magazine;
+select * from mantenimientos;
+select * from magazines;
+select * from users;
