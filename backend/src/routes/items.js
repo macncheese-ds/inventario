@@ -136,8 +136,8 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload
   }
 });
 
-// Eliminar ítem (solo admin)
-router.delete('/:id', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+// Eliminar ítem (admin u operador)
+router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
   try {
@@ -149,24 +149,33 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin'), async (req, re
     const ok = await bcrypt.compare(password, hash);
     if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
-  const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-  // eliminar registro
-  await pool.query(`DELETE FROM \`gavetas\` WHERE id=:id`, { id });
-  // si tenía imagen subida, intentar eliminar archivo del sistema
-  try {
-    const link = prev[0] && prev[0].link ? prev[0].link : null;
-    if (link && link.startsWith('/uploads/')) {
-      const filename = link.split('/').pop();
-      const filePath = path.join(UPLOAD_DIR, filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
+    if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
+
+    // Mostrar mensaje de confirmación con nombre o descripción del ítem
+    if (!password) {
+      // Si no se envió contraseña, informar qué ítem se va a eliminar
+      const nombre = prev[0].nombre || prev[0].descripcion || prev[0].id;
+      return res.status(200).json({ message: `Vas a eliminar el artículo: ${nombre}. Ingresa tu contraseña para confirmar.` });
     }
-  } catch (e) {
-    console.warn('Error eliminando archivo asociado al ítem:', e.message);
-  }
-  await logCambio(req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null);
-  res.json({ message: 'Ítem eliminado' });
+
+    // eliminar registro
+    await pool.query(`DELETE FROM \`gavetas\` WHERE id=:id`, { id });
+    // si tenía imagen subida, intentar eliminar archivo del sistema
+    try {
+      const link = prev[0] && prev[0].link ? prev[0].link : null;
+      if (link && link.startsWith('/uploads/')) {
+        const filename = link.split('/').pop();
+        const filePath = path.join(UPLOAD_DIR, filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+    } catch (e) {
+      console.warn('Error eliminando archivo asociado al ítem:', e.message);
+    }
+    await logCambio(req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null);
+    res.json({ message: 'Ítem eliminado' });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Error eliminando ítem' });
