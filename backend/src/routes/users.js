@@ -115,6 +115,11 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
   const { username } = req.params;
   const { password, rol, nombre, adminPassword } = req.body;
   try {
+    // Validar que se envió la contraseña del admin
+    if (!adminPassword) {
+      return res.status(400).json({ message: 'Se requiere la contraseña del administrador' });
+    }
+
     // Validar contraseña del admin actual
     const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
     if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });
@@ -151,6 +156,11 @@ router.delete('/:username', authenticateToken, authorizeRoles('admin'), async (r
   const { username } = req.params;
   const { adminPassword } = req.body;
   try {
+    // Validar que se envió la contraseña del admin
+    if (!adminPassword) {
+      return res.status(400).json({ message: 'Se requiere la contraseña del administrador' });
+    }
+
     // Validar contraseña del admin actual
     const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
     if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });

@@ -114,110 +114,236 @@ function Historial() {
   );
 }
 
-function UsuariosAdmin({ onClose }) {
+function UsuariosAdmin({ onClose, onPasswordPrompt }) {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const [editRol, setEditRol] = useState({});
+  const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    api.get('/users')
-      .then(r => setUsuarios(r.data))
-      .catch(() => setError('Error cargando usuarios'))
-      .finally(() => setLoading(false));
+    loadUsuarios();
   }, []);
 
-  function handleRolChange(username, newRol) {
-    setEditRol(r => ({ ...r, [username]: newRol }));
-  }
-
-  async function guardarRol(username) {
-    const nuevoRol = editRol[username];
-    if (!nuevoRol) return;
+  async function loadUsuarios() {
+    setLoading(true);
+    setError('');
     try {
-      await api.put(`/users/${username}`, { rol: nuevoRol });
-      setUsuarios(us => us.map(u => u.username === username ? { ...u, rol: nuevoRol } : u));
-      setEditRol(r => ({ ...r, [username]: undefined }));
-    } catch {
-      setError('Error actualizando rol');
+      const response = await api.get('/users');
+      setUsuarios(response.data);
+    } catch (e) {
+      setError('Error cargando usuarios');
+      console.error('Error loading users:', e);
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function eliminarUsuario(username) {
+  function handleEditUser(user) {
+    setEditingUser({
+      username: user.username,
+      nombre: user.nombre,
+      rol: user.rol,
+      originalRol: user.rol
+    });
+  }
+
+  function handleRolChange(newRol) {
+    setEditingUser(prev => ({
+      ...prev,
+      rol: newRol
+    }));
+  }
+
+  function handleSaveUser() {
+    if (!editingUser) return;
+    
+    // Si no cambió el rol, no hacer nada
+    if (editingUser.rol === editingUser.originalRol) {
+      setEditingUser(null);
+      return;
+    }
+
+    // Usar el sistema de prompt de contraseña
+    onPasswordPrompt({
+      action: 'edit-user',
+      context: {
+        username: editingUser.username,
+        rol: editingUser.rol,
+        onSuccess: () => {
+          // Actualizar la lista local
+          setUsuarios(prev => prev.map(u => 
+            u.username === editingUser.username 
+              ? { ...u, rol: editingUser.rol }
+              : u
+          ));
+          setEditingUser(null);
+          loadUsuarios(); // Recargar para estar seguro
+        }
+      }
+    });
+  }
+
+  function handleDeleteUser(username) {
     setConfirmDelete(username);
   }
 
-  async function confirmarEliminar() {
+  function handleConfirmDelete() {
     if (!confirmDelete) return;
-    await api.delete(`/users/${confirmDelete}`);
-    setUsuarios(usuarios.filter(u => u.username !== confirmDelete));
+
+    // Usar el sistema de prompt de contraseña
+    onPasswordPrompt({
+      action: 'delete-user',
+      context: {
+        username: confirmDelete,
+        onSuccess: () => {
+          setUsuarios(prev => prev.filter(u => u.username !== confirmDelete));
+          setConfirmDelete(null);
+          loadUsuarios(); // Recargar para estar seguro
+        }
+      }
+    });
+  }
+
+  function handleCancelDelete() {
     setConfirmDelete(null);
   }
 
-  function cancelarEliminar() {
-    setConfirmDelete(null);
+  function handleCancelEdit() {
+    setEditingUser(null);
   }
+
+  if (loading) return <div className="text-gray-500">Cargando usuarios...</div>;
+  if (error) return <div className="text-red-600">{error}</div>;
 
   return (
     <div>
-      <h4 className="font-semibold mb-2">Usuarios registrados</h4>
-      {loading && <div className="text-gray-500">Cargando...</div>}
-      {error && <div className="text-red-600">{error}</div>}
-      {!loading && !error && (
-        <table className="min-w-full text-xs mb-4">
-          <thead>
-            <tr className="bg-gray-100 dark:bg-gray-700">
-              <th className="px-2 py-1">Usuario</th>
-              <th className="px-2 py-1">Nombre</th>
-              <th className="px-2 py-1">Rol</th>
-              <th className="px-2 py-1"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {usuarios.map(u => (
-              <tr key={u.username} className="border-b border-gray-200 dark:border-gray-700">
-                <td className="px-2 py-1">{u.username}</td>
-                <td className="px-2 py-1">{u.nombre}</td>
-                <td className="px-2 py-1">
-                  <select
-                    value={editRol[u.username] !== undefined ? editRol[u.username] : u.rol}
-                    onChange={e => handleRolChange(u.username, e.target.value)}
-                    className="rounded border px-2 py-1 bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
-                  >
-                    <option value="admin">admin</option>
-                    <option value="operador">operador</option>
-                    <option value="guest">guest</option>
-                  </select>
-                  {editRol[u.username] !== undefined && editRol[u.username] !== u.rol && (
-                    <button onClick={() => guardarRol(u.username)} className="ml-2 text-blue-600 hover:underline">Guardar</button>
-                  )}
-                </td>
-                <td className="px-2 py-1 text-right">
-                  <button onClick={() => eliminarUsuario(u.username)} className="text-red-600 hover:underline">Eliminar</button>
-                </td>
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="font-semibold">Administrar Usuarios</h4>
+        <button
+          onClick={loadUsuarios}
+          className="text-sm text-blue-600 hover:underline"
+        >
+          Actualizar
+        </button>
+      </div>
+
+      {usuarios.length === 0 ? (
+        <div className="text-gray-500">No hay usuarios registrados</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-100 dark:bg-gray-700">
+                <th className="px-3 py-2 text-left">Usuario</th>
+                <th className="px-3 py-2 text-left">Nombre</th>
+                <th className="px-3 py-2 text-left">Rol</th>
+                <th className="px-3 py-2 text-right">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {usuarios.map(user => (
+                <tr key={user.username} className="border-b border-gray-200 dark:border-gray-700">
+                  <td className="px-3 py-2 font-medium">{user.username}</td>
+                  <td className="px-3 py-2">{user.nombre}</td>
+                  <td className="px-3 py-2">
+                    {editingUser?.username === user.username ? (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={editingUser.rol}
+                          onChange={e => handleRolChange(e.target.value)}
+                          className="rounded border px-2 py-1 text-sm bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
+                        >
+                          <option value="admin">admin</option>
+                          <option value="operador">operador</option>
+                          <option value="guest">guest</option>
+                        </select>
+                        <button
+                          onClick={handleSaveUser}
+                          className="text-green-600 hover:underline text-sm"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="text-gray-600 hover:underline text-sm"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                        user.rol === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' :
+                        user.rol === 'operador' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                      }`}>
+                        {user.rol}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    {editingUser?.username === user.username ? null : (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="text-blue-600 hover:underline text-sm"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user.username)}
+                          className="text-red-600 hover:underline text-sm"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {/* Modal de confirmación para eliminar */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
-            <div className="mb-4 text-lg font-semibold text-red-700 dark:text-red-400">¿Eliminar usuario?</div>
-            <div className="mb-4 text-gray-700 dark:text-gray-300">
-              ¿Estás seguro de que deseas eliminar el usuario <b>{confirmDelete}</b>?
+            <div className="mb-4 text-lg font-semibold text-red-700 dark:text-red-400">
+              Confirmar eliminación
             </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={cancelarEliminar} className="rounded-lg border px-4 py-2 dark:border-gray-700">Cancelar</button>
-              <button onClick={confirmarEliminar} className="rounded-lg bg-red-700 text-white px-4 py-2 dark:bg-red-400 dark:text-red-900">Eliminar</button>
+            <div className="mb-6 text-gray-700 dark:text-gray-300">
+              ¿Estás seguro de que deseas eliminar el usuario <strong>{confirmDelete}</strong>?
+              <br />
+              <span className="text-sm text-gray-500">Esta acción no se puede deshacer.</span>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+              >
+                Eliminar
+              </button>
             </div>
           </div>
         </div>
       )}
-      <div className="flex justify-end mt-4">
-        <button onClick={onClose} className="rounded-lg border px-4 py-2 dark:border-gray-700">Cerrar</button>
+
+      {/* Botón de cerrar */}
+      <div className="flex justify-end mt-6">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >
+          Cerrar
+        </button>
       </div>
     </div>
   );
@@ -246,7 +372,7 @@ function Header({ user, onLogout, onOpenPassword }) {
             className="rounded-lg border px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
             title="Cambiar tema"
           >
-            🌙/☀️
+            Tema
           </button>
           <button
             onClick={onOpenPassword}
@@ -665,9 +791,9 @@ export default function Inventory() {
         await api.delete(`/items/${id}`, { data: { password } });
         loadItems();
       } else if (pwPrompt.action === 'edit-user') {
-        const { username, rol } = pwPrompt.context;
+        const { username, rol, onSuccess } = pwPrompt.context;
         await api.put(`/users/${username}`, { rol, adminPassword: password });
-        setModal(m => m && m.mode === 'usuarios' ? { ...m } : null); // refrescar usuarios
+        if (onSuccess) onSuccess();
       } else if (pwPrompt.action === 'delete-user') {
         const { username, onSuccess } = pwPrompt.context;
         await api.delete(`/users/${username}`, { data: { adminPassword: password } });
@@ -678,6 +804,43 @@ export default function Inventory() {
       setPwError(e?.response?.data?.message || 'Contraseña incorrecta');
     }
     setPwLoading(false);
+  }
+
+  // Función para exportar a Excel
+  async function handleExportExcel() {
+    try {
+      const params = {};
+      if (activeGaveta !== null) params.gaveta = activeGaveta;
+      if (q) params.q = q;
+
+      const response = await api.get('/items/export/excel', { 
+        params,
+        responseType: 'blob'
+      });
+      
+      // Crear blob y descargar archivo
+      const blob = new Blob([response.data], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generar nombre de archivo con fecha
+      const today = new Date().toISOString().slice(0, 10);
+      const gavetaText = activeGaveta !== null ? `_gaveta${activeGaveta}` : '';
+      const searchText = q ? `_filtrado` : '';
+      link.download = `inventario${gavetaText}${searchText}_${today}.xlsx`;
+      
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error('Error exportando a Excel:', e);
+      alert('Error exportando datos a Excel');
+    }
   }
 
   return (
@@ -729,12 +892,21 @@ export default function Inventory() {
             </>
           )}
           {(user?.rol === 'admin' || user?.rol === 'operador') && (
-            <button
-              onClick={() => setModal({ mode: 'add' })}
-              className="rounded-xl bg-gray-900 text-white px-4 py-2 dark:bg-gray-100 dark:text-gray-900"
-            >
-              Agregar
-            </button>
+            <>
+              <button
+                onClick={handleExportExcel}
+                className="rounded-xl bg-orange-900 text-white px-4 py-2 dark:bg-orange-400 dark:text-orange-900 font-semibold border border-orange-900 dark:border-orange-400"
+                title="Exportar datos a Excel"
+              >
+                Exportar Excel
+              </button>
+              <button
+                onClick={() => setModal({ mode: 'add' })}
+                className="rounded-xl bg-gray-900 text-white px-4 py-2 dark:bg-gray-100 dark:text-gray-900"
+              >
+                Agregar
+              </button>
+            </>
           )}
           <input
             value={q}
@@ -795,7 +967,17 @@ export default function Inventory() {
             {modal.mode === 'historial' ? (
               <Historial />
             ) : modal.mode === 'usuarios' ? (
-              <UsuariosAdmin onClose={() => setModal(null)} />
+              <UsuariosAdmin 
+                onClose={() => setModal(null)} 
+                onPasswordPrompt={(promptData) => {
+                  setModal(null); // Cerrar modal de usuarios
+                  setPwPrompt({
+                    open: true,
+                    action: promptData.action,
+                    context: promptData.context
+                  });
+                }}
+              />
             ) : modal.mode === 'detail' ? (
               // detalle de ítem (tarjeta con imagen si existe)
               <div>

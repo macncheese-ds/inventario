@@ -3,6 +3,7 @@ import pool from '../db.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import ExcelJS from 'exceljs';
 import { authenticateToken } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { buildSearchClause } from '../utils/search.js';
@@ -179,6 +180,139 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), as
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Error eliminando ítem' });
+  }
+});
+
+// Endpoint para exportar a Excel (solo operadores y admins)
+router.get('/export/excel', authenticateToken, authorizeRoles(['operador', 'admin']), async (req, res) => {
+  console.log('🔍 Export Excel - User:', req.user);
+  console.log('🔍 Export Excel - User role:', req.user?.rol);
+  console.log('🔍 Export Excel - Query params:', req.query);
+  
+  try {
+    const { q, gaveta } = req.query;
+    const params = {};
+    const where = ['1=1'];
+
+    if (gaveta) { 
+      where.push('g.gaveta = :gaveta'); 
+      params.gaveta = Number(gaveta); 
+    }
+
+    const search = buildSearchClause(q, 'g');
+    const whereSql = ` WHERE ${where.join(' AND ')} ${search.clause}`;
+    Object.assign(params, search.params);
+
+    console.log('🔍 Export Excel - SQL params:', params);
+
+    // Obtener todos los datos para exportar (sin filtro de gaveta para obtener todas)
+    const [rows] = await pool.query(
+      `SELECT g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.\`min\` AS min, g.\`max\` AS max,
+              g.equipo, g.tde
+         FROM \`gavetas\` g
+         ORDER BY g.gaveta ASC, g.nivel ASC`
+    );
+
+    console.log('🔍 Export Excel - Found rows:', rows.length);
+
+    // Crear workbook con ExcelJS
+    const workbook = new ExcelJS.Workbook();
+
+    // Agrupar datos por gaveta
+    const gavetaGroups = {};
+    rows.forEach(row => {
+      const gaveta = row.gaveta;
+      if (!gavetaGroups[gaveta]) {
+        gavetaGroups[gaveta] = [];
+      }
+      gavetaGroups[gaveta].push(row);
+    });
+
+    // Crear una hoja por cada gaveta
+    Object.keys(gavetaGroups).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gaveta => {
+      const worksheet = workbook.addWorksheet(`Gaveta ${gaveta}`);
+      
+      // Definir las columnas (sin ID ni Link)
+      worksheet.columns = [
+        { header: 'NDP', key: 'ndp', width: 15 },
+        { header: 'Artículo', key: 'articulo', width: 35 },
+        { header: 'Nivel', key: 'nivel', width: 8 },
+        { header: 'Cantidad', key: 'cantidad', width: 12 },
+        { header: 'Mínimo', key: 'min', width: 10 },
+        { header: 'Máximo', key: 'max', width: 10 },
+        { header: 'Equipo', key: 'equipo', width: 20 },
+        { header: 'TDE', key: 'tde', width: 15 }
+      ];
+
+      // Agregar los datos de esta gaveta
+      gavetaGroups[gaveta].forEach(row => {
+        worksheet.addRow({
+          ndp: row.ndp,
+          articulo: row.articulo,
+          nivel: row.nivel,
+          cantidad: row.cantidad,
+          min: row.min,
+          max: row.max,
+          equipo: row.equipo || '',
+          tde: row.tde || ''
+        });
+      });
+
+      // Aplicar estilos al header
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE0E0E0' }
+        };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+
+      // Aplicar bordes a todas las celdas de datos
+      for (let i = 2; i <= worksheet.rowCount; i++) {
+        const row = worksheet.getRow(i);
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+      }
+    });
+
+    // Generar buffer del archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Configurar headers para descarga
+    const filename = `inventario_gavetas_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Length', buffer.length);
+
+    console.log('🔍 Export Excel - Sending file:', filename);
+
+    // Registrar la exportación en el historial
+    await logCambio(
+      req.user.username, 
+      'EXPORTAR_EXCEL', 
+      `Exportó ${rows.length} registros a Excel (todas las gavetas)`,
+      'N/A',
+      { filtros: { q }, total_registros: rows.length, gavetas: Object.keys(gavetaGroups).length }
+    );
+
+    res.send(buffer);
+  } catch (e) {
+    console.error('❌ Error exportando a Excel:', e);
+    res.status(500).json({ message: 'Error exportando datos a Excel' });
   }
 });
 
