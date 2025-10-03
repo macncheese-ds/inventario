@@ -39,12 +39,17 @@ const ImageUploader = ({ currentImage, onImageChange }) => {
       const apiUrl = import.meta.env.VITE_API_URL;
       console.debug('VITE_API_URL:', apiUrl);
       console.debug('window.location.origin:', window.location.origin);
-      
+
+      // Prefer explicit API base URL when provided (useful when nginx proxy not configured)
       let uploadUrl = '';
-      if (!apiUrl) {
+      if (apiUrl && apiUrl !== '') {
+        // ensure no trailing slash
+        uploadUrl = apiUrl.replace(/\/+$/,'') + '/upload/upload';
+      } else if (window.location.origin && window.location.hostname !== 'localhost') {
+        // try to use the current origin + /api (for proxied setups)
         uploadUrl = window.location.origin + '/api/upload/upload';
       } else {
-        // Since we're proxying through nginx, just use relative path
+        // fallback to relative path
         uploadUrl = '/api/upload/upload';
       }
       
