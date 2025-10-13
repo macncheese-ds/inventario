@@ -43,7 +43,7 @@ router.get('/', authenticateToken, async (req, res) => {
   const params = { limit: parseInt(pageSize), offset };
   const where = ['1=1'];
 
-  if (gaveta) { where.push('g.gaveta = :gaveta'); params.gaveta = Number(gaveta); }
+    if (gaveta) { where.push('g.gaveta = :gaveta'); params.gaveta = gaveta; }
 
   const search = buildSearchClause(q, 'g');
   const whereSql = ` WHERE ${where.join(' AND ')} ${search.clause}`;
@@ -76,7 +76,11 @@ router.get('/', authenticateToken, async (req, res) => {
 
 // Crear ítem (admin/operador) - acepta multipart/form-data con campo 'image'
 router.post('/', authenticateToken, authorizeRoles('admin','operador'), upload.single('image'), async (req, res) => {
-  const { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno } = req.body;
+  let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno } = req.body;
+  nivel = nivel !== undefined ? Number(nivel) : null;
+  if (nivel === null || isNaN(nivel) || nivel < 1) {
+    return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 1' });
+  }
   let publicLink = link || null;
   if (req.file) {
     // ruta pública relativa al servidor
@@ -101,7 +105,11 @@ router.post('/', authenticateToken, authorizeRoles('admin','operador'), upload.s
 router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload.single('image'), async (req, res) => {
   const { id } = req.params;
   // si viene multipart, los campos estarán en req.body; si json, también
-  const { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno, password } = req.body;
+  let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno, password } = req.body;
+  nivel = nivel !== undefined ? Number(nivel) : null;
+  if (nivel === null || isNaN(nivel) || nivel < 1) {
+    return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 1' });
+  }
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;
   try {
@@ -196,7 +204,7 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['operador', 'admi
 
     if (gaveta) { 
       where.push('g.gaveta = :gaveta'); 
-      params.gaveta = Number(gaveta); 
+      params.gaveta = gaveta; 
     }
 
     const search = buildSearchClause(q, 'g');

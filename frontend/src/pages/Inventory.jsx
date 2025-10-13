@@ -464,13 +464,14 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
         </div>
         <div>
           <label className="text-sm">Gaveta</label>
-          <select className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required>
+          <input list="gavetas-list" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
+          <datalist id="gavetas-list">
             {gavetas.map(g => <option key={g} value={g}>{g}</option>)}
-          </select>
+          </datalist>
         </div>
         <div>
           <label className="text-sm">Nivel</label>
-          <input className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.nivel} onChange={e => upd('nivel', e.target.value)} />
+          <input type="number" min={1} className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
         </div>
         <div>
           <label className="text-sm">Cantidad</label>

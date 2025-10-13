@@ -4,7 +4,7 @@ CREATE TABLE gavetas(
 id INT AUTO_INCREMENT PRIMARY KEY,
 ndp Varchar(100) not null,
 articulo varchar(100) not null,
-gaveta int not null,
+gaveta varchar(100) not null,
 nivel int not null,
 cantidad int not null,
 max int not null,
@@ -12,8 +12,10 @@ min int not null,
 equipo varchar(100) not null,
 tde int not null,
 link varchar(200),
-constraint chk_nivel CHECK (nivel between 1 and 6)
+constraint chk_nivel CHECK (nivel >= 1)
 );
+
+-- Modified to allow any nivel >= 1
 
 CREATE TABLE IF NOT EXISTS users (
   username VARCHAR(50) PRIMARY KEY,
