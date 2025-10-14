@@ -844,6 +844,13 @@ export default function Inventory() {
     }
   }
 
+  // Ordenar items por nivel ascendente (de menor a mayor)
+  const itemsOrdenados = [...items].sort((a, b) => {
+    const nivelA = a.nivel || 0;
+    const nivelB = b.nivel || 0;
+    return nivelA - nivelB;
+  });
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <Header user={user} onLogout={logout} onOpenPassword={() => setShowPasswordModal(true)} />
@@ -935,7 +942,7 @@ export default function Inventory() {
               </tr>
             </thead>
             <tbody>
-              {!loading && Array.isArray(items) && items.map((it) => (
+              {!loading && Array.isArray(itemsOrdenados) && itemsOrdenados.map((it) => (
                 <ItemRow
                   key={it.id}
                   item={it}
@@ -948,7 +955,7 @@ export default function Inventory() {
             </tbody>
           </table>
           {loading && <div className="p-6 text-center text-gray-500">Cargando...</div>}
-          {!loading && Array.isArray(items) && items.length === 0 && <div className="p-6 text-center text-gray-500">Sin resultados</div>}
+          {!loading && Array.isArray(itemsOrdenados) && itemsOrdenados.length === 0 && <div className="p-6 text-center text-gray-500">Sin resultados</div>}
         </div>
         <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
           Total: <b>{total}</b>

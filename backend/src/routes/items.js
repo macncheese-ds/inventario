@@ -55,7 +55,7 @@ router.get('/', authenticateToken, async (req, res) => {
               g.equipo, g.tde, g.link
          FROM \`gavetas\` g
         ${whereSql}
-        ORDER BY g.id DESC
+        ORDER BY g.nivel ASC, g.id ASC
         LIMIT :limit OFFSET :offset`,
       params
     );
