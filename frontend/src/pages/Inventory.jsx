@@ -635,6 +635,13 @@ export default function Inventory() {
   const [pwPrompt, setPwPrompt] = useState({ open: false, action: null, context: null });
   const [pwError, setPwError] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+  
+  // Estados para filtros por columna
+  const [filtroNdp, setFiltroNdp] = useState('');
+  const [filtroArticulo, setFiltroArticulo] = useState('');
+  const [filtroEquipo, setFiltroEquipo] = useState('');
+  const [filtroGaveta, setFiltroGaveta] = useState('');
+  const [filtroNivel, setFiltroNivel] = useState('');
 
   function logout() {
     setAuthToken(null);
@@ -851,6 +858,26 @@ export default function Inventory() {
     return nivelA - nivelB;
   });
 
+  // Aplicar filtros por columna
+  const itemsFiltrados = itemsOrdenados.filter(item => {
+    const matchNdp = !filtroNdp || (item.ndp && item.ndp.toLowerCase().includes(filtroNdp.toLowerCase()));
+    const matchArticulo = !filtroArticulo || (item.articulo && item.articulo.toLowerCase().includes(filtroArticulo.toLowerCase()));
+    const matchEquipo = !filtroEquipo || (item.equipo && item.equipo.toLowerCase().includes(filtroEquipo.toLowerCase()));
+    const matchGaveta = !filtroGaveta || (item.gaveta && item.gaveta.toString().includes(filtroGaveta));
+    const matchNivel = !filtroNivel || (item.nivel && item.nivel.toString().includes(filtroNivel));
+    
+    return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel;
+  });
+
+  // Función para limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setFiltroNdp('');
+    setFiltroArticulo('');
+    setFiltroEquipo('');
+    setFiltroGaveta('');
+    setFiltroNivel('');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <Header user={user} onLogout={logout} onOpenPassword={() => setShowPasswordModal(true)} />
@@ -924,6 +951,16 @@ export default function Inventory() {
             style={{ marginLeft: 'auto' }}
           />
         </div>
+        <div className="mb-2 flex justify-end">
+          {(filtroNdp || filtroArticulo || filtroEquipo || filtroGaveta || filtroNivel) && (
+            <button
+              onClick={limpiarFiltros}
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
@@ -940,9 +977,61 @@ export default function Inventory() {
                 {/* Imagen column removed from list view */}
                 {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-3 py-2"></th>}
               </tr>
+              <tr>
+                <th className="px-2 py-1">
+                  <input
+                    type="text"
+                    value={filtroNdp}
+                    onChange={(e) => setFiltroNdp(e.target.value)}
+                    placeholder="Filtrar..."
+                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </th>
+                <th className="px-2 py-1">
+                  <input
+                    type="text"
+                    value={filtroArticulo}
+                    onChange={(e) => setFiltroArticulo(e.target.value)}
+                    placeholder="Filtrar..."
+                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </th>
+                <th className="px-2 py-1">
+                  <input
+                    type="text"
+                    value={filtroEquipo}
+                    onChange={(e) => setFiltroEquipo(e.target.value)}
+                    placeholder="Filtrar..."
+                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </th>
+                <th className="px-2 py-1">
+                  <input
+                    type="text"
+                    value={filtroGaveta}
+                    onChange={(e) => setFiltroGaveta(e.target.value)}
+                    placeholder="Filtrar..."
+                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </th>
+                <th className="px-2 py-1">
+                  <input
+                    type="text"
+                    value={filtroNivel}
+                    onChange={(e) => setFiltroNivel(e.target.value)}
+                    placeholder="Filtrar..."
+                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                  />
+                </th>
+                <th className="px-2 py-1"></th>
+                <th className="px-2 py-1"></th>
+                <th className="px-2 py-1"></th>
+                <th className="px-2 py-1"></th>
+                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-2 py-1"></th>}
+              </tr>
             </thead>
             <tbody>
-              {!loading && Array.isArray(itemsOrdenados) && itemsOrdenados.map((it) => (
+              {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.map((it) => (
                 <ItemRow
                   key={it.id}
                   item={it}
@@ -955,10 +1044,10 @@ export default function Inventory() {
             </tbody>
           </table>
           {loading && <div className="p-6 text-center text-gray-500">Cargando...</div>}
-          {!loading && Array.isArray(itemsOrdenados) && itemsOrdenados.length === 0 && <div className="p-6 text-center text-gray-500">Sin resultados</div>}
+          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-6 text-center text-gray-500">Sin resultados</div>}
         </div>
         <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-          Total: <b>{total}</b>
+          Total: <b>{total}</b> | Mostrando: <b>{itemsFiltrados.length}</b>
         </div>
       </main>
       {modal && (
