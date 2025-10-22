@@ -49,19 +49,19 @@ function Historial() {
   
   return (
     <div className="space-y-2">
-      {loading && <div className="text-gray-500">Cargando historial...</div>}
-      {error && <div className="text-red-600">{error}</div>}
+      {loading && <div className="text-gray-500 text-sm">Cargando historial...</div>}
+      {error && <div className="text-red-600 text-sm">{error}</div>}
       {!loading && !error && (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="min-w-full text-xs">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-2 py-1">Fecha/Hora</th>
-                <th className="px-2 py-1">Usuario</th>
-                <th className="px-2 py-1">Acción</th>
-                <th className="px-2 py-1">Detalle anterior</th>
-                <th className="px-2 py-1">Detalle nuevo</th>
-                <th className="px-2 py-1">Turno</th>
+                <th className="px-1 sm:px-2 py-1 text-left">Fecha/Hora</th>
+                <th className="px-1 sm:px-2 py-1 text-left">Usuario</th>
+                <th className="px-1 sm:px-2 py-1 text-left">Acción</th>
+                <th className="px-1 sm:px-2 py-1 text-left hidden md:table-cell">Detalle anterior</th>
+                <th className="px-1 sm:px-2 py-1 text-left">Detalle nuevo</th>
+                <th className="px-1 sm:px-2 py-1 text-left hidden lg:table-cell">Turno</th>
               </tr>
             </thead>
             <tbody>
@@ -97,12 +97,12 @@ function Historial() {
                 
                 return (
                   <tr key={h.id} className="border-b border-gray-200 dark:border-gray-700">
-                    <td className="px-2 py-1 whitespace-nowrap">{new Date(h.fecha_hora).toLocaleString()}</td>
-                    <td className="px-2 py-1">{h.username}</td>
-                    <td className="px-2 py-1">{ACCION_LABELS[h.accion] || h.accion}</td>
-                    <td className="px-2 py-1 max-w-xs">{adetalleContent}</td>
-                    <td className="px-2 py-1 max-w-xs">{detalleContent}</td>
-                    <td className="px-2 py-1">{h.turno}</td>
+                    <td className="px-1 sm:px-2 py-1 whitespace-nowrap text-xs">{new Date(h.fecha_hora).toLocaleString()}</td>
+                    <td className="px-1 sm:px-2 py-1 text-xs">{h.username}</td>
+                    <td className="px-1 sm:px-2 py-1 text-xs">{ACCION_LABELS[h.accion] || h.accion}</td>
+                    <td className="px-1 sm:px-2 py-1 max-w-xs text-xs hidden md:table-cell">{adetalleContent}</td>
+                    <td className="px-1 sm:px-2 py-1 max-w-xs text-xs">{detalleContent}</td>
+                    <td className="px-1 sm:px-2 py-1 text-xs hidden lg:table-cell">{h.turno}</td>
                   </tr>
                 );
               })}
@@ -218,58 +218,60 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold">Administrar Usuarios</h4>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+        <h4 className="font-semibold text-sm sm:text-base">Administrar Usuarios</h4>
         <button
           onClick={loadUsuarios}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-xs sm:text-sm text-blue-600 hover:underline"
         >
           Actualizar
         </button>
       </div>
 
       {usuarios.length === 0 ? (
-        <div className="text-gray-500">No hay usuarios registrados</div>
+        <div className="text-gray-500 text-sm">No hay usuarios registrados</div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <table className="min-w-full text-xs sm:text-sm">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-3 py-2 text-left">Usuario</th>
-                <th className="px-3 py-2 text-left">Nombre</th>
-                <th className="px-3 py-2 text-left">Rol</th>
-                <th className="px-3 py-2 text-right">Acciones</th>
+                <th className="px-2 sm:px-3 py-2 text-left">Usuario</th>
+                <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">Nombre</th>
+                <th className="px-2 sm:px-3 py-2 text-left">Rol</th>
+                <th className="px-2 sm:px-3 py-2 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {usuarios.map(user => (
                 <tr key={user.username} className="border-b border-gray-200 dark:border-gray-700">
-                  <td className="px-3 py-2 font-medium">{user.username}</td>
-                  <td className="px-3 py-2">{user.nombre}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-2 sm:px-3 py-2 font-medium">{user.username}</td>
+                  <td className="px-2 sm:px-3 py-2 hidden sm:table-cell">{user.nombre}</td>
+                  <td className="px-2 sm:px-3 py-2">
                     {editingUser?.username === user.username ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-2">
                         <select
                           value={editingUser.rol}
                           onChange={e => handleRolChange(e.target.value)}
-                          className="rounded border px-2 py-1 text-sm bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
+                          className="rounded border px-2 py-1 text-xs sm:text-sm bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
                         >
                           <option value="admin">admin</option>
                           <option value="operador">operador</option>
                           <option value="guest">guest</option>
                         </select>
-                        <button
-                          onClick={handleSaveUser}
-                          className="text-green-600 hover:underline text-sm"
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="text-gray-600 hover:underline text-sm"
-                        >
-                          Cancelar
-                        </button>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={handleSaveUser}
+                            className="text-green-600 hover:underline text-xs flex-1 sm:flex-none min-h-[36px]"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="text-gray-600 hover:underline text-xs flex-1 sm:flex-none min-h-[36px]"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
@@ -281,18 +283,18 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-right">
+                  <td className="px-2 sm:px-3 py-2 text-right">
                     {editingUser?.username === user.username ? null : (
-                      <div className="flex justify-end gap-2">
+                      <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
                         <button
                           onClick={() => handleEditUser(user)}
-                          className="text-blue-600 hover:underline text-sm"
+                          className="text-blue-600 hover:underline text-xs whitespace-nowrap min-h-[36px]"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.username)}
-                          className="text-red-600 hover:underline text-sm"
+                          className="text-red-600 hover:underline text-xs whitespace-nowrap min-h-[36px]"
                         >
                           Eliminar
                         </button>
@@ -308,26 +310,26 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal de confirmación para eliminar */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
-            <div className="mb-4 text-lg font-semibold text-red-700 dark:text-red-400">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+            <div className="mb-4 text-base sm:text-lg font-semibold text-red-700 dark:text-red-400">
               Confirmar eliminación
             </div>
-            <div className="mb-6 text-gray-700 dark:text-gray-300">
+            <div className="mb-6 text-sm sm:text-base text-gray-700 dark:text-gray-300">
               ¿Estás seguro de que deseas eliminar el usuario <strong>{confirmDelete}</strong>?
               <br />
-              <span className="text-sm text-gray-500">Esta acción no se puede deshacer.</span>
+              <span className="text-xs sm:text-sm text-gray-500">Esta acción no se puede deshacer.</span>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleCancelDelete}
-                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                className="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm min-h-[44px]"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                className="px-4 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm min-h-[44px]"
               >
                 Eliminar
               </button>
@@ -340,7 +342,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       <div className="flex justify-end mt-6">
         <button
           onClick={onClose}
-          className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+          className="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm min-h-[44px]"
         >
           Cerrar
         </button>
@@ -352,41 +354,44 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 function Header({ user, onLogout, onOpenPassword }) {
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold">Inventario</span>
-          <span className="text-xs text-gray-500 hidden sm:inline">| Gestión de Gavetas</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-600 dark:text-gray-300">
-            {user?.nombre ? (
-              <>
-                <b>{user.rol}</b> - {user.nombre}
-              </>
-            ) : (
-              <>Rol: <b>{user.rol}</b></>
-            )}
-          </span>
-          <button
-            onClick={toggleTheme}
-            className="rounded-lg border px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
-            title="Cambiar tema"
-          >
-            Tema
-          </button>
-          <button
-            onClick={onOpenPassword}
-            className="rounded-lg border px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
-            title="Cambiar contraseña"
-          >
-            <FaCog />
-          </button>
-          <button
-            onClick={onLogout}
-            className="rounded-lg border px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700"
-          >
-            Salir
-          </button>
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base sm:text-lg font-semibold">Inventario</span>
+            <span className="text-xs text-gray-500 hidden md:inline">| Gestión de Gavetas</span>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-3">
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
+              {user?.nombre ? (
+                <>
+                  <b>{user.rol}</b> - {user.nombre}
+                </>
+              ) : (
+                <>Rol: <b>{user.rol}</b></>
+              )}
+            </span>
+            <button
+              onClick={toggleTheme}
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
+              title="Cambiar tema"
+            >
+              <span className="hidden sm:inline">Tema</span>
+              <span className="sm:hidden">🌓</span>
+            </button>
+            <button
+              onClick={onOpenPassword}
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              title="Cambiar contraseña"
+            >
+              <FaCog />
+            </button>
+            <button
+              onClick={onLogout}
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px]"
+            >
+              Salir
+            </button>
+          </div>
         </div>
       </div>
     </header>
@@ -402,21 +407,23 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick }) {
       : '';
   
   return (
-    <tr onDoubleClick={() => onDoubleClick && onDoubleClick(item)} className="border-b border-gray-200 dark:border-gray-700 cursor-pointer">
-      <td className="px-3 py-2">{item.ndp}</td>
-      <td className="px-3 py-2">{item.articulo}</td>
-      <td className="px-3 py-2">{item.equipo}</td>
-      <td className="px-3 py-2">{item.gaveta}</td>
-      <td className="px-3 py-2">{item.nivel}</td>
-      <td className={`px-3 py-2 ${qtyClass}`}>{item.cantidad}</td>
-      <td className="px-3 py-2">{item.min}</td>
-      <td className="px-3 py-2">{item.max}</td>
-      <td className="px-3 py-2">{item.tde}</td>
+    <tr onDoubleClick={() => onDoubleClick && onDoubleClick(item)} className="border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.ndp}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.articulo}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">{item.equipo}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.gaveta}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.nivel}</td>
+      <td className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${qtyClass}`}>{item.cantidad}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.min}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.max}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">{item.tde}</td>
       {/* imagen removida de la lista; se muestra en la tarjeta de detalle al hacer doble clic */}
       {(role === 'admin' || role === 'operador') && (
-        <td className="px-3 py-2 text-right">
-          <button onClick={() => onEdit(item)} className="text-blue-600 hover:underline mr-2" disabled={role === 'guest'}>Editar</button>
-          <button onClick={() => onDelete(item)} className="text-red-600 hover:underline" disabled={role === 'guest'}>Eliminar</button>
+        <td className="px-2 sm:px-3 py-2 text-right">
+          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
+            <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="text-blue-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={role === 'guest'}>Editar</button>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="text-red-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={role === 'guest'}>Eliminar</button>
+          </div>
         </td>
       )}
     </tr>
@@ -448,55 +455,55 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
   }
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="text-sm">N° Parte</label>
-          <input className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.ndp} onChange={e => upd('ndp', e.target.value)} required />
+          <label className="text-xs sm:text-sm block mb-1">N° Parte</label>
+          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.ndp} onChange={e => upd('ndp', e.target.value)} required />
         </div>
         <div>
-          <label className="text-sm">Artículo</label>
-          <input className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
+          <label className="text-xs sm:text-sm block mb-1">Artículo</label>
+          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
         </div>
         <div>
-          <label className="text-sm">Equipo</label>
-          <input className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
+          <label className="text-xs sm:text-sm block mb-1">Equipo</label>
+          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
         </div>
         <div>
-          <label className="text-sm">Gaveta</label>
-          <input list="gavetas-list" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
+          <label className="text-xs sm:text-sm block mb-1">Gaveta</label>
+          <input list="gavetas-list" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
           <datalist id="gavetas-list">
             {gavetas.map(g => <option key={g} value={g}>{g}</option>)}
           </datalist>
         </div>
         <div>
-          <label className="text-sm">Nivel</label>
-          <input type="number" min={1} className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
+          <label className="text-xs sm:text-sm block mb-1">Nivel</label>
+          <input type="number" min={1} className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
         </div>
         <div>
-          <label className="text-sm">Cantidad</label>
-          <input type="number" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} min={0} />
+          <label className="text-xs sm:text-sm block mb-1">Cantidad</label>
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} min={0} />
         </div>
         <div>
-          <label className="text-sm">Mín</label>
-          <input type="number" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.min} onChange={e => upd('min', Number(e.target.value))} min={0} />
+          <label className="text-xs sm:text-sm block mb-1">Mín</label>
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.min} onChange={e => upd('min', Number(e.target.value))} min={0} />
         </div>
         <div>
-          <label className="text-sm">Máx</label>
-          <input type="number" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.max} onChange={e => upd('max', Number(e.target.value))} min={0} />
+          <label className="text-xs sm:text-sm block mb-1">Máx</label>
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.max} onChange={e => upd('max', Number(e.target.value))} min={0} />
         </div>
         <div>
-          <label className="text-sm">TDE</label>
-          <input type="number" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={form.tde} onChange={e => upd('tde', Number(e.target.value))} min={0} />
+          <label className="text-xs sm:text-sm block mb-1">TDE</label>
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.tde} onChange={e => upd('tde', Number(e.target.value))} min={0} />
         </div>
-        <div className="sm:col-span-3">
-          <label className="text-sm">Subir imagen</label>
+        <div className="sm:col-span-2 lg:col-span-3">
+          <label className="text-xs sm:text-sm block mb-1">Subir imagen</label>
           <ImageUploader currentImage={form.link} onImageChange={handleImageChange} />
         </div>
       </div>
-      <div className="flex justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="rounded-lg border px-3 py-2 dark:border-gray-700">Cancelar</button>
-        <button type="submit" className="rounded-lg bg-gray-900 text-white px-3 py-2 dark:bg-gray-100 dark:text-gray-900">Guardar</button>
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cancelar</button>
+        <button type="submit" className="rounded-lg bg-gray-900 text-white px-4 py-2.5 dark:bg-gray-100 dark:text-gray-900 text-sm min-h-[44px]">Guardar</button>
       </div>
     </form>
   );
@@ -537,27 +544,27 @@ function PasswordModal({ onClose }) {
   };
   
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">Cambiar contraseña</h3>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+        <h3 className="text-base sm:text-lg font-semibold mb-4">Cambiar contraseña</h3>
         <form onSubmit={handleChange} className="space-y-3">
           <div>
-            <label className="block text-sm mb-1">Contraseña actual</label>
-            <input type="password" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={current} onChange={e => setCurrent(e.target.value)} required />
+            <label className="block text-xs sm:text-sm mb-1">Contraseña actual</label>
+            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={current} onChange={e => setCurrent(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm mb-1">Nueva contraseña</label>
-            <input type="password" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={new1} onChange={e => setNew1(e.target.value)} required />
+            <label className="block text-xs sm:text-sm mb-1">Nueva contraseña</label>
+            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={new1} onChange={e => setNew1(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-sm mb-1">Repetir nueva contraseña</label>
-            <input type="password" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={new2} onChange={e => setNew2(e.target.value)} required />
+            <label className="block text-xs sm:text-sm mb-1">Repetir nueva contraseña</label>
+            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={new2} onChange={e => setNew2(e.target.value)} required />
           </div>
-          {error && <div className="text-red-600 text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-sm">{success}</div>}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-3 py-2 dark:border-gray-700">Cerrar</button>
-            <button type="submit" className="rounded-lg bg-blue-900 text-white px-3 py-2 dark:bg-blue-100 dark:text-blue-900" disabled={loading}>Guardar</button>
+          {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
+          {success && <div className="text-green-600 text-xs sm:text-sm">{success}</div>}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cerrar</button>
+            <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>Guardar</button>
           </div>
         </form>
       </div>
@@ -571,15 +578,15 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   useEffect(() => { if (!open) setPassword(''); }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">{label}</h3>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+        <h3 className="text-base sm:text-lg font-semibold mb-4">{label}</h3>
         <form onSubmit={e => { e.preventDefault(); onSubmit(password); }} className="space-y-3">
-          <input type="password" className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700" value={password} onChange={e => setPassword(e.target.value)} autoFocus required />
-          {error && <div className="text-red-600 text-sm">{error}</div>}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-3 py-2 dark:border-gray-700">Cancelar</button>
-            <button type="submit" className="rounded-lg bg-blue-900 text-white px-3 py-2 dark:bg-blue-100 dark:text-blue-900" disabled={loading}>Aceptar</button>
+          <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={password} onChange={e => setPassword(e.target.value)} autoFocus required />
+          {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cancelar</button>
+            <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>Aceptar</button>
           </div>
         </form>
       </div>
@@ -881,15 +888,15 @@ export default function Inventory() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <Header user={user} onLogout={logout} onOpenPassword={() => setShowPasswordModal(true)} />
-      <main className="max-w-7xl mx-auto w-full px-4 py-6">
-        <div className="mb-2 text-right text-sm text-blue-900 dark:text-blue-200 font-semibold">
-          Turno actual: <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100">{turno}</span>
+      <main className="max-w-7xl mx-auto w-full px-2 sm:px-4 py-3 sm:py-6">
+        <div className="mb-2 text-right text-xs sm:text-sm text-blue-900 dark:text-blue-200 font-semibold">
+          Turno: <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100">{turno}</span>
         </div>
         {/* Gavetas */}
-        <div className="flex gap-2 overflow-x-auto mb-2">
+        <div className="flex gap-1 sm:gap-2 overflow-x-auto mb-3 pb-2">
           {gavetas.map((g) => {
             const tieneResultados = false; // Cambiar lógica si es necesario
-            let btnClass = 'px-4 py-2 rounded-full border dark:border-gray-700 transition-colors duration-200 ';
+            let btnClass = 'px-3 sm:px-4 py-2 rounded-full border dark:border-gray-700 transition-colors duration-200 text-xs sm:text-sm whitespace-nowrap min-h-[44px] ';
             if (g === activeGaveta) {
               btnClass += 'bg-white text-gray-900 dark:bg-gray-100 dark:text-gray-900';
             } else if (tieneResultados) {
@@ -909,125 +916,129 @@ export default function Inventory() {
           })}
         </div>
         {/* Botones y barra de búsqueda */}
-        <div className="flex items-center gap-2 mb-4 justify-end">
-          {user?.rol === 'admin' && (
-            <>
-              <button
-                onClick={() => setModal({ mode: 'historial' })}
-                className="rounded-xl bg-blue-900 text-white px-4 py-2 dark:bg-blue-400 dark:text-blue-900 font-semibold border border-blue-900 dark:border-blue-400"
-              >
-                Ver historial
-              </button>
-              <button
-                onClick={() => setModal({ mode: 'usuarios' })}
-                className="rounded-xl bg-green-900 text-white px-4 py-2 dark:bg-green-400 dark:text-green-900 font-semibold border border-green-900 dark:border-green-400"
-              >
-                Administrar usuarios
-              </button>
-            </>
-          )}
-          {(user?.rol === 'admin' || user?.rol === 'operador') && (
-            <>
-              <button
-                onClick={handleExportExcel}
-                className="rounded-xl bg-orange-900 text-white px-4 py-2 dark:bg-orange-400 dark:text-orange-900 font-semibold border border-orange-900 dark:border-orange-400"
-                title="Exportar datos a Excel"
-              >
-                Exportar Excel
-              </button>
-              <button
-                onClick={() => setModal({ mode: 'add' })}
-                className="rounded-xl bg-gray-900 text-white px-4 py-2 dark:bg-gray-100 dark:text-gray-900"
-              >
-                Agregar
-              </button>
-            </>
-          )}
+        <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-4">
+          <div className="flex flex-wrap gap-2">
+            {user?.rol === 'admin' && (
+              <>
+                <button
+                  onClick={() => setModal({ mode: 'historial' })}
+                  className="rounded-xl bg-blue-900 text-white px-3 sm:px-4 py-2 dark:bg-blue-400 dark:text-blue-900 font-semibold border border-blue-900 dark:border-blue-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
+                >
+                  <span className="hidden sm:inline">Ver historial</span>
+                  <span className="sm:hidden">Historial</span>
+                </button>
+                <button
+                  onClick={() => setModal({ mode: 'usuarios' })}
+                  className="rounded-xl bg-green-900 text-white px-3 sm:px-4 py-2 dark:bg-green-400 dark:text-green-900 font-semibold border border-green-900 dark:border-green-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
+                >
+                  <span className="hidden sm:inline">Administrar usuarios</span>
+                  <span className="sm:hidden">Usuarios</span>
+                </button>
+              </>
+            )}
+            {(user?.rol === 'admin' || user?.rol === 'operador') && (
+              <>
+                <button
+                  onClick={handleExportExcel}
+                  className="rounded-xl bg-orange-900 text-white px-3 sm:px-4 py-2 dark:bg-orange-400 dark:text-orange-900 font-semibold border border-orange-900 dark:border-orange-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
+                  title="Exportar datos a Excel"
+                >
+                  <span className="hidden sm:inline">Exportar Excel</span>
+                  <span className="sm:hidden">Excel</span>
+                </button>
+                <button
+                  onClick={() => setModal({ mode: 'add' })}
+                  className="rounded-xl bg-gray-900 text-white px-3 sm:px-4 py-2 dark:bg-gray-100 dark:text-gray-900 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
+                >
+                  + Agregar
+                </button>
+              </>
+            )}
+          </div>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar (N° parte, artículo, equipo)"
-            className="w-72 max-w-full rounded-xl border px-3 py-2 dark:bg-gray-800 dark:border-gray-700 ml-auto"
-            style={{ marginLeft: 'auto' }}
+            className="w-full sm:w-72 rounded-xl border px-3 py-2 dark:bg-gray-800 dark:border-gray-700 sm:ml-auto text-sm min-h-[44px]"
           />
         </div>
         <div className="mb-2 flex justify-end">
           {(filtroNdp || filtroArticulo || filtroEquipo || filtroGaveta || filtroNivel) && (
             <button
               onClick={limpiarFiltros}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline min-h-[36px]"
             >
               Limpiar filtros
             </button>
           )}
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="text-left px-3 py-2">N° Parte</th>
-                <th className="text-left px-3 py-2">Artículo</th>
-                <th className="text-left px-3 py-2">Equipo</th>
-                <th className="text-left px-3 py-2">Gaveta</th>
-                <th className="text-left px-3 py-2">Nivel</th>
-                <th className="text-left px-3 py-2">Cantidad</th>
-                <th className="text-left px-3 py-2">Mín</th>
-                <th className="text-left px-3 py-2">Máx</th>
-                <th className="text-left px-3 py-2">TDE</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">N° Parte</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Artículo</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">Equipo</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Gaveta</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Nivel</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Cant.</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">Mín</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">Máx</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">TDE</th>
                 {/* Imagen column removed from list view */}
-                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-3 py-2"></th>}
+                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-2 sm:px-3 py-2"></th>}
               </tr>
               <tr>
-                <th className="px-2 py-1">
+                <th className="px-1 sm:px-2 py-1">
                   <input
                     type="text"
                     value={filtroNdp}
                     onChange={(e) => setFiltroNdp(e.target.value)}
-                    placeholder="Filtrar..."
-                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    placeholder="..."
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
                   />
                 </th>
-                <th className="px-2 py-1">
+                <th className="px-1 sm:px-2 py-1">
                   <input
                     type="text"
                     value={filtroArticulo}
                     onChange={(e) => setFiltroArticulo(e.target.value)}
-                    placeholder="Filtrar..."
-                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    placeholder="..."
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
                   />
                 </th>
-                <th className="px-2 py-1">
+                <th className="px-1 sm:px-2 py-1 hidden md:table-cell">
                   <input
                     type="text"
                     value={filtroEquipo}
                     onChange={(e) => setFiltroEquipo(e.target.value)}
-                    placeholder="Filtrar..."
-                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    placeholder="..."
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
                   />
                 </th>
-                <th className="px-2 py-1">
+                <th className="px-1 sm:px-2 py-1">
                   <input
                     type="text"
                     value={filtroGaveta}
                     onChange={(e) => setFiltroGaveta(e.target.value)}
-                    placeholder="Filtrar..."
-                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    placeholder="..."
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
                   />
                 </th>
-                <th className="px-2 py-1">
+                <th className="px-1 sm:px-2 py-1">
                   <input
                     type="text"
                     value={filtroNivel}
                     onChange={(e) => setFiltroNivel(e.target.value)}
-                    placeholder="Filtrar..."
-                    className="w-full text-xs px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    placeholder="..."
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
                   />
                 </th>
-                <th className="px-2 py-1"></th>
-                <th className="px-2 py-1"></th>
-                <th className="px-2 py-1"></th>
-                <th className="px-2 py-1"></th>
-                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-2 py-1"></th>}
+                <th className="px-1 sm:px-2 py-1"></th>
+                <th className="px-1 sm:px-2 py-1 hidden lg:table-cell"></th>
+                <th className="px-1 sm:px-2 py-1 hidden lg:table-cell"></th>
+                <th className="px-1 sm:px-2 py-1 hidden xl:table-cell"></th>
+                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-1 sm:px-2 py-1"></th>}
               </tr>
             </thead>
             <tbody>
@@ -1043,21 +1054,21 @@ export default function Inventory() {
               ))}
             </tbody>
           </table>
-          {loading && <div className="p-6 text-center text-gray-500">Cargando...</div>}
-          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-6 text-center text-gray-500">Sin resultados</div>}
+          {loading && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">Cargando...</div>}
+          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">Sin resultados</div>}
         </div>
-        <div className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
           Total: <b>{total}</b> | Mostrando: <b>{itemsFiltrados.length}</b>
         </div>
       </main>
       {modal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl p-5 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+          <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 border dark:border-gray-700 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-base sm:text-lg font-semibold">
                 {modal.mode === 'edit' ? 'Editar' : modal.mode === 'historial' ? 'Historial de acciones' : modal.mode === 'usuarios' ? 'Administrar usuarios' : 'Agregar ítem'}
               </h3>
-              <button onClick={() => setModal(null)} className="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200">
+              <button onClick={() => setModal(null)} className="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-2xl w-10 h-10 flex items-center justify-center min-h-[44px] min-w-[44px]">
                 ✕
               </button>
             </div>
@@ -1079,11 +1090,11 @@ export default function Inventory() {
               // detalle de ítem (tarjeta con imagen si existe)
               <div>
                 <div className="mb-3">
-                  <h4 className="text-lg font-semibold">{modal.item.articulo} (N° {modal.item.ndp})</h4>
-                  <p className="text-sm text-gray-600">Equipo: {modal.item.equipo} — Gaveta: {modal.item.gaveta} — Nivel: {modal.item.nivel}</p>
+                  <h4 className="text-base sm:text-lg font-semibold">{modal.item.articulo} (N° {modal.item.ndp})</h4>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Equipo: {modal.item.equipo} — Gaveta: {modal.item.gaveta} — Nivel: {modal.item.nivel}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="text-sm">
                     <p><b>Cantidad:</b> {modal.item.cantidad}</p>
                     <p><b>Mín:</b> {modal.item.min}</p>
                     <p><b>Máx:</b> {modal.item.max}</p>
@@ -1095,22 +1106,22 @@ export default function Inventory() {
                         <img 
                           src={resolveImageUrl(modal.item.link)} 
                           alt={modal.item.articulo} 
-                          className="max-h-80 object-contain" 
+                          className="max-h-60 sm:max-h-80 object-contain" 
                           onError={(e) => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'flex';
                           }}
                         />
                         <div 
-                          className="max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"
+                          className="max-h-60 sm:max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 rounded"
                           style={{display: 'none'}}
                         >
-                          <span>Error cargando imagen</span>
+                          <span className="text-xs sm:text-sm p-4">Error cargando imagen</span>
                         </div>
                       </>
                     ) : (
-                      <div className="max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                        <span>Sin imagen disponible</span>
+                      <div className="max-h-60 sm:max-h-80 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 rounded p-8">
+                        <span className="text-xs sm:text-sm">Sin imagen disponible</span>
                       </div>
                     )}
                   </div>

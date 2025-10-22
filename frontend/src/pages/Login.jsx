@@ -49,19 +49,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen grid place-items-center bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      <form onSubmit={submit} className="w-full max-w-sm bg-white border rounded-2xl p-6 shadow-sm dark:bg-gray-800 dark:border-gray-700">
-        <h1 className="text-xl font-semibold mb-4">{registro ? 'Registrar usuario' : 'Iniciar sesión'}</h1>
+    <div className="min-h-screen grid place-items-center bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 p-2 sm:p-4">
+      <form onSubmit={submit} className="w-full max-w-sm bg-white border rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+        <h1 className="text-lg sm:text-xl font-semibold mb-4">{registro ? 'Registrar usuario' : 'Iniciar sesión'}</h1>
         <div className="space-y-3">
           <input
-            className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+            className="w-full border rounded-lg px-2 sm:px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 text-sm"
             placeholder="Usuario"
             value={username}
             onChange={e => setU(e.target.value)}
           />
           <input
             type="password"
-            className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+            className="w-full border rounded-lg px-2 sm:px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 text-sm"
             placeholder="Contraseña"
             value={password}
             onChange={e => setP(e.target.value)}
@@ -69,13 +69,13 @@ export default function Login() {
           {registro && (
             <>
               <input
-                className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                className="w-full border rounded-lg px-2 sm:px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 text-sm"
                 placeholder="Nombre completo"
                 value={nombre}
                 onChange={e => setNombre(e.target.value)}
               />
               <select
-                className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                className="w-full border rounded-lg px-2 sm:px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 text-sm"
                 value={rol}
                 onChange={e => setRol(e.target.value)}
               >
@@ -84,28 +84,28 @@ export default function Login() {
                 <option value="guest">Guest</option>
               </select>
               <input
-                className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                className="w-full border rounded-lg px-2 sm:px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 text-sm"
                 placeholder="Usuario admin para registrar"
                 value={adminUser}
                 onChange={e => setAdminUser(e.target.value)}
               />
               <input
                 type="password"
-                className="w-full border rounded-lg px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                className="w-full border rounded-lg px-2 sm:px-3 py-2 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 text-sm"
                 placeholder="Contraseña de admin para registrar"
                 value={adminPass}
                 onChange={e => setAdminPass(e.target.value)}
               />
             </>
           )}
-          {error && <div className="text-red-600 text-sm dark:text-red-400">{error}</div>}
-          {ok && <div className="text-green-600 text-sm dark:text-green-400">{ok}</div>}
-          <button className="w-full bg-gray-900 text-white rounded-lg px-3 py-2 dark:bg-gray-100 dark:text-gray-900">
+          {error && <div className="text-red-600 text-xs sm:text-sm dark:text-red-400">{error}</div>}
+          {ok && <div className="text-green-600 text-xs sm:text-sm dark:text-green-400">{ok}</div>}
+          <button className="w-full bg-gray-900 text-white rounded-lg px-3 py-2.5 dark:bg-gray-100 dark:text-gray-900 text-sm font-medium min-h-[44px]">
             {registro ? 'Registrar' : 'Entrar'}
           </button>
           <button
             type="button"
-            className="w-full text-xs text-blue-700 underline mt-2 dark:text-blue-400"
+            className="w-full text-xs sm:text-sm text-blue-700 underline mt-2 dark:text-blue-400 min-h-[36px]"
             onClick={() => { setRegistro(r => !r); setError(''); setOk(''); }}
           >
             {registro ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
