@@ -120,6 +120,16 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    usuario: '',
+    num_empleado: '',
+    password: '',
+    rol: 'Operador'
+  });
+  const [formBusy, setFormBusy] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     loadUsuarios();
@@ -139,49 +149,80 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     }
   }
 
+  async function handleSubmitAdd(e) {
+    e.preventDefault();
+    setFormBusy(true);
+    setFormError('');
+    
+    try {
+      await api.post('/users', formData);
+      setShowAddForm(false);
+      setFormData({
+        nombre: '',
+        usuario: '',
+        num_empleado: '',
+        password: '',
+        rol: 'Operador'
+      });
+      await loadUsuarios();
+    } catch (err) {
+      setFormError(err.message || 'Error creando usuario');
+    } finally {
+      setFormBusy(false);
+    }
+  }
+
+  function handleChange(e) {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  }
+
   function handleEditUser(user) {
     setEditingUser({
       username: user.username,
       nombre: user.nombre,
+      usuario: user.usuario || '',
+      num_empleado: user.username,
+      password: '',
       rol: user.rol,
-      originalRol: user.rol
+      originalUsername: user.username
     });
   }
 
-  function handleRolChange(newRol) {
+  function handleEditChange(e) {
     setEditingUser(prev => ({
       ...prev,
-      rol: newRol
+      [e.target.name]: e.target.value
     }));
   }
 
-  function handleSaveUser() {
+  async function handleSaveUser() {
     if (!editingUser) return;
     
-    // Si no cambió el rol, no hacer nada
-    if (editingUser.rol === editingUser.originalRol) {
-      setEditingUser(null);
-      return;
-    }
-
-    // Usar el sistema de prompt de contraseña
-    onPasswordPrompt({
-      action: 'edit-user',
-      context: {
-        username: editingUser.username,
-        rol: editingUser.rol,
-        onSuccess: () => {
-          // Actualizar la lista local
-          setUsuarios(prev => prev.map(u => 
-            u.username === editingUser.username 
-              ? { ...u, rol: editingUser.rol }
-              : u
-          ));
-          setEditingUser(null);
-          loadUsuarios(); // Recargar para estar seguro
-        }
+    setFormBusy(true);
+    setFormError('');
+    
+    try {
+      // Preparar datos para enviar
+      const updateData = {
+        nombre: editingUser.nombre,
+        usuario: editingUser.usuario || null,
+        num_empleado: editingUser.num_empleado,
+        rol: editingUser.rol
+      };
+      
+      // Solo incluir password si se proporcionó uno nuevo
+      if (editingUser.password) {
+        updateData.password = editingUser.password;
       }
-    });
+      
+      await api.put(`/users/${editingUser.originalUsername}`, updateData);
+      setEditingUser(null);
+      await loadUsuarios();
+    } catch (err) {
+      setFormError(err.message || 'Error actualizando usuario');
+    } finally {
+      setFormBusy(false);
+    }
   }
 
   function handleDeleteUser(username) {
@@ -220,12 +261,20 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
         <h4 className="font-semibold text-sm sm:text-base">Administrar Usuarios</h4>
-        <button
-          onClick={loadUsuarios}
-          className="text-xs sm:text-sm text-blue-600 hover:underline"
-        >
-          Actualizar
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-3 py-1.5 rounded text-xs sm:text-sm font-medium min-h-[36px]"
+          >
+            + Agregar Usuario
+          </button>
+          <button
+            onClick={loadUsuarios}
+            className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline min-h-[36px]"
+          >
+            Actualizar
+          </button>
+        </div>
       </div>
 
       {usuarios.length === 0 ? (
@@ -247,59 +296,29 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   <td className="px-2 sm:px-3 py-2 font-medium">{user.username}</td>
                   <td className="px-2 sm:px-3 py-2 hidden sm:table-cell">{user.nombre}</td>
                   <td className="px-2 sm:px-3 py-2">
-                    {editingUser?.username === user.username ? (
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-2">
-                        <select
-                          value={editingUser.rol}
-                          onChange={e => handleRolChange(e.target.value)}
-                          className="rounded border px-2 py-1 text-xs sm:text-sm bg-white dark:bg-gray-700 dark:text-gray-100 dark:border-gray-500"
-                        >
-                          <option value="admin">admin</option>
-                          <option value="operador">operador</option>
-                          <option value="guest">guest</option>
-                        </select>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={handleSaveUser}
-                            className="text-green-600 hover:underline text-xs flex-1 sm:flex-none min-h-[36px]"
-                          >
-                            Guardar
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="text-gray-600 hover:underline text-xs flex-1 sm:flex-none min-h-[36px]"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                        user.rol === 'admin' ? 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100' :
-                        user.rol === 'operador' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
-                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
-                      }`}>
-                        {user.rol}
-                      </span>
-                    )}
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                      ['The Goat', 'Administrador'].includes(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100' :
+                      ['Lider', 'Operador'].includes(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                    }`}>
+                      {user.rol}
+                    </span>
                   </td>
                   <td className="px-2 sm:px-3 py-2 text-right">
-                    {editingUser?.username === user.username ? null : (
-                      <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
-                        <button
-                          onClick={() => handleEditUser(user)}
-                          className="text-blue-600 hover:underline text-xs whitespace-nowrap min-h-[36px]"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.username)}
-                          className="text-red-600 hover:underline text-xs whitespace-nowrap min-h-[36px]"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
+                      <button
+                        onClick={() => handleEditUser(user)}
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-xs whitespace-nowrap min-h-[36px]"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.username)}
+                        className="text-red-600 dark:text-red-400 hover:underline text-xs whitespace-nowrap min-h-[36px]"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -334,6 +353,246 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                 Eliminar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para agregar usuario */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-bold mb-4">Agregar Nuevo Usuario</h3>
+            
+            {formError && (
+              <div className="bg-red-900/20 border border-red-500 text-red-600 dark:text-red-400 p-2 rounded mb-4 text-xs sm:text-sm">
+                {formError}
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmitAdd}>
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Usuario (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    name="usuario"
+                    value={formData.usuario}
+                    onChange={handleChange}
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Número de Empleado *
+                  </label>
+                  <input
+                    type="text"
+                    name="num_empleado"
+                    value={formData.num_empleado}
+                    onChange={handleChange}
+                    required
+                    placeholder="Ej: 1234A"
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Contraseña *
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={4}
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Rol *
+                  </label>
+                  <select
+                    name="rol"
+                    value={formData.rol}
+                    onChange={handleChange}
+                    required
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  >
+                    <option value="Operador">Operador</option>
+                    <option value="Lider">Lider</option>
+                    <option value="Soporte">Soporte</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="The Goat">The Goat</option>
+                    <option value="Invitado">Invitado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setFormError('');
+                    setFormData({
+                      nombre: '',
+                      usuario: '',
+                      num_empleado: '',
+                      password: '',
+                      rol: 'Operador'
+                    });
+                  }}
+                  disabled={formBusy}
+                  className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={formBusy}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
+                >
+                  {formBusy ? 'Creando...' : 'Crear Usuario'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal para editar usuario */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
+          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base sm:text-lg font-bold mb-4">Editar Usuario</h3>
+            
+            {formError && (
+              <div className="bg-red-900/20 border border-red-500 text-red-600 dark:text-red-400 p-2 rounded mb-4 text-xs sm:text-sm">
+                {formError}
+              </div>
+            )}
+            
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveUser(); }}>
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Nombre Completo *
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={editingUser.nombre}
+                    onChange={handleEditChange}
+                    required
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Usuario (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    name="usuario"
+                    value={editingUser.usuario}
+                    onChange={handleEditChange}
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Número de Empleado *
+                  </label>
+                  <input
+                    type="text"
+                    name="num_empleado"
+                    value={editingUser.num_empleado}
+                    onChange={handleEditChange}
+                    required
+                    placeholder="Ej: 1234A"
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Nueva Contraseña (dejar vacío para no cambiar)
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={editingUser.password}
+                    onChange={handleEditChange}
+                    minLength={4}
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium mb-1">
+                    Rol *
+                  </label>
+                  <select
+                    name="rol"
+                    value={editingUser.rol}
+                    onChange={handleEditChange}
+                    required
+                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                  >
+                    <option value="Operador">Operador</option>
+                    <option value="Lider">Lider</option>
+                    <option value="Soporte">Soporte</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="The Goat">The Goat</option>
+                    <option value="Invitado">Invitado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingUser(null);
+                    setFormError('');
+                  }}
+                  disabled={formBusy}
+                  className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={formBusy}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
+                >
+                  {formBusy ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

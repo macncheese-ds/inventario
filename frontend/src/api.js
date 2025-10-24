@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://10.229.52.84:4000/api';
+export const API_BASE_URL = API_URL;
 
 export const api = axios.create({ baseURL: API_URL });
 
@@ -18,6 +19,30 @@ export function setAuthToken(token) {
     localStorage.removeItem('token');
   }
 }
+
+// Función para lookup de usuario (escaneo de gafete)
+api.lookupUser = async (employee_input) => {
+  try {
+    const { data } = await api.get(`/auth/lookup/${encodeURIComponent(employee_input)}`);
+    return data;
+  } catch (error) {
+    const msg = error.response?.data?.error || error.response?.data?.message || 'Usuario no encontrado';
+    const err = new Error(msg);
+    err.status = error.response?.status;
+    throw err;
+  }
+};
+
+// Función para autenticar con employee_input y password
+api.authenticate = async (employee_input, password) => {
+  try {
+    const { data } = await api.post('/auth/login', { employee_input, password });
+    return data;
+  } catch (error) {
+    const msg = error.response?.data?.message || 'Error de autenticación';
+    throw new Error(msg);
+  }
+};
 
 // aplicar token guardado al cargar
 const saved = localStorage.getItem('token');

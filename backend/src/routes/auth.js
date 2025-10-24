@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import pool from '../db.js';
+import mysql from 'mysql2/promise';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { body, validationResult } from 'express-validator';
@@ -7,39 +7,128 @@ dotenv.config();
 
 const router = Router();
 
+// Helper para conectar a credenciales DB
+async function createCredConnection() {
+  const config = {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.CRED_DB_NAME || 'credenciales'
+  };
+  return await mysql.createConnection(config);
+}
+
+// Normalizar entrada de empleado
+function normalizeEmployeeInput(input) {
+  let normalized = String(input).trim();
+  const match = normalized.match(/^0*(\d+)([A-Za-z])?$/);
+  if (match) {
+    const number = match[1];
+    const letter = match[2] || 'A';
+    normalized = `${number}${letter}`;
+  } else {
+    normalized = normalized.replace(/^0+/, '') + 'A';
+  }
+  return normalized;
+}
+
+// Login con employee_input y password
 router.post(
   '/login',
-  body('username').isString().notEmpty(),
+  body('employee_input').isString().notEmpty(),
   body('password').isString().notEmpty(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-    const { username, password } = req.body;
+    const { employee_input, password } = req.body;
 
     try {
-      const [rows] = await pool.query(
-        'SELECT username, pass_hash, rol, nombre FROM users WHERE username=:u',
-        { u: username }
+      const normalized = normalizeEmployeeInput(employee_input);
+      const conn = await createCredConnection();
+      
+      const [rows] = await conn.execute(
+        'SELECT id, nombre, usuario, num_empleado, pass_hash, rol FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+        [normalized, normalized]
       );
-      if (!rows.length) return res.status(401).json({ message: 'Credenciales inválidas' });
+      await conn.end();
+
+      if (!rows || rows.length === 0) {
+        return res.status(401).json({ message: 'Usuario no encontrado' });
+      }
 
       const user = rows[0];
       const bcrypt = (await import('bcryptjs')).default;
       const hash = Buffer.isBuffer(user.pass_hash) ? user.pass_hash.toString() : user.pass_hash;
       const ok = await bcrypt.compare(password, hash);
-      if (!ok) return res.status(401).json({ message: 'Credenciales inválidas' });
+      if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
+
+      // Mapear rol de credenciales a sistema de inventario
+      let inventarioRol = 'guest';
+      if (user.rol === 'The Goat' || user.rol === 'Administrador') {
+        inventarioRol = 'admin';
+      } else if (user.rol === 'Lider' || user.rol === 'Operador') {
+        inventarioRol = 'operador';
+      }
 
       const token = jwt.sign(
-        { username: user.username, rol: user.rol, nombre: user.nombre },
+        { 
+          username: user.num_empleado, 
+          rol: inventarioRol,
+          nombre: user.nombre,
+          rolOriginal: user.rol
+        },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
       );
-      res.json({ token, user: { username: user.username, rol: user.rol, nombre: user.nombre } });
+
+      res.json({ 
+        token, 
+        user: { 
+          username: user.num_empleado, 
+          rol: inventarioRol,
+          rolOriginal: user.rol,
+          nombre: user.nombre 
+        } 
+      });
     } catch (e) {
       console.error(e);
       res.status(500).json({ message: 'Error de servidor' });
     }
   }
 );
+
+// Lookup user sin password (para escaneo)
+router.get('/lookup/:employee_input', async (req, res) => {
+  try {
+    const { employee_input } = req.params;
+    if (!employee_input) return res.status(400).json({ error: 'employee_input es requerido' });
+
+    const normalized = normalizeEmployeeInput(employee_input);
+    const conn = await createCredConnection();
+    
+    const [rows] = await conn.execute(
+      'SELECT id, nombre, usuario, num_empleado, rol FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [normalized, normalized]
+    );
+    await conn.end();
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const user = rows[0];
+    res.json({ 
+      success: true, 
+      nombre: user.nombre, 
+      usuario: user.usuario, 
+      num_empleado: user.num_empleado,
+      rol: user.rol
+    });
+  } catch (err) {
+    console.error('Error buscando usuario:', err);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
 
 export default router;

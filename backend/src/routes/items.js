@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import mysql from 'mysql2/promise';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -9,6 +10,39 @@ import { authorizeRoles } from '../middleware/roles.js';
 import { buildSearchClause } from '../utils/search.js';
 
 const router = Router();
+
+// Helper para conectar a credenciales DB
+async function createCredConnection() {
+  const config = {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.CRED_DB_NAME || 'credenciales'
+  };
+  return await mysql.createConnection(config);
+}
+
+// Validar contraseña desde credenciales
+async function validatePassword(username, password) {
+  try {
+    const conn = await createCredConnection();
+    const [rows] = await conn.execute(
+      'SELECT pass_hash FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [username, username]
+    );
+    await conn.end();
+
+    if (!rows || rows.length === 0) return false;
+
+    const bcrypt = (await import('bcryptjs')).default;
+    const hash = Buffer.isBuffer(rows[0].pass_hash) ? rows[0].pass_hash.toString() : rows[0].pass_hash;
+    return await bcrypt.compare(password, hash);
+  } catch (e) {
+    console.error('Error validando contraseña:', e);
+    return false;
+  }
+}
 
 // configurar multer: guardar en backend/uploads
 const UPLOAD_DIR = path.join(path.resolve(), 'uploads');
@@ -93,7 +127,7 @@ router.post('/', authenticateToken, authorizeRoles('admin','operador'), upload.s
       { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link: publicLink }
     );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id: result.insertId });
-    await logCambio(req.user.username, 'INSERT', rows[0], turno);
+    await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno);
     res.status(201).json(rows[0]);
   } catch (e) {
     console.error(e);
@@ -113,12 +147,8 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;
   try {
-    // Validar contraseña del usuario actual
-    const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
-    if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });
-    const bcrypt = (await import('bcryptjs')).default;
-    const hash = Buffer.isBuffer(userRows[0].pass_hash) ? userRows[0].pass_hash.toString() : userRows[0].pass_hash;
-    const ok = await bcrypt.compare(password, hash);
+    // Validar contraseña del usuario actual desde credenciales
+    const ok = await validatePassword(req.user.username, password);
     if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
     // Obtener detalle anterior
@@ -137,7 +167,7 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload
         { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link: finalLink, id }
     );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-    await logCambio(req.user.username, 'UPDATE', rows[0], turno, prev[0] || null);
+    await logCambio(req.user.nombre || req.user.username, 'UPDATE', rows[0], turno, prev[0] || null);
     res.json(rows[0]);
   } catch (e) {
     console.error(e);
@@ -150,12 +180,8 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), as
   const { id } = req.params;
   const { password } = req.body;
   try {
-    // Validar contraseña del usuario actual
-    const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
-    if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });
-    const bcrypt = (await import('bcryptjs')).default;
-    const hash = Buffer.isBuffer(userRows[0].pass_hash) ? userRows[0].pass_hash.toString() : userRows[0].pass_hash;
-    const ok = await bcrypt.compare(password, hash);
+    // Validar contraseña del usuario actual desde credenciales
+    const ok = await validatePassword(req.user.username, password);
     if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
     const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
@@ -183,7 +209,7 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), as
     } catch (e) {
       console.warn('Error eliminando archivo asociado al ítem:', e.message);
     }
-    await logCambio(req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null);
+    await logCambio(req.user.nombre || req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null);
     res.json({ message: 'Ítem eliminado' });
   } catch (e) {
     console.error(e);
@@ -310,7 +336,7 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['operador', 'admi
 
     // Registrar la exportación en el historial
     await logCambio(
-      req.user.username, 
+      req.user.nombre || req.user.username, 
       'EXPORTAR_EXCEL', 
       `Exportó ${rows.length} registros a Excel (todas las gavetas)`,
       'N/A',

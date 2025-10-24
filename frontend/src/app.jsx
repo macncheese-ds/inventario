@@ -3,6 +3,7 @@ import Login from "./pages/Login.jsx";
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import Inventory from './pages/Inventory.jsx';
+import Users from './pages/Users.jsx';
 import { setAuthToken } from './api.js';
 
 function Protected({ children }) {
@@ -25,6 +26,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Protected><Inventory /></Protected>} />
+      <Route path="/users" element={<Protected><Users /></Protected>} />
     </Routes>
   );
 }

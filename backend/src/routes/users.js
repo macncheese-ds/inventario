@@ -1,57 +1,50 @@
-import { Router } from 'express';
-import pool from '../db.js';
+﻿import { Router } from 'express';
+import mysql from 'mysql2/promise';
 import { authenticateToken } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
-import { body } from 'express-validator';
 
 const router = Router();
 
-// Helper para auditoría
-async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = null) {
-  try {
-    await pool.query(
-      `INSERT INTO cambios (username, accion, detalle, fecha_hora, turno, adetalle)
-       VALUES (:u, :a, :d, NOW(), :t, :ad)`,
-      { u: username, a: accion, d: typeof detalle === 'string' ? detalle : JSON.stringify(detalle), t: turno, ad: adetalle ? (typeof adetalle === 'string' ? adetalle : JSON.stringify(adetalle)) : null }
-    );
-  } catch (e) {
-    console.error('Log cambio fallo:', e.message);
-  }
-}
-// Calcular turno según reglas
-function calcularTurno() {
-  const now = new Date();
-  const dia = now.getDay(); // 0=domingo, 1=lunes, ...
-  const hora = now.getHours();
-  if ((dia >= 1 && dia <= 4) && (hora >= 8 && hora < 20)) return 'Primero';
-  if (((dia === 3 || dia === 4 || dia === 5 || dia === 6) && (hora >= 20 || hora < 8))) return 'Segundo';
-  if (((dia === 1 || dia === 2) && (hora >= 20 || hora < 8)) || ((dia === 5 || dia === 6) && (hora >= 8 && hora < 20))) return 'Mixto';
-  return 'N/A';
+async function createCredConnection() {
+  const config = {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.CRED_DB_NAME || 'credenciales'
+  };
+  return await mysql.createConnection(config);
 }
 
-// Cambio de contraseña usuario activo
-router.post('/change-password', authenticateToken, [
-  body('current').isString().notEmpty(),
-  body('newPassword').isString().isLength({ min: 4 })
-], async (req, res) => {
+async function validatePassword(username, password) {
+  try {
+    const conn = await createCredConnection();
+    const [rows] = await conn.execute(
+      'SELECT pass_hash FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [username, username]
+    );
+    await conn.end();
+    if (!rows || rows.length === 0) return false;
+    const bcrypt = (await import('bcryptjs')).default;
+    const hash = Buffer.isBuffer(rows[0].pass_hash) ? rows[0].pass_hash.toString() : rows[0].pass_hash;
+    return await bcrypt.compare(password, hash);
+  } catch (e) {
+    console.error('Error validando contraseña:', e);
+    return false;
+  }
+}
+
+router.post('/change-password', authenticateToken, async (req, res) => {
   const { current, newPassword } = req.body;
   const username = req.user.username;
   try {
-    const [rows] = await pool.query('SELECT username, pass_hash, rol, nombre FROM users WHERE username=:u', { u: username });
-    if (!rows.length) return res.status(404).json({ message: 'Usuario no encontrado' });
-    const user = rows[0];
-    const bcrypt = (await import('bcryptjs')).default;
-    const hash = Buffer.isBuffer(user.pass_hash) ? user.pass_hash.toString() : user.pass_hash;
-    const ok = await bcrypt.compare(current, hash);
+    const ok = await validatePassword(username, current);
     if (!ok) return res.status(400).json({ message: 'Contraseña actual incorrecta' });
+    const bcrypt = (await import('bcryptjs')).default;
     const newHash = await bcrypt.hash(newPassword, 10);
-    await pool.query('UPDATE users SET pass_hash=:p WHERE username=:u', { p: newHash, u: username });
-    // Log detalle anterior y nuevo
-    const adetalle = { ...user };
-    delete adetalle.pass_hash;
-    const detalle = { ...user };
-    detalle.pass_hash = '***';
-    await logCambio(username, 'USER_UPDATE', detalle, calcularTurno(), adetalle);
+    const conn = await createCredConnection();
+    await conn.execute('UPDATE users SET pass_hash = ? WHERE num_empleado = ? OR usuario = ?', [newHash, username, username]);
+    await conn.end();
     res.json({ message: 'Contraseña cambiada correctamente' });
   } catch (e) {
     console.error(e);
@@ -59,172 +52,117 @@ router.post('/change-password', authenticateToken, [
   }
 });
 
-// Listar usuarios (solo admin)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT username, rol, nombre FROM users ORDER BY username ASC'
-    );
-    res.json(rows);
+    const conn = await createCredConnection();
+    const [rows] = await conn.execute('SELECT num_empleado AS username, nombre, rol FROM users ORDER BY nombre ASC');
+    await conn.end();
+    const users = rows.map(u => ({ username: u.username, nombre: u.nombre, rol: u.rol, inventarioRol: ['The Goat', 'Administrador'].includes(u.rol) ? 'admin' : ['Lider', 'Operador'].includes(u.rol) ? 'operador' : 'guest' }));
+    res.json(users);
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Error listando usuarios' });
   }
 });
 
-// Crear usuario (solo admin)
-router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
-  const { username, password, rol = 'operador', nombre, adminPassword } = req.body;
-  try {
-    // Permitir crear el primer usuario admin si no hay usuarios
-    const [allUsers] = await pool.query('SELECT COUNT(*) as total FROM users');
-    if (allUsers[0].total === 0) {
-      const bcrypt = (await import('bcryptjs')).default;
-      const hash = await bcrypt.hash(password, 10);
-      await pool.query(
-        'INSERT INTO users (username, pass_hash, rol, nombre) VALUES (:u, :p, :r, :n)',
-        { u: username, p: hash, r: rol, n: nombre }
-      );
-      await logCambio(username, 'USER_ADD', { username, rol, nombre });
-      return res.status(201).json({ username, rol, nombre });
-    }
-    if (!adminPassword) return res.status(400).json({ message: 'Debes ingresar la contraseña de administrador' });
-    // Validar contraseña del admin actual
-    const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
-    if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });
-    const bcrypt = (await import('bcryptjs')).default;
-    const hashAdmin = Buffer.isBuffer(userRows[0].pass_hash) ? userRows[0].pass_hash.toString() : userRows[0].pass_hash;
-    const ok = await bcrypt.compare(adminPassword, hashAdmin);
-    if (!ok) return res.status(401).json({ message: 'Contraseña de administrador incorrecta' });
+router.get('/info', authenticateToken, (req, res) => {
+  res.json({ message: 'Los usuarios se gestionan desde el sistema de credenciales.', roles: { 'The Goat': 'Acceso total (admin)', 'Administrador': 'Acceso total (admin)', 'Lider': 'Puede editar (operador)', 'Operador': 'Puede editar (operador)', 'Invitado': 'Solo lectura (guest)' } });
+});
 
-    const hash = await bcrypt.hash(password, 10);
-    await pool.query(
-      'INSERT INTO users (username, pass_hash, rol, nombre) VALUES (:u, :p, :r, :n)',
-      { u: username, p: hash, r: rol, n: nombre }
+router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
+  try {
+    const { nombre, usuario, num_empleado, password, rol } = req.body;
+    
+    // Validar campos requeridos
+    if (!nombre || !num_empleado || !password || !rol) {
+      return res.status(400).json({ message: 'Faltan campos requeridos: nombre, num_empleado, password, rol' });
+    }
+    
+    // Validar rol
+    const rolesValidos = ['The Goat', 'Administrador', 'Soporte', 'Lider', 'Operador', 'Invitado'];
+    if (!rolesValidos.includes(rol)) {
+      return res.status(400).json({ message: `Rol inválido. Debe ser uno de: ${rolesValidos.join(', ')}` });
+    }
+    
+    // Hash de la contraseña
+    const bcrypt = (await import('bcryptjs')).default;
+    const pass_hash = await bcrypt.hash(password, 10);
+    
+    const conn = await createCredConnection();
+    
+    // Insertar usuario
+    await conn.execute(
+      'INSERT INTO users (nombre, usuario, num_empleado, pass_hash, rol) VALUES (?, ?, ?, ?, ?)',
+      [nombre, usuario || null, num_empleado, pass_hash, rol]
     );
-    await logCambio(req.user.username, 'USER_ADD', { username, rol, nombre });
-    res.status(201).json({ username, rol, nombre });
+    
+    await conn.end();
+    
+    res.status(201).json({ message: 'Usuario creado exitosamente' });
   } catch (e) {
-    console.error(e);
+    console.error('Error creando usuario:', e);
+    if (e.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: 'El usuario o número de empleado ya existe' });
+    }
     res.status(500).json({ message: 'Error creando usuario' });
   }
 });
 
-// Actualizar usuario (solo admin)
 router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req, res) => {
-  const { username } = req.params;
-  const { password, rol, nombre, adminPassword } = req.body;
   try {
-    // Validar que se envió la contraseña del admin
-    if (!adminPassword) {
-      return res.status(400).json({ message: 'Se requiere la contraseña del administrador' });
+    const { username } = req.params;
+    const { nombre, usuario, num_empleado, password, rol } = req.body;
+    
+    // Validar campos requeridos
+    if (!nombre || !num_empleado || !rol) {
+      return res.status(400).json({ message: 'Faltan campos requeridos: nombre, num_empleado, rol' });
     }
-
-    // Validar contraseña del admin actual
-    const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
-    if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });
-    const bcrypt = (await import('bcryptjs')).default;
-    const hashAdmin = Buffer.isBuffer(userRows[0].pass_hash) ? userRows[0].pass_hash.toString() : userRows[0].pass_hash;
-    const ok = await bcrypt.compare(adminPassword, hashAdmin);
-    if (!ok) return res.status(401).json({ message: 'Contraseña de administrador incorrecta' });
-
-    const sets = [];
-    const params = { u: username };
-
-    if (typeof nombre === 'string') { sets.push('nombre=:n'); params.n = nombre; }
-    if (rol) { sets.push('rol=:r'); params.r = rol; }
-    if (password) {
-      params.p = await bcrypt.hash(password, 10);
-      sets.push('pass_hash=:p');
+    
+    // Validar rol
+    const rolesValidos = ['The Goat', 'Administrador', 'Soporte', 'Lider', 'Operador', 'Invitado'];
+    if (!rolesValidos.includes(rol)) {
+      return res.status(400).json({ message: `Rol inválido. Debe ser uno de: ${rolesValidos.join(', ')}` });
     }
-    if (!sets.length) return res.json({ message: 'Sin cambios' });
-
-    // Obtener detalle anterior
-    const [prev] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
-    await pool.query(`UPDATE users SET ${sets.join(', ')} WHERE username=:u`, params);
-    const [rows] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
-    await logCambio(req.user.username, 'USER_UPDATE', rows[0], calcularTurno(), prev[0] || null);
-    res.json(rows[0]);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Error actualizando usuario' });
-  }
-});
-
-// Eliminar usuario (solo admin)
-router.delete('/:username', authenticateToken, authorizeRoles('admin'), async (req, res) => {
-  const { username } = req.params;
-  const { adminPassword } = req.body;
-  try {
-    // Validar que se envió la contraseña del admin
-    if (!adminPassword) {
-      return res.status(400).json({ message: 'Se requiere la contraseña del administrador' });
-    }
-
-    // Validar contraseña del admin actual
-    const [userRows] = await pool.query('SELECT pass_hash FROM users WHERE username=:u', { u: req.user.username });
-    if (!userRows.length) return res.status(401).json({ message: 'Usuario no encontrado' });
-    const bcrypt = (await import('bcryptjs')).default;
-    const hashAdmin = Buffer.isBuffer(userRows[0].pass_hash) ? userRows[0].pass_hash.toString() : userRows[0].pass_hash;
-    const ok = await bcrypt.compare(adminPassword, hashAdmin);
-    if (!ok) return res.status(401).json({ message: 'Contraseña de administrador incorrecta' });
-
-  const [prev] = await pool.query('SELECT username, rol, nombre FROM users WHERE username=:u', { u: username });
-  await pool.query('DELETE FROM users WHERE username=:u', { u: username });
-  await logCambio(req.user.username, 'USER_DELETE', { username }, calcularTurno(), prev[0] || null);
-  res.json({ message: 'Usuario eliminado' });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Error eliminando usuario' });
-  }
-});
-
-// Ruta pública para registrar un nuevo usuario, validando con credenciales de un admin existente
-router.post('/register', async (req, res) => {
-  const { username, password, rol = 'operador', nombre, adminUsername, adminPassword } = req.body;
-
-  try {
-    // Si no hay usuarios, el primero se puede crear sin validación de admin.
-    const [allUsers] = await pool.query('SELECT COUNT(*) as total FROM users');
-    if (allUsers[0].total > 0) {
-      if (!adminUsername || !adminPassword) {
-        return res.status(400).json({ message: 'Debes proporcionar el usuario y la contraseña de un administrador para registrar un nuevo usuario.' });
-      }
-
-      // Validar las credenciales del administrador proporcionado
-      const [adminRows] = await pool.query('SELECT pass_hash, rol FROM users WHERE username=:u', { u: adminUsername });
-      if (!adminRows.length || adminRows[0].rol !== 'admin') {
-        return res.status(401).json({ message: 'El usuario administrador no es válido o no tiene permisos.' });
-      }
-
-      const bcrypt = (await import('bcryptjs')).default;
-      const adminHash = Buffer.isBuffer(adminRows[0].pass_hash) ? adminRows[0].pass_hash.toString() : adminRows[0].pass_hash;
-      const isAdminPasswordOk = await bcrypt.compare(adminPassword, adminHash);
-
-      if (!isAdminPasswordOk) {
-        return res.status(401).json({ message: 'La contraseña del administrador es incorrecta.' });
-      }
-    }
-
-    // Crear el nuevo usuario
-    const bcrypt = (await import('bcryptjs')).default;
-    const newUserHash = await bcrypt.hash(password, 10);
-    await pool.query(
-      'INSERT INTO users (username, pass_hash, rol, nombre) VALUES (:u, :p, :r, :n)',
-      { u: username, p: newUserHash, r: rol, n: nombre }
+    
+    const conn = await createCredConnection();
+    
+    // Verificar que el usuario existe
+    const [existing] = await conn.execute(
+      'SELECT id FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [username, username]
     );
-
-    // Registrar el cambio
-    const logUsername = allUsers[0].total > 0 ? adminUsername : username;
-    await logCambio(logUsername, 'USER_ADD', { username, rol, nombre });
-
-    res.status(201).json({ username, rol, nombre });
-  } catch (e) {
-    if (e.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ message: 'El nombre de usuario ya existe.' });
+    
+    if (!existing || existing.length === 0) {
+      await conn.end();
+      return res.status(404).json({ message: 'Usuario no encontrado' });
     }
-    console.error('Error en /register:', e);
-    res.status(500).json({ message: 'Error creando el usuario.' });
+    
+    // Actualizar usuario
+    if (password) {
+      // Si se proporciona nueva contraseña, hashearla y actualizar todo
+      const bcrypt = (await import('bcryptjs')).default;
+      const pass_hash = await bcrypt.hash(password, 10);
+      await conn.execute(
+        'UPDATE users SET nombre = ?, usuario = ?, num_empleado = ?, pass_hash = ?, rol = ? WHERE num_empleado = ? OR usuario = ?',
+        [nombre, usuario || null, num_empleado, pass_hash, rol, username, username]
+      );
+    } else {
+      // Si no se proporciona contraseña, no actualizar el hash
+      await conn.execute(
+        'UPDATE users SET nombre = ?, usuario = ?, num_empleado = ?, rol = ? WHERE num_empleado = ? OR usuario = ?',
+        [nombre, usuario || null, num_empleado, rol, username, username]
+      );
+    }
+    
+    await conn.end();
+    
+    res.json({ message: 'Usuario actualizado exitosamente' });
+  } catch (e) {
+    console.error('Error actualizando usuario:', e);
+    if (e.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: 'El usuario o número de empleado ya existe' });
+    }
+    res.status(500).json({ message: 'Error actualizando usuario' });
   }
 });
 
