@@ -65,7 +65,7 @@ const ImageUploader = ({ currentImage, onImageChange }) => {
         throw new Error('Error uploading');
       }
       const data = await res.json();
-      // Sanitize returned image path in case it contains an accidental host prefix like '/10.229.52.84/uploads/...'
+      // Sanitize returned image path in case it contains an accidental host prefix like '/10.229.52.220/uploads/...'
       let imagePath = data.imageUrl || '';
       try {
         const baseHost = new URL(uploadUrl).hostname;

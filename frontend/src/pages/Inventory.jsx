@@ -936,7 +936,7 @@ export default function Inventory() {
     let r = raw ? raw.replace(/\/api$/, '') : '';
     // ensure protocol has exactly two slashes (fix cases like 'http:/host')
     r = r.replace(/^(https?:)\/+/, '$1//');
-    // if r is just an IP or hostname possibly prefixed with / (e.g. '10.229.52.84' or '/10.229.52.84'), add protocol
+    // if r is just an IP or hostname possibly prefixed with / (e.g. '10.229.52.220' or '/10.229.52.220'), add protocol
     const ipHostMatch = r.match(/^\/*((?:\d{1,3}\.){3}\d{1,3})(:\d+)?(\/.*)?$/);
     if (ipHostMatch) {
       const host = ipHostMatch[1] + (ipHostMatch[2] || '');
