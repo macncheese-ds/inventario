@@ -175,6 +175,62 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload
   }
 });
 
+// Decrementar cantidad de ítem en 1 (operador/admin)
+router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
+  const { id } = req.params;
+  const { password, turno } = req.body;
+  
+  try {
+    // Validar contraseña del usuario actual desde credenciales
+    const ok = await validatePassword(req.user.username, password);
+    if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
+
+    // Obtener item actual
+    const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
+    if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
+
+    const currentQty = prev[0].cantidad;
+    if (currentQty <= 0) {
+      return res.status(400).json({ message: 'La cantidad ya está en 0, no se puede decrementar más' });
+    }
+
+    const newQty = currentQty - 1;
+
+    // Actualizar cantidad
+    await pool.query(
+      `UPDATE \`gavetas\` SET cantidad = :newQty WHERE id = :id`,
+      { newQty, id }
+    );
+
+    const [updated] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
+
+    // Log del cambio
+    await logCambio(
+      req.user.nombre || req.user.username, 
+      'DECREMENT', 
+      { 
+        id, 
+        ndp: prev[0].ndp, 
+        articulo: prev[0].articulo, 
+        cantidad_anterior: currentQty, 
+        cantidad_nueva: newQty 
+      }, 
+      turno || 'N/A',
+      prev[0]
+    );
+
+    res.json({ 
+      message: 'Cantidad decrementada exitosamente', 
+      item: updated[0],
+      cantidad_anterior: currentQty,
+      cantidad_nueva: newQty
+    });
+  } catch (e) {
+    console.error('Error decrementando cantidad:', e);
+    res.status(500).json({ message: 'Error decrementando cantidad del ítem' });
+  }
+});
+
 // Eliminar ítem (admin u operador)
 router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
   const { id } = req.params;

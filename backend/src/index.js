@@ -12,6 +12,7 @@ import itemRoutes from './routes/items.js';
 import gavetaRoutes from './routes/gavetas.js';
 import userRoutes from './routes/users.js';
 import uploadRoutes from './routes/upload.js';
+import prestamosRoutes from './routes/prestamos.js';
 
 dotenv.config();
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/gavetas', gavetaRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/historial', historialRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/prestamos', prestamosRoutes);
 
 // Crea admin por única vez: username=admin, pass=admin123
 app.post('/api/dev/seed-admin', async (req, res) => {

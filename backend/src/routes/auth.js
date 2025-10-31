@@ -63,20 +63,11 @@ router.post(
       const ok = await bcrypt.compare(password, hash);
       if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
-      // Mapear rol de credenciales a sistema de inventario
-      let inventarioRol = 'guest';
-      if (user.rol === 'The Goat' || user.rol === 'Administrador') {
-        inventarioRol = 'admin';
-      } else if (user.rol === 'Lider' || user.rol === 'Operador') {
-        inventarioRol = 'operador';
-      }
-
       const token = jwt.sign(
         { 
           username: user.num_empleado, 
-          rol: inventarioRol,
-          nombre: user.nombre,
-          rolOriginal: user.rol
+          rol: user.rol,
+          nombre: user.nombre
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
@@ -86,8 +77,7 @@ router.post(
         token, 
         user: { 
           username: user.num_empleado, 
-          rol: inventarioRol,
-          rolOriginal: user.rol,
+          rol: user.rol,
           nombre: user.nombre 
         } 
       });

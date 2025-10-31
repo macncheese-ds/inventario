@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ImageUploader from '../components/ImageUploader.jsx';
+import LoginModal from '../components/LoginModal.jsx';
 import { FaCog } from 'react-icons/fa';
 import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
@@ -12,6 +13,29 @@ function parseDetalle(detalle) {
   } catch {
     return detalle;
   }
+}
+
+// Role permissions helper
+const ROLES = {
+  SUPER_ADMIN: ['The Goat'],                    // Nivel más alto - acceso total
+  HIGH_ADMIN: ['Administrador', 'Ingeniero'],   // Administradores - acceso total
+  OPERATOR: ['Operador', 'Tecnico'],            // Operadores - pueden editar
+  GUEST: ['Invitado']                           // Solo lectura
+};
+
+function canEdit(rol) {
+  // The Goat, Administrador, Ingeniero, Operador, Tecnico pueden editar
+  return [...ROLES.SUPER_ADMIN, ...ROLES.HIGH_ADMIN, ...ROLES.OPERATOR].includes(rol);
+}
+
+function canAdminister(rol) {
+  // The Goat, Administrador, Ingeniero pueden administrar
+  return [...ROLES.SUPER_ADMIN, ...ROLES.HIGH_ADMIN].includes(rol);
+}
+
+function isGuest(rol) {
+  // Solo Invitado es read-only
+  return ROLES.GUEST.includes(rol);
 }
 
 function diffObj(prev, curr) {
@@ -29,6 +53,9 @@ const ACCION_LABELS = {
   'INSERT': 'Agregar',
   'DELETE': 'Eliminar',
   'UPDATE': 'Editar',
+  'DECREMENT': 'Usar/Restar 1',
+  'PRESTAMO': 'Préstamo',
+  'DEVOLUCION': 'Devolución',
   'USER_ADD': 'Agregar usuario',
   'USER_DELETE': 'Eliminar usuario',
   'USER_UPDATE': 'Editar usuario',
@@ -297,8 +324,8 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   <td className="px-2 sm:px-3 py-2 hidden sm:table-cell">{user.nombre}</td>
                   <td className="px-2 sm:px-3 py-2">
                     <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      ['The Goat', 'Administrador'].includes(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100' :
-                      ['Lider', 'Operador'].includes(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
+                      canAdminister(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100' :
+                      canEdit(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
                       'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
                     }`}>
                       {user.rol}
@@ -439,11 +466,11 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     required
                     className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   >
-                    <option value="Operador">Operador</option>
-                    <option value="Lider">Lider</option>
-                    <option value="Soporte">Soporte</option>
-                    <option value="Administrador">Administrador</option>
                     <option value="The Goat">The Goat</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Ingeniero">Ingeniero</option>
+                    <option value="Operador">Operador</option>
+                    <option value="Tecnico">Tecnico</option>
                     <option value="Invitado">Invitado</option>
                   </select>
                 </div>
@@ -562,11 +589,11 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     required
                     className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   >
-                    <option value="Operador">Operador</option>
-                    <option value="Lider">Lider</option>
-                    <option value="Soporte">Soporte</option>
-                    <option value="Administrador">Administrador</option>
                     <option value="The Goat">The Goat</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Ingeniero">Ingeniero</option>
+                    <option value="Operador">Operador</option>
+                    <option value="Tecnico">Tecnico</option>
                     <option value="Invitado">Invitado</option>
                   </select>
                 </div>
@@ -610,7 +637,73 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
   );
 }
 
-function Header({ user, onLogout, onOpenPassword }) {
+function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-200">
+            Préstamos Activos ({prestamos.length})
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 text-xl"
+          >
+            ✕
+          </button>
+        </div>
+        
+        {loading ? (
+          <div className="text-center text-gray-500 text-sm py-4">Cargando préstamos...</div>
+        ) : prestamos.length === 0 ? (
+          <div className="text-center text-gray-500 text-sm py-4">No hay préstamos activos</div>
+        ) : (
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <table className="min-w-full text-xs sm:text-sm">
+              <thead className="bg-blue-100 dark:bg-blue-900/40">
+                <tr>
+                  <th className="px-2 py-2 text-left">Empleado</th>
+                  <th className="px-2 py-2 text-left hidden sm:table-cell">N° Empleado</th>
+                  <th className="px-2 py-2 text-left">Artículo</th>
+                  <th className="px-2 py-2 text-left hidden md:table-cell">NDP</th>
+                  <th className="px-2 py-2 text-left hidden md:table-cell">Gaveta</th>
+                  <th className="px-2 py-2 text-left hidden lg:table-cell">Prestado por</th>
+                  <th className="px-2 py-2 text-left hidden xl:table-cell">Fecha</th>
+                  <th className="px-2 py-2 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prestamos.map((p) => (
+                  <tr key={p.id} className="border-b border-blue-200 dark:border-blue-800">
+                    <td className="px-2 py-2">{p.empleado}</td>
+                    <td className="px-2 py-2 hidden sm:table-cell">{p.num_empleado}</td>
+                    <td className="px-2 py-2">{p.articulo}</td>
+                    <td className="px-2 py-2 hidden md:table-cell">{p.ndp}</td>
+                    <td className="px-2 py-2 hidden md:table-cell">{p.gaveta}</td>
+                    <td className="px-2 py-2 hidden lg:table-cell">{p.empleado1}</td>
+                    <td className="px-2 py-2 hidden xl:table-cell">
+                      {p.fecha_prestamo ? new Date(p.fecha_prestamo).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="px-2 py-2 text-right">
+                      <button
+                        onClick={() => onDevolver(p)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm min-h-[36px]"
+                      >
+                        Devolver
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Header({ user, onLogout, onOpenPassword, onOpenPrestamos }) {
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
@@ -645,6 +738,12 @@ function Header({ user, onLogout, onOpenPassword }) {
               <FaCog />
             </button>
             <button
+              onClick={onOpenPrestamos}
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px]"
+            >
+              Préstamos
+            </button>
+            <button
               onClick={onLogout}
               className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px]"
             >
@@ -657,7 +756,7 @@ function Header({ user, onLogout, onOpenPassword }) {
   );
 }
 
-function ItemRow({ item, role, onEdit, onDelete, onDoubleClick }) {
+function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar }) {
   const qtyClass =
     item.cantidad < item.min
       ? 'text-red-600 font-semibold'
@@ -672,16 +771,30 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick }) {
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">{item.equipo}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.gaveta}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.nivel}</td>
-      <td className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${qtyClass}`}>{item.cantidad}</td>
+      <td className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${qtyClass}`}>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <span>{item.cantidad}</span>
+          {canEdit(role) && item.cantidad > 0 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onDecrement(item); }} 
+              className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-1.5 py-0.5 rounded font-bold min-h-[28px] min-w-[28px]"
+              title="Usar 1 unidad (restar 1)"
+            >
+              -1
+            </button>
+          )}
+        </div>
+      </td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.min}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.max}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">{item.tde}</td>
       {/* imagen removida de la lista; se muestra en la tarjeta de detalle al hacer doble clic */}
-      {(role === 'admin' || role === 'operador') && (
+      {canEdit(role) && (
         <td className="px-2 sm:px-3 py-2 text-right">
           <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
-            <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="text-blue-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={role === 'guest'}>Editar</button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="text-red-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={role === 'guest'}>Eliminar</button>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="text-blue-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={!canEdit(role)}>Editar</button>
+            <button onClick={(e) => { e.stopPropagation(); onPrestar(item); }} className="text-purple-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={!canEdit(role) || item.cantidad <= 0}>Prestar</button>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="text-red-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={!canEdit(role)}>Eliminar</button>
           </div>
         </td>
       )}
@@ -853,6 +966,186 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   );
 }
 
+// Modal para préstamo
+function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
+  const [showScanner, setShowScanner] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [employeeInfo, setEmployeeInfo] = useState(null);
+
+  useEffect(() => {
+    if (!open) {
+      setShowScanner(false);
+      setError('');
+      setEmployeeInfo(null);
+      setLoading(false);
+    } else {
+      // Show scanner immediately when modal opens
+      setShowScanner(true);
+    }
+  }, [open]);
+
+  async function handleEmployeeScan(credentials) {
+    setLoading(true);
+    setError('');
+    
+    try {
+      // Lookup employee info using the scanned badge
+      const info = await api.lookupUser(credentials.employee_input);
+      
+      // Auto-submit using currentUser's credentials
+      await onSubmit({
+        employee_input: info.num_empleado,
+        admin_employee_input: currentUser.username,
+        admin_password: currentUser.auto_password, // Using the current user's password
+        item_id: item.id,
+        turno
+      });
+      onClose();
+    } catch (err) {
+      setError(err.message || err.response?.data?.message || 'Error al procesar préstamo');
+      setShowScanner(false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <>
+      {showScanner && (
+        <LoginModal
+          visible={true}
+          onClose={() => { setShowScanner(false); onClose(); }}
+          onConfirm={handleEmployeeScan}
+          busy={loading}
+          requirePassword={false} // Only scan badge, no password needed
+        />
+      )}
+      
+      {!showScanner && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+            <h3 className="text-base sm:text-lg font-semibold mb-2">Prestar Artículo</h3>
+            <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+              <p><b>Artículo:</b> {item?.articulo}</p>
+              <p><b>NDP:</b> {item?.ndp}</p>
+              <p><b>Cantidad disponible:</b> {item?.cantidad}</p>
+            </div>
+
+            <div className="text-center text-gray-500 dark:text-gray-400">
+              {loading ? 'Procesando...' : 'Escanea el gafete del empleado'}
+            </div>
+
+            {error && (
+              <div className="mt-3 text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">
+                {error}
+                <button
+                  onClick={() => { setShowScanner(true); setError(''); }}
+                  className="block w-full mt-2 text-center text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Intentar de nuevo
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Modal para devolución
+function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }) {
+  const [showScanner, setShowScanner] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    if (!open) {
+      setPassword('');
+      setError('');
+      setLoading(false);
+      setShowScanner(false);
+    }
+  }, [open]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      await onSubmit({
+        prestamo_id: prestamo.id,
+        admin_employee_input: currentUser.username,
+        admin_password: password,
+        turno
+      });
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Error al procesar devolución');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+        <h3 className="text-base sm:text-lg font-semibold mb-2">Devolver Artículo</h3>
+        
+        <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+          <p><b>Empleado:</b> {prestamo?.empleado}</p>
+          <p><b>N° Empleado:</b> {prestamo?.num_empleado}</p>
+          <p><b>Artículo:</b> {prestamo?.articulo}</p>
+          <p><b>Prestado por:</b> {prestamo?.empleado1}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="block text-sm mb-1 font-medium">
+              Ingresa tu contraseña para confirmar la devolución
+            </label>
+            <input
+              type="password"
+              className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Tu contraseña"
+              autoFocus
+              required
+            />
+          </div>
+
+          {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
+          
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="rounded-lg bg-green-600 text-white px-4 py-2.5 dark:bg-green-500 text-sm min-h-[44px]"
+              disabled={loading}
+            >
+              {loading ? 'Procesando...' : 'Confirmar Devolución'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Inventory() {
   const [token] = useState(localStorage.getItem('token'));
   const [user] = useState(() => (token ? jwtDecode(token) : null));
@@ -908,6 +1201,13 @@ export default function Inventory() {
   const [filtroEquipo, setFiltroEquipo] = useState('');
   const [filtroGaveta, setFiltroGaveta] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
+
+  // Estados para préstamos
+  const [showPrestamos, setShowPrestamos] = useState(false);
+  const [prestamos, setPrestamos] = useState([]);
+  const [prestamosLoading, setPrestamosLoading] = useState(false);
+  const [prestarModal, setPrestarModal] = useState({ open: false, item: null });
+  const [devolverModal, setDevolverModal] = useState({ open: false, prestamo: null });
 
   function logout() {
     setAuthToken(null);
@@ -995,7 +1295,10 @@ export default function Inventory() {
     }
     setLoading(true);
     try {
-      const { data } = await api.get('/items', { params: { gaveta: activeGaveta, q } });
+      // If there's a search query, search globally (all gavetas)
+      // Otherwise, filter by selected gaveta
+      const params = q ? { q } : { gaveta: activeGaveta };
+      const { data } = await api.get('/items', { params });
       // Normalizar link de imagen a URL absoluta para evitar cargar /uploads/... desde el origen del frontend
       const normalized = (data.data || []).map(it => ({
         ...it,
@@ -1039,6 +1342,66 @@ export default function Inventory() {
     setPwPrompt({ open: true, action: 'delete-item', context: item });
   }
 
+  function handleDecrement(item) {
+    setPwPrompt({ open: true, action: 'decrement-item', context: item });
+  }
+
+  function handlePrestar(item) {
+    if (item.cantidad <= 0) {
+      alert('No hay unidades disponibles para prestar');
+      return;
+    }
+    setPrestarModal({ open: true, item });
+  }
+
+  async function handlePrestarSubmit(data) {
+    try {
+      await api.post('/prestamos', data);
+      await loadItems();
+      await loadPrestamos();
+      setPrestarModal({ open: false, item: null });
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  function handleDevolver(prestamo) {
+    setDevolverModal({ open: true, prestamo });
+  }
+
+  async function handleDevolverSubmit(data) {
+    try {
+      await api.post(`/prestamos/${data.prestamo.num_empleado}/devolver`, {
+        admin_employee_input: data.admin_employee_input,
+        admin_password: data.admin_password
+      });
+      await loadItems();
+      await loadPrestamos();
+      setDevolverModal({ open: false, prestamo: null });
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  async function loadPrestamos() {
+    setPrestamosLoading(true);
+    try {
+      const { data } = await api.get('/prestamos');
+      setPrestamos(data);
+    } catch (e) {
+      console.error('Error loading prestamos:', e);
+      setPrestamos([]);
+    } finally {
+      setPrestamosLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (showPrestamos) {
+      loadPrestamos();
+    }
+  }, [showPrestamos]);
+
   async function handlePwSubmit(password) {
     setPwLoading(true);
     setPwError('');
@@ -1063,6 +1426,10 @@ export default function Inventory() {
       } else if (pwPrompt.action === 'delete-item') {
         const { id } = pwPrompt.context;
         await api.delete(`/items/${id}`, { data: { password } });
+        loadItems();
+      } else if (pwPrompt.action === 'decrement-item') {
+        const { id } = pwPrompt.context;
+        await api.patch(`/items/${id}/decrement`, { password, turno });
         loadItems();
       } else if (pwPrompt.action === 'edit-user') {
         const { username, rol, onSuccess } = pwPrompt.context;
@@ -1146,7 +1513,20 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      <Header user={user} onLogout={logout} onOpenPassword={() => setShowPasswordModal(true)} />
+      <Header 
+        user={user} 
+        onLogout={logout} 
+        onOpenPassword={() => setShowPasswordModal(true)}
+        onOpenPrestamos={() => setShowPrestamos(!showPrestamos)}
+      />
+      {showPrestamos && (
+        <PrestamosPanel
+          prestamos={prestamos}
+          onDevolver={handleDevolver}
+          onClose={() => setShowPrestamos(false)}
+          loading={prestamosLoading}
+        />
+      )}
       <main className="max-w-7xl mx-auto w-full px-2 sm:px-4 py-3 sm:py-6">
         <div className="mb-2 text-right text-xs sm:text-sm text-blue-900 dark:text-blue-200 font-semibold">
           Turno: <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100">{turno}</span>
@@ -1177,7 +1557,7 @@ export default function Inventory() {
         {/* Botones y barra de búsqueda */}
         <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-4">
           <div className="flex flex-wrap gap-2">
-            {user?.rol === 'admin' && (
+            {canAdminister(user?.rol) && (
               <>
                 <button
                   onClick={() => setModal({ mode: 'historial' })}
@@ -1195,7 +1575,7 @@ export default function Inventory() {
                 </button>
               </>
             )}
-            {(user?.rol === 'admin' || user?.rol === 'operador') && (
+            {canEdit(user?.rol) && (
               <>
                 <button
                   onClick={handleExportExcel}
@@ -1245,7 +1625,7 @@ export default function Inventory() {
                 <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">Máx</th>
                 <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">TDE</th>
                 {/* Imagen column removed from list view */}
-                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-2 sm:px-3 py-2"></th>}
+                {canEdit(user?.rol) && <th className="px-2 sm:px-3 py-2"></th>}
               </tr>
               <tr>
                 <th className="px-1 sm:px-2 py-1">
@@ -1306,8 +1686,10 @@ export default function Inventory() {
                   key={it.id}
                   item={it}
                   role={user?.rol}
-                  onEdit={user?.rol === 'admin' || user?.rol === 'operador' ? (item) => setModal({ mode: 'edit', item }) : undefined}
-                  onDelete={user?.rol === 'admin' || user?.rol === 'operador' ? handleDelete : undefined}
+                  onEdit={canEdit(user?.rol) ? (item) => setModal({ mode: 'edit', item }) : undefined}
+                  onDelete={canEdit(user?.rol) ? handleDelete : undefined}
+                  onDecrement={canEdit(user?.rol) ? handleDecrement : undefined}
+                  onPrestar={canEdit(user?.rol) ? handlePrestar : undefined}
                   onDoubleClick={(item) => { setModal({ mode: 'detail', item }); }}
                 />
               ))}
@@ -1401,10 +1783,27 @@ export default function Inventory() {
         onSubmit={handlePwSubmit}
         label={pwPrompt.action === 'edit-item' ? 'Confirma tu contraseña para editar' :
                pwPrompt.action === 'delete-item' ? 'Confirma tu contraseña para eliminar' :
+               pwPrompt.action === 'decrement-item' ? `Confirma tu contraseña para usar 1 unidad de ${pwPrompt.context?.articulo || 'este artículo'}` :
                pwPrompt.action === 'edit-user' ? 'Contraseña de administrador para editar usuario' :
                pwPrompt.action === 'delete-user' ? 'Contraseña de administrador para eliminar usuario' : 'Contraseña'}
         loading={pwLoading}
         error={pwError}
+      />
+      <PrestarModal
+        open={prestarModal.open}
+        item={prestarModal.item}
+        onClose={() => setPrestarModal({ open: false, item: null })}
+        onSubmit={handlePrestarSubmit}
+        turno={turno}
+        currentUser={user}
+      />
+      <DevolverModal
+        open={devolverModal.open}
+        prestamo={devolverModal.prestamo}
+        onClose={() => setDevolverModal({ open: false, prestamo: null })}
+        onSubmit={handleDevolverSubmit}
+        turno={turno}
+        currentUser={user}
       />
     </div>
   );
