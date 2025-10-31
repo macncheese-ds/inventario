@@ -972,6 +972,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [employeeInfo, setEmployeeInfo] = useState(null);
+  const [adminPassword, setAdminPassword] = useState('');
 
   useEffect(() => {
     if (!open) {
@@ -979,6 +980,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
       setError('');
       setEmployeeInfo(null);
       setLoading(false);
+      setAdminPassword('');
     } else {
       // Show scanner immediately when modal opens
       setShowScanner(true);
@@ -988,23 +990,36 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
   async function handleEmployeeScan(credentials) {
     setLoading(true);
     setError('');
-    
     try {
       // Lookup employee info using the scanned badge
       const info = await api.lookupUser(credentials.employee_input);
-      
-      // Auto-submit using currentUser's credentials
+      setEmployeeInfo(info);
+      setShowScanner(false);
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Empleado no encontrado');
+      // keep scanner visible to let user retry
+      setShowScanner(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirm(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      if (!employeeInfo) throw new Error('Empleado no seleccionado');
       await onSubmit({
-        employee_input: info.num_empleado,
+        employee_input: employeeInfo.num_empleado,
         admin_employee_input: currentUser.username,
-        admin_password: currentUser.auto_password, // Using the current user's password
+        admin_password: adminPassword,
         item_id: item.id,
         turno
       });
       onClose();
     } catch (err) {
-      setError(err.message || err.response?.data?.message || 'Error al procesar préstamo');
-      setShowScanner(false);
+      setError(err?.response?.data?.message || err.message || 'Error al procesar préstamo');
     } finally {
       setLoading(false);
     }
@@ -1023,7 +1038,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
           requirePassword={false} // Only scan badge, no password needed
         />
       )}
-      
+
       {!showScanner && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
@@ -1034,11 +1049,52 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
               <p><b>Cantidad disponible:</b> {item?.cantidad}</p>
             </div>
 
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              {loading ? 'Procesando...' : 'Escanea el gafete del empleado'}
-            </div>
+            {employeeInfo ? (
+              <form onSubmit={handleConfirm} className="space-y-3">
+                <div className="mb-3 p-2 bg-green-100 dark:bg-green-900/30 rounded text-sm">
+                  <p><b>Empleado:</b> {employeeInfo.nombre}</p>
+                  <p><b>N° Empleado:</b> {employeeInfo.num_empleado}</p>
+                </div>
 
-            {error && (
+                <div>
+                  <label className="block text-sm mb-1 font-medium">Ingresa tu contraseña de sesión para confirmar (serás el prestador)</label>
+                  <input
+                    type="password"
+                    className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
+                    value={adminPassword}
+                    onChange={e => setAdminPassword(e.target.value)}
+                    placeholder="Tu contraseña"
+                    autoFocus
+                    required
+                  />
+                </div>
+
+                {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
+
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setShowScanner(true); setEmployeeInfo(null); setAdminPassword(''); setError(''); }}
+                    className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]"
+                  >
+                    ← Escanear Otro
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-lg bg-purple-600 text-white px-4 py-2.5 dark:bg-purple-500 text-sm min-h-[44px]"
+                    disabled={loading}
+                  >
+                    {loading ? 'Procesando...' : 'Confirmar Préstamo'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center text-gray-500 dark:text-gray-400">
+                {loading ? 'Procesando...' : 'Escanea el gafete del empleado'}
+              </div>
+            )}
+
+            {error && !employeeInfo && (
               <div className="mt-3 text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">
                 {error}
                 <button
@@ -1058,7 +1114,6 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
 
 // Modal para devolución
 function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }) {
-  const [showScanner, setShowScanner] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
@@ -1068,7 +1123,6 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
       setPassword('');
       setError('');
       setLoading(false);
-      setShowScanner(false);
     }
   }, [open]);
 
@@ -1076,17 +1130,17 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
     e.preventDefault();
     setLoading(true);
     setError('');
-    
     try {
+      // send the prestamo object so backend can identify by num_empleado or id
       await onSubmit({
-        prestamo_id: prestamo.id,
+        prestamo,
         admin_employee_input: currentUser.username,
         admin_password: password,
         turno
       });
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error al procesar devolución');
+      setError(err?.response?.data?.message || err.message || 'Error al procesar devolución');
     } finally {
       setLoading(false);
     }
@@ -1098,7 +1152,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
         <h3 className="text-base sm:text-lg font-semibold mb-2">Devolver Artículo</h3>
-        
+
         <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
           <p><b>Empleado:</b> {prestamo?.empleado}</p>
           <p><b>N° Empleado:</b> {prestamo?.num_empleado}</p>
@@ -1108,9 +1162,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm mb-1 font-medium">
-              Ingresa tu contraseña para confirmar la devolución
-            </label>
+            <label className="block text-sm mb-1 font-medium">Ingresa tu contraseña para confirmar la devolución</label>
             <input
               type="password"
               className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
@@ -1123,20 +1175,10 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
           </div>
 
           {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
-          
+
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-green-600 text-white px-4 py-2.5 dark:bg-green-500 text-sm min-h-[44px]"
-              disabled={loading}
-            >
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cancelar</button>
+            <button type="submit" className="rounded-lg bg-green-600 text-white px-4 py-2.5 dark:bg-green-500 text-sm min-h-[44px]" disabled={loading}>
               {loading ? 'Procesando...' : 'Confirmar Devolución'}
             </button>
           </div>

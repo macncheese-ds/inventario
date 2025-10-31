@@ -195,35 +195,44 @@ router.post('/:num_empleado/devolver', authenticateToken, authorizeRoles('admin'
     if (!adminInfo) {
       return res.status(404).json({ message: 'Administrador/Operador no encontrado' });
     }
-
-    // 3. Obtener y eliminar préstamo
+    // 3. Obtener préstamo(s) activos para ese empleado
     const [prestamoRows] = await pool.query(
-      `DELETE FROM prestamos WHERE num_empleado = :num_empleado`,
+      `SELECT * FROM prestamos WHERE num_empleado = :num_empleado`,
       { num_empleado }
     );
 
-    if (prestamoRows.affectedRows === 0) {
+    if (!prestamoRows || prestamoRows.length === 0) {
       return res.status(404).json({ message: 'No se encontraron préstamos activos para este empleado' });
     }
 
+    // Tomamos el primer préstamo (si hay varios, se puede adaptar la lógica)
+    const prestamo = prestamoRows[0];
+
+    // 4. Buscar el artículo en la tabla de gavetas por nombre de artículo
+    const [itemRows] = await pool.query(
+      `SELECT * FROM gavetas WHERE articulo = :articulo LIMIT 1`,
+      { articulo: prestamo.articulo }
+    );
+
     if (!itemRows || itemRows.length === 0) {
-      return res.status(404).json({ message: 'Artículo no encontrado' });
+      // No encontramos el artículo relacionado: devolver error para que se revise manualmente
+      return res.status(404).json({ message: 'Artículo asociado al préstamo no encontrado' });
     }
 
     const item = itemRows[0];
 
     // 5. Incrementar cantidad del artículo
-    const prevQty = item.cantidad;
+    const prevQty = item.cantidad || 0;
     const newQty = prevQty + 1;
     await pool.query(
       `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
       { newQty, id: item.id }
     );
 
-    // 6. Eliminar registro de préstamo
+    // 6. Eliminar el registro de préstamo específico (por id)
     await pool.query(
       `DELETE FROM prestamos WHERE id = :id`,
-      { id }
+      { id: prestamo.id }
     );
 
     // 7. Log del cambio
