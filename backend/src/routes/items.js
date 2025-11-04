@@ -83,9 +83,9 @@ router.get('/', authenticateToken, async (req, res) => {
   const whereSql = ` WHERE ${where.join(' AND ')} ${search.clause}`;
   Object.assign(params, search.params);
 
-  try {
+    try {
     const [rows] = await pool.query(
-      `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.\`min\` AS min, g.\`max\` AS max,
+      `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
               g.equipo, g.tde, g.link
          FROM \`gavetas\` g
         ${whereSql}
@@ -108,8 +108,8 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// Crear ítem (admin/operador) - acepta multipart/form-data con campo 'image'
-router.post('/', authenticateToken, authorizeRoles('admin','operador'), upload.single('image'), async (req, res) => {
+// Crear ítem (admin/toolroom) - acepta multipart/form-data con campo 'image'
+router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
   let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno } = req.body;
   nivel = nivel !== undefined ? Number(nivel) : null;
   if (nivel === null || isNaN(nivel) || nivel < 1) {
@@ -120,11 +120,11 @@ router.post('/', authenticateToken, authorizeRoles('admin','operador'), upload.s
     // ruta pública relativa al servidor
     publicLink = `/uploads/${req.file.filename}`;
   }
-  try {
+    try {
     const [result] = await pool.query(
-      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, \`min\`, \`max\`, equipo, tde, link)
-       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:min,:max,:equipo,:tde,:link)`,
-      { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link: publicLink }
+      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link)
+       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:precio,:min,:max,:equipo,:tde,:link)`,
+      { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink }
     );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id: result.insertId });
     await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno);
@@ -135,11 +135,11 @@ router.post('/', authenticateToken, authorizeRoles('admin','operador'), upload.s
   }
 });
 
-// Actualizar ítem (admin/operador)
-router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload.single('image'), async (req, res) => {
+// Actualizar ítem (admin/toolroom)
+router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
   const { id } = req.params;
   // si viene multipart, los campos estarán en req.body; si json, también
-  let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno, password } = req.body;
+  let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, password } = req.body;
   nivel = nivel !== undefined ? Number(nivel) : null;
   if (nivel === null || isNaN(nivel) || nivel < 1) {
     return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 1' });
@@ -159,13 +159,13 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload
         finalLink = prev[0] ? prev[0].link : null;
       }
 
-      await pool.query(
-      `UPDATE \`gavetas\`
-          SET ndp=:ndp, articulo=:articulo, gaveta=:gaveta, nivel=:nivel,
-              cantidad=:cantidad, \`min\`=:min, \`max\`=:max, equipo=:equipo, tde=:tde, link=:link
-        WHERE id=:id`,
-        { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link: finalLink, id }
-    );
+    await pool.query(
+    `UPDATE \`gavetas\`
+      SET ndp=:ndp, articulo=:articulo, gaveta=:gaveta, nivel=:nivel,
+        cantidad=:cantidad, precio=:precio, \`min\`=:min, \`max\`=:max, equipo=:equipo, tde=:tde, link=:link
+    WHERE id=:id`,
+    { ndp, articulo, gaveta, nivel, cantidad, precio: Number(precio || 0), min, max, equipo, tde, link: finalLink, id }
+  );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
     await logCambio(req.user.nombre || req.user.username, 'UPDATE', rows[0], turno, prev[0] || null);
     res.json(rows[0]);
@@ -176,7 +176,7 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','operador'), upload
 });
 
 // Decrementar cantidad de ítem en 1 (operador/admin)
-router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
+router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
   const { password, turno } = req.body;
   
@@ -232,7 +232,7 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'opera
 });
 
 // Eliminar ítem (admin u operador)
-router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
+router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
   try {
@@ -274,7 +274,7 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'operador'), as
 });
 
 // Endpoint para exportar a Excel (solo operadores y admins)
-router.get('/export/excel', authenticateToken, authorizeRoles(['operador', 'admin']), async (req, res) => {
+router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admin']), async (req, res) => {
   console.log('🔍 Export Excel - User:', req.user);
   console.log('🔍 Export Excel - User role:', req.user?.rol);
   console.log('🔍 Export Excel - Query params:', req.query);
@@ -297,10 +297,10 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['operador', 'admi
 
     // Obtener todos los datos para exportar (sin filtro de gaveta para obtener todas)
     const [rows] = await pool.query(
-      `SELECT g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.\`min\` AS min, g.\`max\` AS max,
-              g.equipo, g.tde
-         FROM \`gavetas\` g
-         ORDER BY g.gaveta ASC, g.nivel ASC`
+   `SELECT g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
+        g.equipo, g.tde
+      FROM \`gavetas\` g
+      ORDER BY g.gaveta ASC, g.nivel ASC`
     );
 
     console.log('🔍 Export Excel - Found rows:', rows.length);
@@ -322,31 +322,47 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['operador', 'admi
     Object.keys(gavetaGroups).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gaveta => {
       const worksheet = workbook.addWorksheet(`Gaveta ${gaveta}`);
       
-      // Definir las columnas (sin ID ni Link)
+      // Definir las columnas (incluye Precio y Total por ítem)
       worksheet.columns = [
         { header: 'NDP', key: 'ndp', width: 15 },
         { header: 'Artículo', key: 'articulo', width: 35 },
         { header: 'Nivel', key: 'nivel', width: 8 },
         { header: 'Cantidad', key: 'cantidad', width: 12 },
+        { header: 'Precio', key: 'precio', width: 12 },
+        { header: 'Total', key: 'total', width: 14 },
         { header: 'Mínimo', key: 'min', width: 10 },
         { header: 'Máximo', key: 'max', width: 10 },
         { header: 'Equipo', key: 'equipo', width: 20 },
         { header: 'TDE', key: 'tde', width: 15 }
       ];
 
-      // Agregar los datos de esta gaveta
+      // Agregar los datos de esta gaveta y calcular totales
       gavetaGroups[gaveta].forEach(row => {
+        const precio = Number(row.precio || 0);
+        const total = Number(row.cantidad || 0) * precio;
         worksheet.addRow({
           ndp: row.ndp,
           articulo: row.articulo,
           nivel: row.nivel,
           cantidad: row.cantidad,
+          precio: precio,
+          total: total,
           min: row.min,
           max: row.max,
           equipo: row.equipo || '',
           tde: row.tde || ''
         });
       });
+
+      // Agregar fila de sumatoria al final con el total de la gaveta
+      const startDataRow = 2;
+      const endDataRow = worksheet.rowCount;
+      const totalCell = `F${endDataRow + 1}`; // columna F es 'Total'
+      worksheet.addRow({});
+      const sumRow = worksheet.addRow({ articulo: 'TOTAL GAVETA', total: { formula: `SUM(F${startDataRow}:F${endDataRow})` } });
+      // Aplicar formato numérico a la columna Precio y Total
+      worksheet.getColumn('precio').numFmt = '#,##0.00';
+      worksheet.getColumn('total').numFmt = '#,##0.00';
 
       // Aplicar estilos al header
       const headerRow = worksheet.getRow(1);

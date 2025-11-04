@@ -16,7 +16,7 @@ const {
 } = process.env;
 
 async function main() {
-  console.log('🔧 Probando conexión a MySQL con:');
+  console.log('Probando conexión a MySQL con:');
   console.log({
     DB_HOST,
     DB_PORT,
@@ -59,6 +59,19 @@ async function main() {
       process.exitCode = 2;
     } else {
       console.log('🎉 Todas las tablas requeridas están presentes.');
+    }
+    // Comprobar que la columna precio está presente y calcular totales por gaveta y total general
+    try {
+      const [totals] = await conn.query(
+        `SELECT gaveta, SUM(COALESCE(precio,0) * COALESCE(cantidad,0)) AS total_gaveta, SUM(cantidad) AS total_items
+           FROM \`gavetas\`
+           GROUP BY gaveta ORDER BY gaveta`);
+      console.log('📊 Totales por gaveta:');
+      totals.forEach(r => console.log(`  Gaveta ${r.gaveta}: total=${r.total_gaveta}, items=${r.total_items}`));
+      const grand = totals.reduce((s, r) => s + Number(r.total_gaveta || 0), 0);
+      console.log('🔢 Total general (precio*cantidad):', grand);
+    } catch (e) {
+      console.warn('No se pudo calcular totales por gaveta (verifica columna precio):', e.message || e);
     }
   } catch (err) {
     console.error('❌ Error conectando o consultando MySQL:\n', err?.message || err);

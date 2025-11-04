@@ -6,6 +6,294 @@ import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
 import { toggleTheme } from '../theme.js';
 
+// Translations for UI labels (expanded)
+const TRANSLATIONS = {
+  es: {
+    inventory: 'Inventario',
+    turno: 'Turno',
+    total_general: 'Total general',
+    prestamos: 'Préstamos',
+    loading_history: 'Cargando historial...',
+    error_loading_history: 'Error cargando historial',
+  loading_users: 'Cargando usuarios...',
+  error_loading_users: 'Error cargando usuarios',
+  part_number: 'N° Parte',
+  item_label: 'Artículo',
+  equipment: 'Equipo',
+  drawer_label: 'Gaveta',
+  level_label: 'Nivel',
+  quantity_label: 'Cantidad',
+  price_label: 'Precio',
+  min_label: 'Mín',
+  max_label: 'Máx',
+  tde_label: 'TDE',
+  upload_image: 'Subir imagen',
+  fecha_hora: 'Fecha/Hora',
+  usuario_label: 'Usuario',
+  accion_label: 'Acción',
+  detalle_anterior: 'Detalle anterior',
+  detalle_nuevo: 'Detalle nuevo',
+  turno_label: 'Turno',
+    manage_users: 'Administrar Usuarios',
+    add_user: '+ Agregar Usuario',
+    refresh: 'Actualizar',
+    add_new_user: 'Agregar Nuevo Usuario',
+    create_user: 'Crear Usuario',
+    cancel: 'Cancelar',
+    delete_confirm: 'Confirmar eliminación',
+    delete_user_text: '¿Estás seguro de que deseas eliminar el usuario',
+    no_users: 'No hay usuarios registrados',
+  irreversible_action: 'Esta acción no se puede deshacer.',
+    loans_active: 'Préstamos Activos',
+    loading: 'Cargando...',
+    no_results: 'Sin resultados',
+    totals_by_gaveta: 'Totales por gaveta:',
+    select_gaveta: 'Selecciona una gaveta',
+    no_data: 'Sin datos',
+    ver_historial: 'Ver historial',
+    administrar_usuarios: 'Administrar usuarios',
+    export_excel: 'Exportar Excel',
+    agregar: '+ Agregar',
+    search_placeholder: 'Buscar (N° parte, artículo, equipo)',
+    clear_filters: 'Limpiar filtros',
+    total_label: 'Total',
+    showing_label: 'Mostrando',
+    change_password: 'Cambiar contraseña',
+    save: 'Guardar',
+    save_changes: 'Guardar Cambios',
+    create: 'Crear',
+    edit: 'Editar',
+    delete: 'Eliminar',
+    return_item: 'Devolver',
+    lend_item: 'Prestar',
+    no_image: 'Sin imagen disponible',
+    error_loading_image: 'Error cargando imagen',
+    add_item: 'Agregar ítem',
+    edit_item: 'Editar',
+    item_detail: 'Detalle de ítem',
+    confirm_password_edit: 'Confirma tu contraseña para editar',
+    confirm_password_delete: 'Confirma tu contraseña para eliminar',
+    confirm_password_decrement: 'Confirma tu contraseña para usar 1 unidad',
+    confirm_password_admin_edit: 'Contraseña de administrador para editar usuario',
+    confirm_password_admin_delete: 'Contraseña de administrador para eliminar usuario',
+    employee_not_found: 'Empleado no encontrado',
+    processing: 'Procesando...',
+    no_active_loans: 'No hay préstamos activos',
+    scan_another: '← Escanear Otro',
+    confirm_lend: 'Confirmar Préstamo',
+    confirm_return: 'Confirmar Devolución',
+    enter_password_confirm: 'Ingresa tu contraseña para confirmar',
+  scan_badge: 'Escanea el gafete del empleado',
+  try_again: 'Intentar de nuevo',
+  no_units_to_lend: 'No hay unidades disponibles para prestar',
+    turno_prefix: 'Turno:'
+    ,current_password: 'Contraseña actual',
+    new_password: 'Nueva contraseña',
+    repeat_new_password: 'Repetir nueva contraseña',
+    fill_all_fields: 'Completa todos los campos',
+    passwords_no_match: 'Las contraseñas nuevas no coinciden',
+    password_changed_success: 'Contraseña cambiada correctamente',
+    error_changing_password: 'Error al cambiar contraseña'
+  },
+  en: {
+    inventory: 'Inventory',
+    turno: 'Shift',
+    total_general: 'Grand total',
+    prestamos: 'Loans',
+    loading_history: 'Loading history...',
+    error_loading_history: 'Error loading history',
+  loading_users: 'Loading users...',
+  error_loading_users: 'Error loading users',
+  part_number: 'Part #',
+  item_label: 'Item',
+  equipment: 'Equipment',
+  drawer_label: 'Drawer',
+  level_label: 'Level',
+  quantity_label: 'Qty',
+  price_label: 'Price',
+  min_label: 'Min',
+  max_label: 'Max',
+  tde_label: 'TDE',
+  upload_image: 'Upload image',
+  fecha_hora: 'Date/Time',
+  usuario_label: 'User',
+  accion_label: 'Action',
+  detalle_anterior: 'Previous detail',
+  detalle_nuevo: 'New detail',
+  turno_label: 'Shift',
+    manage_users: 'Manage Users',
+    add_user: '+ Add User',
+    refresh: 'Refresh',
+    add_new_user: 'Add New User',
+    create_user: 'Create User',
+    cancel: 'Cancel',
+    delete_confirm: 'Confirm deletion',
+    delete_user_text: 'Are you sure you want to delete user',
+    no_users: 'No users registered',
+  irreversible_action: 'This action cannot be undone.',
+    loans_active: 'Active Loans',
+    loading: 'Loading...',
+    no_results: 'No results',
+    totals_by_gaveta: 'Totals by drawer:',
+    select_gaveta: 'Select a drawer',
+    no_data: 'No data',
+    ver_historial: 'View history',
+    administrar_usuarios: 'Manage users',
+    export_excel: 'Export Excel',
+    agregar: '+ Add',
+    search_placeholder: 'Search (Part #, item, equipment)',
+    clear_filters: 'Clear filters',
+    total_label: 'Total',
+    showing_label: 'Showing',
+    change_password: 'Change password',
+    save: 'Save',
+    save_changes: 'Save Changes',
+    create: 'Create',
+    edit: 'Edit',
+    delete: 'Delete',
+    return_item: 'Return',
+    lend_item: 'Lend',
+    no_image: 'No image available',
+    error_loading_image: 'Error loading image',
+    add_item: 'Add item',
+    edit_item: 'Edit',
+    item_detail: 'Item detail',
+    confirm_password_edit: 'Confirm your password to edit',
+    confirm_password_delete: 'Confirm your password to delete',
+    confirm_password_decrement: 'Confirm your password to use 1 unit',
+    confirm_password_admin_edit: 'Admin password to edit user',
+    confirm_password_admin_delete: 'Admin password to delete user',
+    employee_not_found: 'Employee not found',
+    processing: 'Processing...',
+    no_active_loans: 'No active loans',
+    scan_another: '← Scan another',
+    confirm_lend: 'Confirm Lend',
+    confirm_return: 'Confirm Return',
+    enter_password_confirm: 'Enter your password to confirm',
+  scan_badge: 'Scan the employee badge',
+  try_again: 'Try again',
+  no_units_to_lend: 'No units available to lend',
+    turno_prefix: 'Shift:'
+    ,current_password: 'Current password',
+    new_password: 'New password',
+    repeat_new_password: 'Repeat new password',
+    fill_all_fields: 'Complete all fields',
+    passwords_no_match: 'New passwords do not match',
+    password_changed_success: 'Password changed successfully',
+    error_changing_password: 'Error changing password'
+  },
+  ko: {
+    inventory: '재고',
+    turno: '근무조',
+    total_general: '총 합계',
+    prestamos: '대출',
+    loading_history: '기록 로드 중...',
+    error_loading_history: '기록을 로드하는 중 오류 발생',
+  loading_users: '사용자 로드 중...',
+  error_loading_users: '사용자를 로드하는 중 오류 발생',
+  part_number: '부품 번호',
+  item_label: '항목',
+  equipment: '장비',
+  drawer_label: '서랍',
+  level_label: '레벨',
+  quantity_label: '수량',
+  price_label: '가격',
+  min_label: '최소',
+  max_label: '최대',
+  tde_label: 'TDE',
+  upload_image: '이미지 업로드',
+  fecha_hora: '날짜/시간',
+  usuario_label: '사용자',
+  accion_label: '동작',
+  detalle_anterior: '이전 세부정보',
+  detalle_nuevo: '새 세부정보',
+  turno_label: '근무조',
+    manage_users: '사용자 관리',
+    add_user: '+ 사용자 추가',
+    refresh: '새로고침',
+    add_new_user: '새 사용자 추가',
+    create_user: '사용자 생성',
+    cancel: '취소',
+    delete_confirm: '삭제 확인',
+    delete_user_text: '사용자를 삭제하시겠습니까',
+    no_users: '등록된 사용자가 없습니다',
+  irreversible_action: '이 작업은 취소할 수 없습니다.',
+    loans_active: '대출 중',
+    loading: '로딩 중...',
+    no_results: '결과가 없습니다',
+    totals_by_gaveta: '서랍별 합계:',
+    select_gaveta: '서랍을 선택하세요',
+    no_data: '데이터 없음',
+    ver_historial: '기록 보기',
+    administrar_usuarios: '사용자 관리',
+    export_excel: '엑셀 내보내기',
+    agregar: '+ 추가',
+    search_placeholder: '검색 (부품 번호, 항목, 장비)',
+    clear_filters: '필터 지우기',
+    total_label: '합계',
+    showing_label: '표시 중',
+    change_password: '비밀번호 변경',
+    save: '저장',
+    save_changes: '변경 사항 저장',
+    create: '생성',
+    edit: '편집',
+    delete: '삭제',
+    return_item: '반납',
+    lend_item: '대출',
+    no_image: '이미지 없음',
+    error_loading_image: '이미지를 불러오는 중 오류 발생',
+    add_item: '항목 추가',
+    edit_item: '편집',
+    item_detail: '항목 상세',
+    confirm_password_edit: '편집을 위해 비밀번호를 확인하세요',
+    confirm_password_delete: '삭제를 위해 비밀번호를 확인하세요',
+    confirm_password_decrement: '1개 사용을 위해 비밀번호를 확인하세요',
+    confirm_password_admin_edit: '사용자 편집용 관리자 비밀번호',
+    confirm_password_admin_delete: '사용자 삭제용 관리자 비밀번호',
+    employee_not_found: '직원을 찾을 수 없음',
+    processing: '처리 중...',
+    no_active_loans: '활성 대출 없음',
+    scan_another: '← 다른 것 스캔',
+    confirm_lend: '대출 확인',
+    confirm_return: '반납 확인',
+    enter_password_confirm: '확인을 위해 비밀번호를 입력하세요',
+  scan_badge: '직원 배지를 스캔하세요',
+  try_again: '다시 시도',
+  no_units_to_lend: '대출 가능한 항목이 없습니다',
+    turno_prefix: '근무:'
+    ,current_password: '현재 비밀번호',
+    new_password: '새 비밀번호',
+    repeat_new_password: '새 비밀번호 확인',
+    fill_all_fields: '모든 필드를 입력하세요',
+    passwords_no_match: '새 비밀번호가 일치하지 않습니다',
+    password_changed_success: '비밀번호가 변경되었습니다',
+    error_changing_password: '비밀번호 변경 중 오류'
+  }
+};
+
+const DEFAULT_LANG = 'es';
+
+// Helper translation that reads current language from localStorage when used
+function trLocal(key) {
+  try {
+    const l = (typeof window !== 'undefined') ? (localStorage.getItem('inv_lang') || DEFAULT_LANG) : DEFAULT_LANG;
+    return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) ? TRANSLATIONS[l][key] : TRANSLATIONS[DEFAULT_LANG][key];
+  } catch (e) {
+    return TRANSLATIONS[DEFAULT_LANG][key] || key;
+  }
+}
+
+// Formatos comunes
+function formatCurrency(value) {
+  try {
+    const n = Number(value || 0);
+    // Formatear en Pesos Mexicanos (MXN)
+    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(n);
+  } catch {
+    return String(value);
+  }
+}
+
 // Utils
 function parseDetalle(detalle) {
   try {
@@ -16,26 +304,28 @@ function parseDetalle(detalle) {
 }
 
 // Role permissions helper
-const ROLES = {
-  SUPER_ADMIN: ['The Goat'],                    // Nivel más alto - acceso total
-  HIGH_ADMIN: ['Administrador', 'Ingeniero'],   // Administradores - acceso total
-  OPERATOR: ['Operador', 'Tecnico'],            // Operadores - pueden editar
-  GUEST: ['Invitado']                           // Solo lectura
+// Group definitions based on requested policy:
+// - FULL_ACCESS: full admin capabilities (manage users, settings, full edit)
+// - TOOL_ACCESS: can view data and edit tool-room related items, but NOT manage users
+// - GUEST: read-only
+const ROLE_GROUPS = {
+  FULL_ACCESS: ['The Goat', 'Ingeniero', 'Administrador'],
+  TOOL_ACCESS: ['Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'],
+  GUEST: ['Invitado']
 };
 
-function canEdit(rol) {
-  // The Goat, Administrador, Ingeniero, Operador, Tecnico pueden editar
-  return [...ROLES.SUPER_ADMIN, ...ROLES.HIGH_ADMIN, ...ROLES.OPERATOR].includes(rol);
+function canAdminister(rol) {
+  // Only FULL_ACCESS roles can administer users and high-level settings
+  return ROLE_GROUPS.FULL_ACCESS.includes(rol);
 }
 
-function canAdminister(rol) {
-  // The Goat, Administrador, Ingeniero pueden administrar
-  return [...ROLES.SUPER_ADMIN, ...ROLES.HIGH_ADMIN].includes(rol);
+function canEdit(rol) {
+  // FULL_ACCESS and TOOL_ACCESS can edit inventory/tool-room items
+  return [...ROLE_GROUPS.FULL_ACCESS, ...ROLE_GROUPS.TOOL_ACCESS].includes(rol);
 }
 
 function isGuest(rol) {
-  // Solo Invitado es read-only
-  return ROLES.GUEST.includes(rol);
+  return ROLE_GROUPS.GUEST.includes(rol);
 }
 
 function diffObj(prev, curr) {
@@ -70,7 +360,7 @@ function Historial() {
     setLoading(true);
     api.get('/historial')
       .then(r => setHistorial(r.data))
-      .catch(e => setError('Error cargando historial'))
+      .catch(e => setError(trLocal('error_loading_history')))
       .finally(() => setLoading(false));
   }, []);
   
@@ -83,12 +373,12 @@ function Historial() {
           <table className="min-w-full text-xs">
             <thead>
               <tr className="bg-gray-100 dark:bg-gray-700">
-                <th className="px-1 sm:px-2 py-1 text-left">Fecha/Hora</th>
-                <th className="px-1 sm:px-2 py-1 text-left">Usuario</th>
-                <th className="px-1 sm:px-2 py-1 text-left">Acción</th>
-                <th className="px-1 sm:px-2 py-1 text-left hidden md:table-cell">Detalle anterior</th>
-                <th className="px-1 sm:px-2 py-1 text-left">Detalle nuevo</th>
-                <th className="px-1 sm:px-2 py-1 text-left hidden lg:table-cell">Turno</th>
+                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('fecha_hora')}</th>
+                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('usuario_label')}</th>
+                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('accion_label')}</th>
+                <th className="px-1 sm:px-2 py-1 text-left hidden md:table-cell">{trLocal('detalle_anterior')}</th>
+                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('detalle_nuevo')}</th>
+                <th className="px-1 sm:px-2 py-1 text-left hidden lg:table-cell">{trLocal('turno_label')}</th>
               </tr>
             </thead>
             <tbody>
@@ -281,31 +571,31 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     setEditingUser(null);
   }
 
-  if (loading) return <div className="text-gray-500">Cargando usuarios...</div>;
+  if (loading) return <div className="text-gray-500">{trLocal('loading_users')}</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-        <h4 className="font-semibold text-sm sm:text-base">Administrar Usuarios</h4>
+        <h4 className="font-semibold text-sm sm:text-base">{trLocal('manage_users')}</h4>
         <div className="flex gap-2">
           <button
             onClick={() => setShowAddForm(true)}
             className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-3 py-1.5 rounded text-xs sm:text-sm font-medium min-h-[36px]"
           >
-            + Agregar Usuario
+            {trLocal('add_user')}
           </button>
           <button
             onClick={loadUsuarios}
             className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline min-h-[36px]"
           >
-            Actualizar
+            {trLocal('refresh')}
           </button>
         </div>
       </div>
 
       {usuarios.length === 0 ? (
-        <div className="text-gray-500 text-sm">No hay usuarios registrados</div>
+        <div className="text-gray-500 text-sm">{trLocal('no_users')}</div>
       ) : (
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="min-w-full text-xs sm:text-sm">
@@ -337,13 +627,13 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                         onClick={() => handleEditUser(user)}
                         className="text-blue-600 dark:text-blue-400 hover:underline text-xs whitespace-nowrap min-h-[36px]"
                       >
-                        Editar
+                        {trLocal('edit')}
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user.username)}
                         className="text-red-600 dark:text-red-400 hover:underline text-xs whitespace-nowrap min-h-[36px]"
                       >
-                        Eliminar
+                        {trLocal('delete')}
                       </button>
                     </div>
                   </td>
@@ -359,25 +649,25 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
             <div className="mb-4 text-base sm:text-lg font-semibold text-red-700 dark:text-red-400">
-              Confirmar eliminación
+              {trLocal('delete_confirm')}
             </div>
             <div className="mb-6 text-sm sm:text-base text-gray-700 dark:text-gray-300">
-              ¿Estás seguro de que deseas eliminar el usuario <strong>{confirmDelete}</strong>?
+              {trLocal('delete_user_text')} <strong>{confirmDelete}</strong>?
               <br />
-              <span className="text-xs sm:text-sm text-gray-500">Esta acción no se puede deshacer.</span>
+              <span className="text-xs sm:text-sm text-gray-500">{trLocal('irreversible_action')}</span>
             </div>
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleCancelDelete}
                 className="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm min-h-[44px]"
               >
-                Cancelar
+                {trLocal('cancel')}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="px-4 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm min-h-[44px]"
               >
-                Eliminar
+                {trLocal('delete')}
               </button>
             </div>
           </div>
@@ -388,7 +678,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base sm:text-lg font-bold mb-4">Agregar Nuevo Usuario</h3>
+            <h3 className="text-base sm:text-lg font-bold mb-4">{trLocal('add_new_user')}</h3>
             
             {formError && (
               <div className="bg-red-900/20 border border-red-500 text-red-600 dark:text-red-400 p-2 rounded mb-4 text-xs sm:text-sm">
@@ -493,14 +783,14 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   disabled={formBusy}
                   className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
                 >
-                  Cancelar
+                  {trLocal('cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={formBusy}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
                 >
-                  {formBusy ? 'Creando...' : 'Crear Usuario'}
+                  {formBusy ? trLocal('processing') : trLocal('create_user')}
                 </button>
               </div>
             </form>
@@ -512,7 +802,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       {editingUser && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base sm:text-lg font-bold mb-4">Editar Usuario</h3>
+            <h3 className="text-base sm:text-lg font-bold mb-4">{trLocal('edit_item') /* reuse edit label for modal */}</h3>
             
             {formError && (
               <div className="bg-red-900/20 border border-red-500 text-red-600 dark:text-red-400 p-2 rounded mb-4 text-xs sm:text-sm">
@@ -609,14 +899,14 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   disabled={formBusy}
                   className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
                 >
-                  Cancelar
+                  {trLocal('cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={formBusy}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
                 >
-                  {formBusy ? 'Guardando...' : 'Guardar Cambios'}
+                  {formBusy ? trLocal('processing') : trLocal('save_changes')}
                 </button>
               </div>
             </form>
@@ -643,7 +933,7 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-200">
-            Préstamos Activos ({prestamos.length})
+            {trLocal('loans_active')} ({prestamos.length})
           </h3>
           <button
             onClick={onClose}
@@ -654,9 +944,9 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
         </div>
         
         {loading ? (
-          <div className="text-center text-gray-500 text-sm py-4">Cargando préstamos...</div>
+          <div className="text-center text-gray-500 text-sm py-4">{trLocal('loading')}</div>
         ) : prestamos.length === 0 ? (
-          <div className="text-center text-gray-500 text-sm py-4">No hay préstamos activos</div>
+          <div className="text-center text-gray-500 text-sm py-4">{trLocal('no_active_loans')}</div>
         ) : (
           <div className="overflow-x-auto -mx-2 sm:mx-0">
             <table className="min-w-full text-xs sm:text-sm">
@@ -689,7 +979,7 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
                         onClick={() => onDevolver(p)}
                         className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm min-h-[36px]"
                       >
-                        Devolver
+                        {trLocal('return_item')}
                       </button>
                     </td>
                   </tr>
@@ -703,16 +993,22 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
   );
 }
 
-function Header({ user, onLogout, onOpenPassword, onOpenPrestamos }) {
+function Header({ user, onLogout, onOpenPassword, onOpenPrestamos, lang, setLang, grandTotalAll }) {
+  const t = (key) => (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) ? TRANSLATIONS[lang][key] : TRANSLATIONS[DEFAULT_LANG][key];
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg font-semibold">Inventario</span>
+            <span className="text-base sm:text-lg font-semibold">{t('inventory')}</span>
             <span className="text-xs text-gray-500 hidden md:inline">| Gestión de Gavetas</span>
           </div>
-          <div className="flex items-center gap-1 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-right mr-2">
+              <div className="hidden sm:block"><span className="text-xs text-gray-500 mr-1">{t('total_general')}:</span> <b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
+              <div className="text-xs sm:hidden"><b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
+            </div>
+
             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
               {user?.nombre ? (
                 <>
@@ -722,6 +1018,13 @@ function Header({ user, onLogout, onOpenPassword, onOpenPrestamos }) {
                 <>Rol: <b>{user.rol}</b></>
               )}
             </span>
+
+            <select value={lang} onChange={(e) => { setLang(e.target.value); localStorage.setItem('inv_lang', e.target.value); }} className="text-xs rounded border px-2 py-1 bg-white dark:bg-gray-800">
+              <option value="es">Español</option>
+              <option value="en">English</option>
+              <option value="ko">한국어</option>
+            </select>
+
             <button
               onClick={toggleTheme}
               className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -741,7 +1044,7 @@ function Header({ user, onLogout, onOpenPassword, onOpenPrestamos }) {
               onClick={onOpenPrestamos}
               className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px]"
             >
-              Préstamos
+              {t('prestamos')}
             </button>
             <button
               onClick={onLogout}
@@ -785,6 +1088,8 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onP
           )}
         </div>
       </td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-right">{formatCurrency(item.precio)}</td>
+      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-right">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.min}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.max}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">{item.tde}</td>
@@ -805,7 +1110,7 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onP
 function ItemForm({ initial, onCancel, onSave, gavetas }) {
   const [form, setForm] = useState(
     initial || {
-      ndp: '', articulo: '', equipo: '', gaveta: gavetas[0] || '', nivel: '', cantidad: 0, min: 0, max: 0, tde: 0, link: ''
+      ndp: '', articulo: '', equipo: '', gaveta: gavetas[0] || '', nivel: '', cantidad: 0, precio: 0, min: 0, max: 0, tde: 0, link: ''
     }
   );
   
@@ -830,52 +1135,56 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div>
-          <label className="text-xs sm:text-sm block mb-1">N° Parte</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('part_number')}</label>
           <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.ndp} onChange={e => upd('ndp', e.target.value)} required />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Artículo</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('item_label')}</label>
           <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Equipo</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('equipment')}</label>
           <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Gaveta</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('drawer_label')}</label>
           <input list="gavetas-list" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
           <datalist id="gavetas-list">
             {gavetas.map(g => <option key={g} value={g}>{g}</option>)}
           </datalist>
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Nivel</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('level_label')}</label>
           <input type="number" min={1} className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Cantidad</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('quantity_label')}</label>
           <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} min={0} />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Mín</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('price_label')}</label>
+          <input type="number" step="0.01" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.precio} onChange={e => upd('precio', Number(e.target.value))} min={0} />
+        </div>
+        <div>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('min_label')}</label>
           <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.min} onChange={e => upd('min', Number(e.target.value))} min={0} />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">Máx</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('max_label')}</label>
           <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.max} onChange={e => upd('max', Number(e.target.value))} min={0} />
         </div>
         <div>
-          <label className="text-xs sm:text-sm block mb-1">TDE</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('tde_label')}</label>
           <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.tde} onChange={e => upd('tde', Number(e.target.value))} min={0} />
         </div>
         <div className="sm:col-span-2 lg:col-span-3">
-          <label className="text-xs sm:text-sm block mb-1">Subir imagen</label>
+          <label className="text-xs sm:text-sm block mb-1">{trLocal('upload_image')}</label>
           <ImageUploader currentImage={form.link} onImageChange={handleImageChange} />
         </div>
       </div>
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cancelar</button>
-        <button type="submit" className="rounded-lg bg-gray-900 text-white px-4 py-2.5 dark:bg-gray-100 dark:text-gray-900 text-sm min-h-[44px]">Guardar</button>
+        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
+        <button type="submit" className="rounded-lg bg-gray-900 text-white px-4 py-2.5 dark:bg-gray-100 dark:text-gray-900 text-sm min-h-[44px]">{trLocal('save')}</button>
       </div>
     </form>
   );
@@ -895,22 +1204,22 @@ function PasswordModal({ onClose }) {
     setError(''); 
     setSuccess('');
     if (!current || !new1 || !new2) { 
-      setError('Completa todos los campos'); 
+      setError(trLocal('fill_all_fields'));
       return; 
     }
     if (new1 !== new2) { 
-      setError('Las contraseñas nuevas no coinciden'); 
+      setError(trLocal('passwords_no_match'));
       return; 
     }
     setLoading(true);
     try {
       await api.post('/users/change-password', { current, newPassword: new1 });
-      setSuccess('Contraseña cambiada correctamente');
+      setSuccess(trLocal('password_changed_success'));
       setCurrent(''); 
       setNew1(''); 
       setNew2('');
     } catch (e) {
-      setError(e?.response?.data?.message || 'Error al cambiar contraseña');
+      setError(e?.response?.data?.message || trLocal('error_changing_password'));
     }
     setLoading(false);
   };
@@ -918,25 +1227,25 @@ function PasswordModal({ onClose }) {
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
-        <h3 className="text-base sm:text-lg font-semibold mb-4">Cambiar contraseña</h3>
+        <h3 className="text-base sm:text-lg font-semibold mb-4">{trLocal('change_password')}</h3>
         <form onSubmit={handleChange} className="space-y-3">
           <div>
-            <label className="block text-xs sm:text-sm mb-1">Contraseña actual</label>
+            <label className="block text-xs sm:text-sm mb-1">{trLocal('current_password')}</label>
             <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={current} onChange={e => setCurrent(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-xs sm:text-sm mb-1">Nueva contraseña</label>
+            <label className="block text-xs sm:text-sm mb-1">{trLocal('new_password')}</label>
             <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={new1} onChange={e => setNew1(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-xs sm:text-sm mb-1">Repetir nueva contraseña</label>
+            <label className="block text-xs sm:text-sm mb-1">{trLocal('repeat_new_password')}</label>
             <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={new2} onChange={e => setNew2(e.target.value)} required />
           </div>
           {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
           {success && <div className="text-green-600 text-xs sm:text-sm">{success}</div>}
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cerrar</button>
-            <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>Guardar</button>
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
+            <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>{trLocal('save')}</button>
           </div>
         </form>
       </div>
@@ -996,7 +1305,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
       setEmployeeInfo(info);
       setShowScanner(false);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Empleado no encontrado');
+      setError(err?.response?.data?.message || err.message || trLocal('employee_not_found'));
       // keep scanner visible to let user retry
       setShowScanner(true);
     } finally {
@@ -1042,28 +1351,28 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
       {!showScanner && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
-            <h3 className="text-base sm:text-lg font-semibold mb-2">Prestar Artículo</h3>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">{trLocal('confirm_lend')}</h3>
             <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
-              <p><b>Artículo:</b> {item?.articulo}</p>
+              <p><b>{trLocal('item_label')}:</b> {item?.articulo}</p>
               <p><b>NDP:</b> {item?.ndp}</p>
-              <p><b>Cantidad disponible:</b> {item?.cantidad}</p>
+              <p><b>{trLocal('quantity_label')} disponible:</b> {item?.cantidad}</p>
             </div>
 
             {employeeInfo ? (
               <form onSubmit={handleConfirm} className="space-y-3">
                 <div className="mb-3 p-2 bg-green-100 dark:bg-green-900/30 rounded text-sm">
-                  <p><b>Empleado:</b> {employeeInfo.nombre}</p>
-                  <p><b>N° Empleado:</b> {employeeInfo.num_empleado}</p>
+                  <p><b>{trLocal('usuario_label')}:</b> {employeeInfo.nombre}</p>
+                  <p><b>N° {trLocal('usuario_label')}:</b> {employeeInfo.num_empleado}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1 font-medium">Ingresa tu contraseña de sesión para confirmar (serás el prestador)</label>
+                  <label className="block text-sm mb-1 font-medium">{trLocal('enter_password_confirm')}</label>
                   <input
                     type="password"
                     className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
                     value={adminPassword}
                     onChange={e => setAdminPassword(e.target.value)}
-                    placeholder="Tu contraseña"
+                    placeholder={trLocal('enter_password_confirm')}
                     autoFocus
                     required
                   />
@@ -1077,20 +1386,20 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
                     onClick={() => { setShowScanner(true); setEmployeeInfo(null); setAdminPassword(''); setError(''); }}
                     className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]"
                   >
-                    ← Escanear Otro
+                    {trLocal('scan_another')}
                   </button>
                   <button
                     type="submit"
                     className="rounded-lg bg-purple-600 text-white px-4 py-2.5 dark:bg-purple-500 text-sm min-h-[44px]"
                     disabled={loading}
                   >
-                    {loading ? 'Procesando...' : 'Confirmar Préstamo'}
+                    {loading ? trLocal('processing') : trLocal('confirm_lend')}
                   </button>
                 </div>
               </form>
             ) : (
               <div className="text-center text-gray-500 dark:text-gray-400">
-                {loading ? 'Procesando...' : 'Escanea el gafete del empleado'}
+                {loading ? trLocal('processing') : trLocal('scan_badge')}
               </div>
             )}
 
@@ -1151,24 +1460,24 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
-        <h3 className="text-base sm:text-lg font-semibold mb-2">Devolver Artículo</h3>
+        <h3 className="text-base sm:text-lg font-semibold mb-2">{trLocal('confirm_return')}</h3>
 
         <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
-          <p><b>Empleado:</b> {prestamo?.empleado}</p>
-          <p><b>N° Empleado:</b> {prestamo?.num_empleado}</p>
-          <p><b>Artículo:</b> {prestamo?.articulo}</p>
-          <p><b>Prestado por:</b> {prestamo?.empleado1}</p>
+          <p><b>{trLocal('usuario_label')}:</b> {prestamo?.empleado}</p>
+          <p><b>N° {trLocal('usuario_label')}:</b> {prestamo?.num_empleado}</p>
+          <p><b>{trLocal('item_label')}:</b> {prestamo?.articulo}</p>
+          <p><b>{trLocal('lend_item')} por:</b> {prestamo?.empleado1}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm mb-1 font-medium">Ingresa tu contraseña para confirmar la devolución</label>
+            <label className="block text-sm mb-1 font-medium">{trLocal('enter_password_confirm')}</label>
             <input
               type="password"
               className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Tu contraseña"
+              placeholder={trLocal('enter_password_confirm')}
               autoFocus
               required
             />
@@ -1177,9 +1486,9 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
           {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cancelar</button>
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
             <button type="submit" className="rounded-lg bg-green-600 text-white px-4 py-2.5 dark:bg-green-500 text-sm min-h-[44px]" disabled={loading}>
-              {loading ? 'Procesando...' : 'Confirmar Devolución'}
+              {loading ? trLocal('processing') : trLocal('confirm_return')}
             </button>
           </div>
         </form>
@@ -1191,6 +1500,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
 export default function Inventory() {
   const [token] = useState(localStorage.getItem('token'));
   const [user] = useState(() => (token ? jwtDecode(token) : null));
+  const [lang, setLang] = useState(() => localStorage.getItem('inv_lang') || DEFAULT_LANG);
   const activityTimer = useRef(null);
   const TIMEOUT = 5 * 60 * 1000; // 5 minutos
   const resetTimer = () => {
@@ -1225,6 +1535,8 @@ export default function Inventory() {
   }, []);
   const [gavetas, setGavetas] = useState([]);
   const [activeGaveta, setActiveGaveta] = useState(null);
+  const [serverGavetaTotals, setServerGavetaTotals] = useState([]);
+  const [grandTotalAllState, setGrandTotalAllState] = useState(0);
   const [q, setQ] = useState('');
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -1328,6 +1640,19 @@ export default function Inventory() {
       console.error('Error loading gavetas:', e);
     }
   }
+
+  // Load totals (per gaveta and grand total across all gavetas)
+  async function loadTotals() {
+    try {
+      const { data } = await api.get('/gavetas/totales');
+      setServerGavetaTotals(data.gavetaTotals || []);
+      setGrandTotalAllState(Number(data.grandTotal || 0));
+    } catch (e) {
+      console.error('Error loading gaveta totals:', e);
+      setServerGavetaTotals([]);
+      setGrandTotalAllState(0);
+    }
+  }
   
   async function loadItems() {
     if (activeGaveta === null && !q) {
@@ -1353,9 +1678,12 @@ export default function Inventory() {
       setTotal(0);
     }
     setLoading(false);
+    // refresh totals after loading items (keeps header and gaveta totals up-to-date)
+    try { loadTotals(); } catch (e) { /* non-blocking */ }
   }
   
   useEffect(() => { loadGavetas(); }, []);
+  useEffect(() => { loadTotals(); }, []);
   useEffect(() => { loadItems(); }, [activeGaveta, q]);
 
   // item: either plain object or FormData; isForm indicates FormData
@@ -1544,6 +1872,15 @@ export default function Inventory() {
     return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel;
   });
 
+  // Totales por gaveta (traídos desde el backend) y totales generales
+  const gavetaTotals = (serverGavetaTotals || []).slice().sort((a, b) => {
+    const na = Number(a.gaveta);
+    const nb = Number(b.gaveta);
+    if (!isNaN(na) && !isNaN(nb)) return na - nb;
+    return String(a.gaveta).localeCompare(String(b.gaveta));
+  });
+  const grandTotalAll = Number(grandTotalAllState || 0);
+
   // Función para limpiar todos los filtros
   const limpiarFiltros = () => {
     setFiltroNdp('');
@@ -1555,11 +1892,14 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
-      <Header 
+        <Header 
         user={user} 
         onLogout={logout} 
         onOpenPassword={() => setShowPasswordModal(true)}
         onOpenPrestamos={() => setShowPrestamos(!showPrestamos)}
+        lang={lang}
+        setLang={setLang}
+        grandTotalAll={grandTotalAllState}
       />
       {showPrestamos && (
         <PrestamosPanel
@@ -1571,7 +1911,7 @@ export default function Inventory() {
       )}
       <main className="max-w-7xl mx-auto w-full px-2 sm:px-4 py-3 sm:py-6">
         <div className="mb-2 text-right text-xs sm:text-sm text-blue-900 dark:text-blue-200 font-semibold">
-          Turno: <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100">{turno}</span>
+          {trLocal('turno_prefix')} <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100">{turno}</span>
         </div>
         {/* Gavetas */}
         <div className="flex gap-1 sm:gap-2 overflow-x-auto mb-3 pb-2">
@@ -1591,7 +1931,7 @@ export default function Inventory() {
                 onClick={() => setActiveGaveta(g)}
                 className={btnClass}
               >
-                Gaveta {g}
+                {trLocal('drawer_label')} {g}
               </button>
             );
           })}
@@ -1605,14 +1945,14 @@ export default function Inventory() {
                   onClick={() => setModal({ mode: 'historial' })}
                   className="rounded-xl bg-blue-900 text-white px-3 sm:px-4 py-2 dark:bg-blue-400 dark:text-blue-900 font-semibold border border-blue-900 dark:border-blue-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
                 >
-                  <span className="hidden sm:inline">Ver historial</span>
+                  <span className="hidden sm:inline">{trLocal('ver_historial')}</span>
                   <span className="sm:hidden">Historial</span>
                 </button>
                 <button
                   onClick={() => setModal({ mode: 'usuarios' })}
                   className="rounded-xl bg-green-900 text-white px-3 sm:px-4 py-2 dark:bg-green-400 dark:text-green-900 font-semibold border border-green-900 dark:border-green-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
                 >
-                  <span className="hidden sm:inline">Administrar usuarios</span>
+                  <span className="hidden sm:inline">{trLocal('administrar_usuarios')}</span>
                   <span className="sm:hidden">Usuarios</span>
                 </button>
               </>
@@ -1624,14 +1964,14 @@ export default function Inventory() {
                   className="rounded-xl bg-orange-900 text-white px-3 sm:px-4 py-2 dark:bg-orange-400 dark:text-orange-900 font-semibold border border-orange-900 dark:border-orange-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
                   title="Exportar datos a Excel"
                 >
-                  <span className="hidden sm:inline">Exportar Excel</span>
+                  <span className="hidden sm:inline">{trLocal('export_excel')}</span>
                   <span className="sm:hidden">Excel</span>
                 </button>
                 <button
                   onClick={() => setModal({ mode: 'add' })}
                   className="rounded-xl bg-gray-900 text-white px-3 sm:px-4 py-2 dark:bg-gray-100 dark:text-gray-900 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
                 >
-                  + Agregar
+                  {trLocal('agregar')}
                 </button>
               </>
             )}
@@ -1639,7 +1979,7 @@ export default function Inventory() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Buscar (N° parte, artículo, equipo)"
+            placeholder={trLocal('search_placeholder')}
             className="w-full sm:w-72 rounded-xl border px-3 py-2 dark:bg-gray-800 dark:border-gray-700 sm:ml-auto text-sm min-h-[44px]"
           />
         </div>
@@ -1653,19 +1993,46 @@ export default function Inventory() {
             </button>
           )}
         </div>
+        {/* Totales por gaveta (server-provided). Show only the currently selected gaveta's total. */}
+        <div className="mb-3">
+          <div className="text-sm text-gray-700 dark:text-gray-300">
+            <b>{trLocal('totals_by_gaveta')}</b>
+            <div className="mt-2">
+              {/* If there are no server totals at all */}
+              {gavetaTotals.length === 0 ? (
+                <div className="text-xs text-gray-500">Sin datos</div>
+              ) : (
+                // Show only the total for the active (selected) gaveta
+                (() => {
+                  if (activeGaveta === null || activeGaveta === undefined) {
+                    return <div className="text-xs text-gray-500">{trLocal('select_gaveta')}</div>;
+                  }
+                  const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
+                  const val = Number(sel?.total || 0);
+                  return (
+                    <div className="text-xs">{trLocal('drawer_label')} {activeGaveta}: <b>{formatCurrency(val.toFixed(2))}</b></div>
+                  );
+                })()
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-gray-700/50">
               <tr>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">N° Parte</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Artículo</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">Equipo</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Gaveta</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Nivel</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">Cant.</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">Mín</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">Máx</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">TDE</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('part_number')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('item_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">{trLocal('equipment')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('drawer_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('level_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('quantity_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('price_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('total_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{trLocal('min_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{trLocal('max_label')}</th>
+                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">{trLocal('tde_label')}</th>
                 {/* Imagen column removed from list view */}
                 {canEdit(user?.rol) && <th className="px-2 sm:px-3 py-2"></th>}
               </tr>
@@ -1716,10 +2083,11 @@ export default function Inventory() {
                   />
                 </th>
                 <th className="px-1 sm:px-2 py-1"></th>
+                <th className="px-1 sm:px-2 py-1"></th>
                 <th className="px-1 sm:px-2 py-1 hidden lg:table-cell"></th>
                 <th className="px-1 sm:px-2 py-1 hidden lg:table-cell"></th>
                 <th className="px-1 sm:px-2 py-1 hidden xl:table-cell"></th>
-                {(user?.rol === 'admin' || user?.rol === 'operador') && <th className="px-1 sm:px-2 py-1"></th>}
+                {canEdit(user?.rol) && <th className="px-1 sm:px-2 py-1"></th>}
               </tr>
             </thead>
             <tbody>
@@ -1737,11 +2105,11 @@ export default function Inventory() {
               ))}
             </tbody>
           </table>
-          {loading && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">Cargando...</div>}
-          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">Sin resultados</div>}
+          {loading && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">{trLocal('loading')}</div>}
+          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">{trLocal('no_results')}</div>}
         </div>
         <div className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-          Total: <b>{total}</b> | Mostrando: <b>{itemsFiltrados.length}</b>
+          {trLocal('total_label')}: <b>{total}</b> | {trLocal('showing_label')}: <b>{itemsFiltrados.length}</b>
         </div>
       </main>
       {modal && (
@@ -1799,12 +2167,12 @@ export default function Inventory() {
                           className="max-h-60 sm:max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 rounded"
                           style={{display: 'none'}}
                         >
-                          <span className="text-xs sm:text-sm p-4">Error cargando imagen</span>
+                          <span className="text-xs sm:text-sm p-4">{trLocal('error_loading_image')}</span>
                         </div>
                       </>
                     ) : (
                       <div className="max-h-60 sm:max-h-80 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 rounded p-8">
-                        <span className="text-xs sm:text-sm">Sin imagen disponible</span>
+                        <span className="text-xs sm:text-sm">{trLocal('no_image')}</span>
                       </div>
                     )}
                   </div>
@@ -1823,11 +2191,11 @@ export default function Inventory() {
         open={pwPrompt.open}
         onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }}
         onSubmit={handlePwSubmit}
-        label={pwPrompt.action === 'edit-item' ? 'Confirma tu contraseña para editar' :
-               pwPrompt.action === 'delete-item' ? 'Confirma tu contraseña para eliminar' :
-               pwPrompt.action === 'decrement-item' ? `Confirma tu contraseña para usar 1 unidad de ${pwPrompt.context?.articulo || 'este artículo'}` :
-               pwPrompt.action === 'edit-user' ? 'Contraseña de administrador para editar usuario' :
-               pwPrompt.action === 'delete-user' ? 'Contraseña de administrador para eliminar usuario' : 'Contraseña'}
+   label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') :
+     pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') :
+     pwPrompt.action === 'decrement-item' ? `${trLocal('confirm_password_decrement')} ${pwPrompt.context?.articulo ? `(${pwPrompt.context.articulo})` : ''}` :
+     pwPrompt.action === 'edit-user' ? trLocal('confirm_password_admin_edit') :
+     pwPrompt.action === 'delete-user' ? trLocal('confirm_password_admin_delete') : trLocal('enter_password_confirm')}
         loading={pwLoading}
         error={pwError}
       />

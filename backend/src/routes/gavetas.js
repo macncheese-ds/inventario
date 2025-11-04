@@ -19,4 +19,24 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+// Devuelve totales por gaveta y total general (precio * cantidad)
+router.get('/totales', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT gaveta, SUM(COALESCE(precio,0) * COALESCE(cantidad,0)) AS total_gaveta
+         FROM \`gavetas\`
+        GROUP BY gaveta
+        ORDER BY (CASE WHEN gaveta REGEXP '^[0-9]+$' THEN CONVERT(gaveta, UNSIGNED) ELSE NULL END) ASC, gaveta ASC`
+    );
+
+    const [grows] = await pool.query(`SELECT SUM(COALESCE(precio,0) * COALESCE(cantidad,0)) AS grand FROM \`gavetas\``);
+    const grand = grows && grows[0] ? grows[0].grand : 0;
+
+    res.json({ gavetaTotals: rows.map(r => ({ gaveta: String(r.gaveta), total: Number(r.total_gaveta || 0) })), grandTotal: Number(grand || 0) });
+  } catch (e) {
+    console.error('Error obteniendo totales de gavetas:', e);
+    res.status(500).json({ message: 'Error obteniendo totales' });
+  }
+});
+
 export default router;

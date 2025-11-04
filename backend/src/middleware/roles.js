@@ -1,21 +1,42 @@
-// Roles hierarchy
+// Roles hierarchy (kept for backward reference)
 const ROLES = {
   SUPER_ADMIN: ['The Goat'],                    // Nivel más alto - acceso total
   HIGH_ADMIN: ['Administrador', 'Ingeniero'],   // Administradores - acceso total
-  OPERATOR: ['Operador', 'Tecnico'],            // Operadores - pueden editar
+  OPERATOR: ['Operador', 'Tecnico'],            // legacy grouping
   GUEST: ['Invitado']                           // Solo lectura
 };
 
+// Authoritative role groups as requested:
+// - FULL_ACCESS: The Goat, Ingeniero, Administrador
+// - TOOL_ROOM: Tool Room (can edit tool-room related things)
+// - VIEW_ONLY: Calidad, Soporte, Lider, Operador, Invitado, Recursos Humanos
+const ROLE_GROUPS = {
+  FULL_ACCESS: ['The Goat', 'Ingeniero', 'Administrador'],
+  TOOL_ROOM: ['Tool Room'],
+  VIEW_ONLY: ['Calidad', 'Soporte', 'Lider', 'Operador', 'Invitado', 'Recursos Humanos']
+};
+
+// Normaliza un role para comparaciones: trim + lowercase
+function normalizeRole(r) {
+  if (!r && r !== 0) return '';
+  return String(r).trim().toLowerCase();
+}
+
 // Helper to check if role has edit permissions
 function canEdit(rol) {
-  // The Goat, Administrador, Ingeniero, Operador, Tecnico pueden editar
-  return [...ROLES.SUPER_ADMIN, ...ROLES.HIGH_ADMIN, ...ROLES.OPERATOR].includes(rol);
+  // Full access and Tool Room can edit; VIEW_ONLY cannot.
+  const normalized = normalizeRole(rol);
+  const full = ROLE_GROUPS.FULL_ACCESS.map(normalizeRole);
+  const tool = ROLE_GROUPS.TOOL_ROOM.map(normalizeRole);
+  return full.includes(normalized) || tool.includes(normalized);
 }
 
 // Helper to check if role has admin permissions
 function canAdminister(rol) {
-  // The Goat, Administrador, Ingeniero pueden administrar
-  return [...ROLES.SUPER_ADMIN, ...ROLES.HIGH_ADMIN].includes(rol);
+  // Only FULL_ACCESS can administer
+  const normalized = normalizeRole(rol);
+  const adminRoles = ROLE_GROUPS.FULL_ACCESS.map(normalizeRole);
+  return adminRoles.includes(normalized);
 }
 
 export function authorizeRoles(...allowed) {
@@ -31,16 +52,37 @@ export function authorizeRoles(...allowed) {
       return res.status(401).json({ message: 'No autenticado' });
     }
     
-    // Check against role shortcuts
+    // Check against role shortcuts and normalize comparisons
+    const userRoleNorm = normalizeRole(req.user.rol);
     let hasPermission = false;
-    for (const allowedRole of flatAllowed) {
+    for (const allowedRoleRaw of flatAllowed) {
+      const allowedRole = String(allowedRoleRaw || '').trim().toLowerCase();
+
+      // 'admin' shortcut => only FULL_ACCESS
       if (allowedRole === 'admin' && canAdminister(req.user.rol)) {
         hasPermission = true;
         break;
-      } else if (allowedRole === 'operador' && canEdit(req.user.rol)) {
+      }
+
+      // 'toolroom' or 'tool' shortcut => Tool Room or Full Access
+      if ((allowedRole === 'toolroom' || allowedRole === 'tool') && (canEdit(req.user.rol) || canAdminister(req.user.rol))) {
         hasPermission = true;
         break;
-      } else if (flatAllowed.includes(req.user.rol)) {
+      }
+
+      // 'view' shortcut => any role that has at least view permission (full, tool, or view-only)
+      if (allowedRole === 'view') {
+        const isViewer = ROLE_GROUPS.FULL_ACCESS.map(normalizeRole).includes(userRoleNorm)
+          || ROLE_GROUPS.TOOL_ROOM.map(normalizeRole).includes(userRoleNorm)
+          || ROLE_GROUPS.VIEW_ONLY.map(normalizeRole).includes(userRoleNorm);
+        if (isViewer) {
+          hasPermission = true;
+          break;
+        }
+      }
+
+      // literal role match after normalization
+      if (allowedRole === userRoleNorm) {
         hasPermission = true;
         break;
       }
@@ -55,3 +97,6 @@ export function authorizeRoles(...allowed) {
     next();
   };
 }
+
+// Export helpers and groups for reuse
+export { ROLE_GROUPS, canEdit, canAdminister, normalizeRole };

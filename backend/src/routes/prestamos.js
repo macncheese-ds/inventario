@@ -84,7 +84,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Crear préstamo (prestar artículo)
-router.post('/', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
+router.post('/', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { 
     employee_input,      // gafete del empleado que pide prestado
     admin_employee_input, // gafete del admin/operador
@@ -179,7 +179,7 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'operador'), async (
 });
 
 // Devolver préstamo
-router.post('/:num_empleado/devolver', authenticateToken, authorizeRoles('admin', 'operador'), async (req, res) => {
+router.post('/:num_empleado/devolver', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { num_empleado } = req.params;
   const { admin_employee_input, admin_password } = req.body;
 
