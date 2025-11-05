@@ -366,13 +366,13 @@ function Historial() {
   
   return (
     <div className="space-y-2">
-      {loading && <div className="text-gray-500 text-sm">Cargando historial...</div>}
+      {loading && <div className="text-slate-500 text-sm">Cargando historial...</div>}
       {error && <div className="text-red-600 text-sm">{error}</div>}
       {!loading && !error && (
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="min-w-full text-xs">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700">
+              <tr className="bg-slate-800 dark:bg-slate-700">
                 <th className="px-1 sm:px-2 py-1 text-left">{trLocal('fecha_hora')}</th>
                 <th className="px-1 sm:px-2 py-1 text-left">{trLocal('usuario_label')}</th>
                 <th className="px-1 sm:px-2 py-1 text-left">{trLocal('accion_label')}</th>
@@ -413,7 +413,7 @@ function Historial() {
                 }
                 
                 return (
-                  <tr key={h.id} className="border-b border-gray-200 dark:border-gray-700">
+                  <tr key={h.id} className="border-b border-slate-700 dark:border-slate-700">
                     <td className="px-1 sm:px-2 py-1 whitespace-nowrap text-xs">{new Date(h.fecha_hora).toLocaleString()}</td>
                     <td className="px-1 sm:px-2 py-1 text-xs">{h.username}</td>
                     <td className="px-1 sm:px-2 py-1 text-xs">{ACCION_LABELS[h.accion] || h.accion}</td>
@@ -571,7 +571,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     setEditingUser(null);
   }
 
-  if (loading) return <div className="text-gray-500">{trLocal('loading_users')}</div>;
+  if (loading) return <div className="text-slate-500">{trLocal('loading_users')}</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
@@ -595,12 +595,12 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       </div>
 
       {usuarios.length === 0 ? (
-        <div className="text-gray-500 text-sm">{trLocal('no_users')}</div>
+        <div className="text-slate-500 text-sm">{trLocal('no_users')}</div>
       ) : (
         <div className="overflow-x-auto -mx-3 sm:mx-0">
           <table className="min-w-full text-xs sm:text-sm">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700">
+              <tr className="bg-slate-800 dark:bg-slate-700">
                 <th className="px-2 sm:px-3 py-2 text-left">Usuario</th>
                 <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">Nombre</th>
                 <th className="px-2 sm:px-3 py-2 text-left">Rol</th>
@@ -609,14 +609,14 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
             </thead>
             <tbody>
               {usuarios.map(user => (
-                <tr key={user.username} className="border-b border-gray-200 dark:border-gray-700">
+                <tr key={user.username} className="border-b border-slate-700 dark:border-slate-700">
                   <td className="px-2 sm:px-3 py-2 font-medium">{user.username}</td>
                   <td className="px-2 sm:px-3 py-2 hidden sm:table-cell">{user.nombre}</td>
                   <td className="px-2 sm:px-3 py-2">
                     <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
                       canAdminister(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100' :
                       canEdit(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                      'bg-slate-800 text-slate-200 dark:bg-slate-800 dark:text-slate-100'
                     }`}>
                       {user.rol}
                     </span>
@@ -647,19 +647,19 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       {/* Modal de confirmación para eliminar */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
             <div className="mb-4 text-base sm:text-lg font-semibold text-red-700 dark:text-red-400">
               {trLocal('delete_confirm')}
             </div>
-            <div className="mb-6 text-sm sm:text-base text-gray-700 dark:text-gray-300">
+            <div className="mb-6 text-sm sm:text-base text-slate-300 dark:text-slate-300">
               {trLocal('delete_user_text')} <strong>{confirmDelete}</strong>?
               <br />
-              <span className="text-xs sm:text-sm text-gray-500">{trLocal('irreversible_action')}</span>
+              <span className="text-xs sm:text-sm text-slate-500">{trLocal('irreversible_action')}</span>
             </div>
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleCancelDelete}
-                className="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm min-h-[44px]"
+                className="px-4 py-2.5 rounded-lg border border-slate-600 dark:border-slate-600 hover:bg-slate-700/50 dark:hover:bg-slate-600 text-sm min-h-[44px]"
               >
                 {trLocal('cancel')}
               </button>
@@ -677,7 +677,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       {/* Modal para agregar usuario */}
       {showAddForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base sm:text-lg font-bold mb-4">{trLocal('add_new_user')}</h3>
             
             {formError && (
@@ -698,7 +698,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     value={formData.nombre}
                     onChange={handleChange}
                     required
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -711,7 +711,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     name="usuario"
                     value={formData.usuario}
                     onChange={handleChange}
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -726,7 +726,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     onChange={handleChange}
                     required
                     placeholder="Ej: 1234A"
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -741,7 +741,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     onChange={handleChange}
                     required
                     minLength={4}
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -754,7 +754,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     value={formData.rol}
                     onChange={handleChange}
                     required
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   >
                     <option value="The Goat">The Goat</option>
                     <option value="Administrador">Administrador</option>
@@ -781,7 +781,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     });
                   }}
                   disabled={formBusy}
-                  className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
+                  className="flex-1 bg-slate-800 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-500 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
                 >
                   {trLocal('cancel')}
                 </button>
@@ -801,7 +801,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       {/* Modal para editar usuario */}
       {editingUser && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base sm:text-lg font-bold mb-4">{trLocal('edit_item') /* reuse edit label for modal */}</h3>
             
             {formError && (
@@ -822,7 +822,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     value={editingUser.nombre}
                     onChange={handleEditChange}
                     required
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -835,7 +835,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     name="usuario"
                     value={editingUser.usuario}
                     onChange={handleEditChange}
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -850,7 +850,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     onChange={handleEditChange}
                     required
                     placeholder="Ej: 1234A"
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -864,7 +864,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     value={editingUser.password}
                     onChange={handleEditChange}
                     minLength={4}
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   />
                 </div>
 
@@ -877,7 +877,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     value={editingUser.rol}
                     onChange={handleEditChange}
                     required
-                    className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
+                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
                   >
                     <option value="The Goat">The Goat</option>
                     <option value="Administrador">Administrador</option>
@@ -897,7 +897,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     setFormError('');
                   }}
                   disabled={formBusy}
-                  className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
+                  className="flex-1 bg-slate-800 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-500 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
                 >
                   {trLocal('cancel')}
                 </button>
@@ -918,7 +918,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       <div className="flex justify-end mt-6">
         <button
           onClick={onClose}
-          className="px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm min-h-[44px]"
+          className="px-4 py-2.5 rounded-lg border border-slate-600 dark:border-slate-600 hover:bg-slate-700/50 dark:hover:bg-slate-600 text-sm min-h-[44px]"
         >
           Cerrar
         </button>
@@ -944,9 +944,9 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
         </div>
         
         {loading ? (
-          <div className="text-center text-gray-500 text-sm py-4">{trLocal('loading')}</div>
+          <div className="text-center text-slate-500 text-sm py-4">{trLocal('loading')}</div>
         ) : prestamos.length === 0 ? (
-          <div className="text-center text-gray-500 text-sm py-4">{trLocal('no_active_loans')}</div>
+          <div className="text-center text-slate-500 text-sm py-4">{trLocal('no_active_loans')}</div>
         ) : (
           <div className="overflow-x-auto -mx-2 sm:mx-0">
             <table className="min-w-full text-xs sm:text-sm">
@@ -996,20 +996,20 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
 function Header({ user, onLogout, onOpenPassword, onOpenPrestamos, lang, setLang, grandTotalAll }) {
   const t = (key) => (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) ? TRANSLATIONS[lang][key] : TRANSLATIONS[DEFAULT_LANG][key];
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+    <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-700 dark:bg-slate-900 dark:border-slate-700">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-base sm:text-lg font-semibold">{t('inventory')}</span>
-            <span className="text-xs text-gray-500 hidden md:inline">| Gestión de Gavetas</span>
+            <span className="text-xs text-slate-500 hidden md:inline">| Gestión de Gavetas</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-right mr-2">
-              <div className="hidden sm:block"><span className="text-xs text-gray-500 mr-1">{t('total_general')}:</span> <b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
+            <div className="text-xs sm:text-sm text-slate-300 dark:text-slate-300 text-right mr-2">
+              <div className="hidden sm:block"><span className="text-xs text-slate-500 mr-1">{t('total_general')}:</span> <b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
               <div className="text-xs sm:hidden"><b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
             </div>
 
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
+            <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-300 hidden sm:block">
               {user?.nombre ? (
                 <>
                   <b>{user.rol}</b> - {user.nombre}
@@ -1019,7 +1019,7 @@ function Header({ user, onLogout, onOpenPassword, onOpenPrestamos, lang, setLang
               )}
             </span>
 
-            <select value={lang} onChange={(e) => { setLang(e.target.value); localStorage.setItem('inv_lang', e.target.value); }} className="text-xs rounded border px-2 py-1 bg-white dark:bg-gray-800">
+            <select value={lang} onChange={(e) => { setLang(e.target.value); localStorage.setItem('inv_lang', e.target.value); }} className="text-xs rounded border px-2 py-1 bg-slate-900 dark:bg-slate-800">
               <option value="es">Español</option>
               <option value="en">English</option>
               <option value="ko">한국어</option>
@@ -1027,7 +1027,7 @@ function Header({ user, onLogout, onOpenPassword, onOpenPrestamos, lang, setLang
 
             <button
               onClick={toggleTheme}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 text-xs sm:text-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Cambiar tema"
             >
               <span className="hidden sm:inline">Tema</span>
@@ -1035,20 +1035,20 @@ function Header({ user, onLogout, onOpenPassword, onOpenPrestamos, lang, setLang
             </button>
             <button
               onClick={onOpenPassword}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="Cambiar contraseña"
             >
               <FaCog />
             </button>
             <button
               onClick={onOpenPrestamos}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px]"
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 text-xs sm:text-sm min-h-[44px]"
             >
               {t('prestamos')}
             </button>
             <button
               onClick={onLogout}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 text-xs sm:text-sm min-h-[44px]"
+              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 text-xs sm:text-sm min-h-[44px]"
             >
               Salir
             </button>
@@ -1068,7 +1068,7 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onP
       : '';
   
   return (
-    <tr onDoubleClick={() => onDoubleClick && onDoubleClick(item)} className="border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+    <tr onDoubleClick={() => onDoubleClick && onDoubleClick(item)} className="border-b border-slate-700 dark:border-slate-700 cursor-pointer hover:bg-slate-700/50 dark:hover:bg-slate-600/50">
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.ndp}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.articulo}</td>
       <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">{item.equipo}</td>
@@ -1136,46 +1136,46 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('part_number')}</label>
-          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.ndp} onChange={e => upd('ndp', e.target.value)} required />
+          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.ndp} onChange={e => upd('ndp', e.target.value)} required />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('item_label')}</label>
-          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
+          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('equipment')}</label>
-          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
+          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('drawer_label')}</label>
-          <input list="gavetas-list" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
+          <input list="gavetas-list" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
           <datalist id="gavetas-list">
             {gavetas.map(g => <option key={g} value={g}>{g}</option>)}
           </datalist>
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('level_label')}</label>
-          <input type="number" min={1} className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
+          <input type="number" min={1} className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('quantity_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} min={0} />
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} min={0} />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('price_label')}</label>
-          <input type="number" step="0.01" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.precio} onChange={e => upd('precio', Number(e.target.value))} min={0} />
+          <input type="number" step="0.01" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.precio} onChange={e => upd('precio', Number(e.target.value))} min={0} />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('min_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.min} onChange={e => upd('min', Number(e.target.value))} min={0} />
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.min} onChange={e => upd('min', Number(e.target.value))} min={0} />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('max_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.max} onChange={e => upd('max', Number(e.target.value))} min={0} />
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.max} onChange={e => upd('max', Number(e.target.value))} min={0} />
         </div>
         <div>
           <label className="text-xs sm:text-sm block mb-1">{trLocal('tde_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={form.tde} onChange={e => upd('tde', Number(e.target.value))} min={0} />
+          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.tde} onChange={e => upd('tde', Number(e.target.value))} min={0} />
         </div>
         <div className="sm:col-span-2 lg:col-span-3">
           <label className="text-xs sm:text-sm block mb-1">{trLocal('upload_image')}</label>
@@ -1183,8 +1183,8 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
         </div>
       </div>
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
-        <button type="submit" className="rounded-lg bg-gray-900 text-white px-4 py-2.5 dark:bg-gray-100 dark:text-gray-900 text-sm min-h-[44px]">{trLocal('save')}</button>
+        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
+        <button type="submit" className="rounded-lg bg-gray-900 text-white px-4 py-2.5 dark:bg-slate-800 dark:text-slate-100 text-sm min-h-[44px]">{trLocal('save')}</button>
       </div>
     </form>
   );
@@ -1226,25 +1226,25 @@ function PasswordModal({ onClose }) {
   
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+      <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
         <h3 className="text-base sm:text-lg font-semibold mb-4">{trLocal('change_password')}</h3>
         <form onSubmit={handleChange} className="space-y-3">
           <div>
             <label className="block text-xs sm:text-sm mb-1">{trLocal('current_password')}</label>
-            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={current} onChange={e => setCurrent(e.target.value)} required />
+            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={current} onChange={e => setCurrent(e.target.value)} required />
           </div>
           <div>
             <label className="block text-xs sm:text-sm mb-1">{trLocal('new_password')}</label>
-            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={new1} onChange={e => setNew1(e.target.value)} required />
+            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={new1} onChange={e => setNew1(e.target.value)} required />
           </div>
           <div>
             <label className="block text-xs sm:text-sm mb-1">{trLocal('repeat_new_password')}</label>
-            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={new2} onChange={e => setNew2(e.target.value)} required />
+            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={new2} onChange={e => setNew2(e.target.value)} required />
           </div>
           {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
           {success && <div className="text-green-600 text-xs sm:text-sm">{success}</div>}
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
             <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>{trLocal('save')}</button>
           </div>
         </form>
@@ -1260,13 +1260,13 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+      <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
         <h3 className="text-base sm:text-lg font-semibold mb-4">{label}</h3>
         <form onSubmit={e => { e.preventDefault(); onSubmit(password); }} className="space-y-3">
-          <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm" value={password} onChange={e => setPassword(e.target.value)} autoFocus required />
+          <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={password} onChange={e => setPassword(e.target.value)} autoFocus required />
           {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">Cancelar</button>
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">Cancelar</button>
             <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>Aceptar</button>
           </div>
         </form>
@@ -1350,9 +1350,9 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
 
       {!showScanner && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
             <h3 className="text-base sm:text-lg font-semibold mb-2">{trLocal('confirm_lend')}</h3>
-            <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+            <div className="mb-4 p-2 bg-slate-800 dark:bg-slate-700 rounded text-sm">
               <p><b>{trLocal('item_label')}:</b> {item?.articulo}</p>
               <p><b>NDP:</b> {item?.ndp}</p>
               <p><b>{trLocal('quantity_label')} disponible:</b> {item?.cantidad}</p>
@@ -1369,7 +1369,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
                   <label className="block text-sm mb-1 font-medium">{trLocal('enter_password_confirm')}</label>
                   <input
                     type="password"
-                    className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
+                    className="w-full border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm"
                     value={adminPassword}
                     onChange={e => setAdminPassword(e.target.value)}
                     placeholder={trLocal('enter_password_confirm')}
@@ -1384,7 +1384,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
                   <button
                     type="button"
                     onClick={() => { setShowScanner(true); setEmployeeInfo(null); setAdminPassword(''); setError(''); }}
-                    className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]"
+                    className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]"
                   >
                     {trLocal('scan_another')}
                   </button>
@@ -1398,7 +1398,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
                 </div>
               </form>
             ) : (
-              <div className="text-center text-gray-500 dark:text-gray-400">
+              <div className="text-center text-slate-500 dark:text-slate-400">
                 {loading ? trLocal('processing') : trLocal('scan_badge')}
               </div>
             )}
@@ -1459,10 +1459,10 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
+      <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
         <h3 className="text-base sm:text-lg font-semibold mb-2">{trLocal('confirm_return')}</h3>
 
-        <div className="mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm">
+        <div className="mb-4 p-2 bg-slate-800 dark:bg-slate-700 rounded text-sm">
           <p><b>{trLocal('usuario_label')}:</b> {prestamo?.empleado}</p>
           <p><b>N° {trLocal('usuario_label')}:</b> {prestamo?.num_empleado}</p>
           <p><b>{trLocal('item_label')}:</b> {prestamo?.articulo}</p>
@@ -1474,7 +1474,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
             <label className="block text-sm mb-1 font-medium">{trLocal('enter_password_confirm')}</label>
             <input
               type="password"
-              className="w-full border rounded-lg px-3 py-2 dark:bg-gray-800 dark:border-gray-700 text-sm"
+              className="w-full border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder={trLocal('enter_password_confirm')}
@@ -1486,7 +1486,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
           {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-gray-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
+            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
             <button type="submit" className="rounded-lg bg-green-600 text-white px-4 py-2.5 dark:bg-green-500 text-sm min-h-[44px]" disabled={loading}>
               {loading ? trLocal('processing') : trLocal('confirm_return')}
             </button>
@@ -1891,7 +1891,7 @@ export default function Inventory() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100">
         <Header 
         user={user} 
         onLogout={logout} 
@@ -1917,13 +1917,13 @@ export default function Inventory() {
         <div className="flex gap-1 sm:gap-2 overflow-x-auto mb-3 pb-2">
           {gavetas.map((g) => {
             const tieneResultados = false; // Cambiar lógica si es necesario
-            let btnClass = 'px-3 sm:px-4 py-2 rounded-full border dark:border-gray-700 transition-colors duration-200 text-xs sm:text-sm whitespace-nowrap min-h-[44px] ';
+            let btnClass = 'px-3 sm:px-4 py-2 rounded-full border dark:border-slate-700 transition-colors duration-200 text-xs sm:text-sm whitespace-nowrap min-h-[44px] ';
             if (g === activeGaveta) {
-              btnClass += 'bg-white text-gray-900 dark:bg-gray-100 dark:text-gray-900';
+              btnClass += 'bg-slate-900 text-slate-100 dark:bg-slate-800 dark:text-slate-100';
             } else if (tieneResultados) {
               btnClass += 'bg-green-200 text-green-900 border-green-400 dark:bg-green-300 dark:text-green-900 dark:border-green-400 animate-pulse';
             } else {
-              btnClass += 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100';
+              btnClass += 'bg-slate-800 text-slate-100 dark:bg-slate-800 dark:text-slate-100';
             }
             return (
               <button
@@ -1969,7 +1969,7 @@ export default function Inventory() {
                 </button>
                 <button
                   onClick={() => setModal({ mode: 'add' })}
-                  className="rounded-xl bg-gray-900 text-white px-3 sm:px-4 py-2 dark:bg-gray-100 dark:text-gray-900 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
+                  className="rounded-xl bg-gray-900 text-white px-3 sm:px-4 py-2 dark:bg-slate-800 dark:text-slate-100 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
                 >
                   {trLocal('agregar')}
                 </button>
@@ -1980,7 +1980,7 @@ export default function Inventory() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={trLocal('search_placeholder')}
-            className="w-full sm:w-72 rounded-xl border px-3 py-2 dark:bg-gray-800 dark:border-gray-700 sm:ml-auto text-sm min-h-[44px]"
+            className="w-full sm:w-72 rounded-xl border px-3 py-2 dark:bg-slate-800 dark:border-slate-700 sm:ml-auto text-sm min-h-[44px]"
           />
         </div>
         <div className="mb-2 flex justify-end">
@@ -1995,17 +1995,17 @@ export default function Inventory() {
         </div>
         {/* Totales por gaveta (server-provided). Show only the currently selected gaveta's total. */}
         <div className="mb-3">
-          <div className="text-sm text-gray-700 dark:text-gray-300">
+          <div className="text-sm text-slate-300 dark:text-slate-300">
             <b>{trLocal('totals_by_gaveta')}</b>
             <div className="mt-2">
               {/* If there are no server totals at all */}
               {gavetaTotals.length === 0 ? (
-                <div className="text-xs text-gray-500">Sin datos</div>
+                <div className="text-xs text-slate-500">Sin datos</div>
               ) : (
                 // Show only the total for the active (selected) gaveta
                 (() => {
                   if (activeGaveta === null || activeGaveta === undefined) {
-                    return <div className="text-xs text-gray-500">{trLocal('select_gaveta')}</div>;
+                    return <div className="text-xs text-slate-500">{trLocal('select_gaveta')}</div>;
                   }
                   const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
                   const val = Number(sel?.total || 0);
@@ -2018,9 +2018,9 @@ export default function Inventory() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <div className="bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-sm border border-slate-700 dark:border-slate-700 overflow-x-auto">
           <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700/50">
+            <thead className="bg-slate-700/50 dark:bg-slate-700/50">
               <tr>
                 <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('part_number')}</th>
                 <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('item_label')}</th>
@@ -2043,7 +2043,7 @@ export default function Inventory() {
                     value={filtroNdp}
                     onChange={(e) => setFiltroNdp(e.target.value)}
                     placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
                   />
                 </th>
                 <th className="px-1 sm:px-2 py-1">
@@ -2052,7 +2052,7 @@ export default function Inventory() {
                     value={filtroArticulo}
                     onChange={(e) => setFiltroArticulo(e.target.value)}
                     placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
                   />
                 </th>
                 <th className="px-1 sm:px-2 py-1 hidden md:table-cell">
@@ -2061,7 +2061,7 @@ export default function Inventory() {
                     value={filtroEquipo}
                     onChange={(e) => setFiltroEquipo(e.target.value)}
                     placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
                   />
                 </th>
                 <th className="px-1 sm:px-2 py-1">
@@ -2070,7 +2070,7 @@ export default function Inventory() {
                     value={filtroGaveta}
                     onChange={(e) => setFiltroGaveta(e.target.value)}
                     placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
                   />
                 </th>
                 <th className="px-1 sm:px-2 py-1">
@@ -2079,7 +2079,7 @@ export default function Inventory() {
                     value={filtroNivel}
                     onChange={(e) => setFiltroNivel(e.target.value)}
                     placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
                   />
                 </th>
                 <th className="px-1 sm:px-2 py-1"></th>
@@ -2105,21 +2105,21 @@ export default function Inventory() {
               ))}
             </tbody>
           </table>
-          {loading && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">{trLocal('loading')}</div>}
-          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-4 sm:p-6 text-center text-gray-500 text-sm">{trLocal('no_results')}</div>}
+          {loading && <div className="p-4 sm:p-6 text-center text-slate-500 text-sm">{trLocal('loading')}</div>}
+          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-4 sm:p-6 text-center text-slate-500 text-sm">{trLocal('no_results')}</div>}
         </div>
-        <div className="mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
           {trLocal('total_label')}: <b>{total}</b> | {trLocal('showing_label')}: <b>{itemsFiltrados.length}</b>
         </div>
       </main>
       {modal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
-          <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 border dark:border-gray-700 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto my-auto">
+          <div className="w-full max-w-3xl bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 border dark:border-slate-700 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base sm:text-lg font-semibold">
                 {modal.mode === 'edit' ? 'Editar' : modal.mode === 'historial' ? 'Historial de acciones' : modal.mode === 'usuarios' ? 'Administrar usuarios' : 'Agregar ítem'}
               </h3>
-              <button onClick={() => setModal(null)} className="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-2xl w-10 h-10 flex items-center justify-center min-h-[44px] min-w-[44px]">
+              <button onClick={() => setModal(null)} className="text-slate-500 hover:text-slate-200 dark:hover:text-slate-200 text-2xl w-10 h-10 flex items-center justify-center min-h-[44px] min-w-[44px]">
                 ✕
               </button>
             </div>
@@ -2142,7 +2142,7 @@ export default function Inventory() {
               <div>
                 <div className="mb-3">
                   <h4 className="text-base sm:text-lg font-semibold">{modal.item.articulo} (N° {modal.item.ndp})</h4>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Equipo: {modal.item.equipo} — Gaveta: {modal.item.gaveta} — Nivel: {modal.item.nivel}</p>
+                  <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-400">Equipo: {modal.item.equipo} — Gaveta: {modal.item.gaveta} — Nivel: {modal.item.nivel}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="text-sm">
@@ -2164,14 +2164,14 @@ export default function Inventory() {
                           }}
                         />
                         <div 
-                          className="max-h-60 sm:max-h-80 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 rounded"
+                          className="max-h-60 sm:max-h-80 bg-gray-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 rounded"
                           style={{display: 'none'}}
                         >
                           <span className="text-xs sm:text-sm p-4">{trLocal('error_loading_image')}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="max-h-60 sm:max-h-80 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 rounded p-8">
+                      <div className="max-h-60 sm:max-h-80 w-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 rounded p-8">
                         <span className="text-xs sm:text-sm">{trLocal('no_image')}</span>
                       </div>
                     )}
