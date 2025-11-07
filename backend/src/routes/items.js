@@ -179,7 +179,8 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
 router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
   const { password, turno } = req.body;
-  
+  let cantidad = parseInt(req.body.cantidad, 10);
+  if (!cantidad || isNaN(cantidad) || cantidad < 1) cantidad = 1;
   try {
     // Validar contraseña del usuario actual desde credenciales
     const ok = await validatePassword(req.user.username, password);
@@ -193,8 +194,11 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolr
     if (currentQty <= 0) {
       return res.status(400).json({ message: 'La cantidad ya está en 0, no se puede decrementar más' });
     }
+    if (cantidad > currentQty) {
+      return res.status(400).json({ message: `Solo hay ${currentQty} unidades disponibles` });
+    }
 
-    const newQty = currentQty - 1;
+    const newQty = currentQty - cantidad;
 
     // Actualizar cantidad
     await pool.query(
@@ -213,7 +217,8 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolr
         ndp: prev[0].ndp, 
         articulo: prev[0].articulo, 
         cantidad_anterior: currentQty, 
-        cantidad_nueva: newQty 
+        cantidad_nueva: newQty, 
+        cantidad_retirada: cantidad
       }, 
       turno || 'N/A',
       prev[0]
@@ -223,7 +228,8 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolr
       message: 'Cantidad decrementada exitosamente', 
       item: updated[0],
       cantidad_anterior: currentQty,
-      cantidad_nueva: newQty
+      cantidad_nueva: newQty,
+      cantidad_retirada: cantidad
     });
   } catch (e) {
     console.error('Error decrementando cantidad:', e);

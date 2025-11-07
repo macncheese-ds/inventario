@@ -84,92 +84,97 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Crear préstamo (prestar artículo)
-router.post('/', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
-  const { 
-    employee_input,      // gafete del empleado que pide prestado
-    admin_employee_input, // gafete del admin/operador
-    admin_password,      // contraseña del admin/operador
-    item_id,             // ID del artículo a prestar
-    turno 
+// Nuevo flujo: solo requiere gafete y cantidad, sin admin ni contraseña
+router.post('/', authenticateToken, async (req, res) => {
+  const {
+    employee_input, // gafete del empleado
+    articulo,       // nombre del artículo
+    cantidad = 1,   // cantidad a prestar
+    item_id         // id del artículo (opcional, preferido)
   } = req.body;
 
   try {
-    // 1. Validar contraseña del admin/operador
-    const passOk = await validatePassword(admin_employee_input, admin_password);
-    if (!passOk) {
-      return res.status(401).json({ message: 'Contraseña incorrecta del administrador/operador' });
-    }
-
-    // 2. Obtener info del empleado que pide prestado
+    // 1. Obtener info del empleado
     const employeeInfo = await getUserInfo(employee_input);
     if (!employeeInfo) {
       return res.status(404).json({ message: 'Empleado no encontrado' });
     }
 
-    // 3. Obtener info del admin/operador
-    const adminInfo = await getUserInfo(admin_employee_input);
-    if (!adminInfo) {
-      return res.status(404).json({ message: 'Administrador/Operador no encontrado' });
+    // 2. Obtener info del artículo
+    let item;
+    if (item_id) {
+      const [itemRows] = await pool.query(
+        `SELECT * FROM gavetas WHERE id = :id`,
+        { id: item_id }
+      );
+      if (!itemRows || itemRows.length === 0) {
+        return res.status(404).json({ message: 'Artículo no encontrado' });
+      }
+      item = itemRows[0];
+    } else if (articulo) {
+      const [itemRows] = await pool.query(
+        `SELECT * FROM gavetas WHERE articulo = :articulo LIMIT 1`,
+        { articulo }
+      );
+      if (!itemRows || itemRows.length === 0) {
+        return res.status(404).json({ message: 'Artículo no encontrado' });
+      }
+      item = itemRows[0];
+    } else {
+      return res.status(400).json({ message: 'Falta el artículo a prestar' });
     }
 
-    // 4. Obtener info del artículo
-    const [itemRows] = await pool.query(
-      `SELECT * FROM gavetas WHERE id = :id`,
-      { id: item_id }
-    );
-    
-    if (!itemRows || itemRows.length === 0) {
-      return res.status(404).json({ message: 'Artículo no encontrado' });
+    // 3. Validar cantidad
+    const qty = parseInt(cantidad, 10);
+    if (!qty || qty < 1) {
+      return res.status(400).json({ message: 'Cantidad inválida' });
+    }
+    if (item.cantidad < qty) {
+      return res.status(400).json({ message: 'No hay suficientes unidades disponibles para prestar' });
     }
 
-    const item = itemRows[0];
-
-    // 5. Verificar que hay cantidad disponible
-    if (item.cantidad <= 0) {
-      return res.status(400).json({ message: 'No hay unidades disponibles para prestar' });
-    }
-
-    // 6. Crear registro de préstamo
+    // 4. Crear registro de préstamo (una fila por préstamo, con cantidad)
     await pool.query(
-      `INSERT INTO prestamos (empleado, num_empleado, articulo, empleado1, num_empleado1)
-       VALUES (:empleado, :num_empleado, :articulo, :empleado1, :num_empleado1)`,
+      `INSERT INTO prestamos (empleado, num_empleado, articulo, cantidad)
+       VALUES (:empleado, :num_empleado, :articulo, :cantidad)`,
       {
         empleado: employeeInfo.nombre,
         num_empleado: employeeInfo.num_empleado,
         articulo: item.articulo,
-        empleado1: adminInfo.nombre,
-        num_empleado1: adminInfo.num_empleado
+        cantidad: qty
       }
     );
 
-    // 7. Decrementar cantidad del artículo
+    // 5. Decrementar cantidad del artículo
     const prevQty = item.cantidad;
-    const newQty = prevQty - 1;
+    const newQty = prevQty - qty;
     await pool.query(
       `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
-      { newQty, id: item_id }
+      { newQty, id: item.id }
     );
 
-    // 8. Log del cambio
+    // 6. Log del cambio
     await logCambio(
-      adminInfo.nombre || adminInfo.num_empleado,
+      employeeInfo.nombre || employeeInfo.num_empleado,
       'PRESTAMO',
       {
         empleado: employeeInfo.nombre,
         num_empleado: employeeInfo.num_empleado,
         articulo: item.articulo,
         ndp: item.ndp,
+        cantidad_prestada: qty,
         cantidad_anterior: prevQty,
         cantidad_nueva: newQty
       },
-      turno || 'N/A',
+      'N/A',
       item
     );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Préstamo registrado exitosamente',
       empleado: employeeInfo.nombre,
       articulo: item.articulo,
+      cantidad_prestada: qty,
       cantidad_restante: newQty
     });
   } catch (e) {
@@ -179,87 +184,102 @@ router.post('/', authenticateToken, authorizeRoles('admin', 'toolroom'), async (
 });
 
 // Devolver préstamo
-router.post('/:num_empleado/devolver', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
+// Nuevo flujo: devolución sin admin, acepta cantidad
+router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
   const { num_empleado } = req.params;
-  const { admin_employee_input, admin_password } = req.body;
+  const { id, articulo, cantidad = 1 } = req.body;
 
   try {
-    // 1. Validar contraseña del admin/operador
-    const passOk = await validatePassword(admin_employee_input, admin_password);
-    if (!passOk) {
-      return res.status(401).json({ message: 'Contraseña incorrecta' });
+    // 1. Buscar préstamo activo por id si está presente, si no por combinación
+    let prestamo;
+    if (id) {
+      const [rows] = await pool.query(
+        `SELECT * FROM prestamos WHERE id = :id LIMIT 1`,
+        { id }
+      );
+      if (!rows || rows.length === 0) {
+        return res.status(404).json({ message: 'No se encontró préstamo con ese id' });
+      }
+      prestamo = rows[0];
+    } else {
+      const [rows] = await pool.query(
+        `SELECT * FROM prestamos WHERE num_empleado = :num_empleado AND articulo = :articulo LIMIT 1`,
+        { num_empleado, articulo }
+      );
+      if (!rows || rows.length === 0) {
+        return res.status(404).json({ message: 'No se encontró préstamo activo para este empleado y artículo' });
+      }
+      prestamo = rows[0];
     }
 
-    // 2. Obtener info del admin/operador
-    const adminInfo = await getUserInfo(admin_employee_input);
-    if (!adminInfo) {
-      return res.status(404).json({ message: 'Administrador/Operador no encontrado' });
-    }
-    // 3. Obtener préstamo(s) activos para ese empleado
-    const [prestamoRows] = await pool.query(
-      `SELECT * FROM prestamos WHERE num_empleado = :num_empleado`,
-      { num_empleado }
-    );
-
-    if (!prestamoRows || prestamoRows.length === 0) {
-      return res.status(404).json({ message: 'No se encontraron préstamos activos para este empleado' });
-    }
-
-    // Tomamos el primer préstamo (si hay varios, se puede adaptar la lógica)
-    const prestamo = prestamoRows[0];
-
-    // 4. Buscar el artículo en la tabla de gavetas por nombre de artículo
+    // 2. Buscar el artículo
     const [itemRows] = await pool.query(
       `SELECT * FROM gavetas WHERE articulo = :articulo LIMIT 1`,
-      { articulo: prestamo.articulo }
+      { articulo }
     );
-
     if (!itemRows || itemRows.length === 0) {
-      // No encontramos el artículo relacionado: devolver error para que se revise manualmente
       return res.status(404).json({ message: 'Artículo asociado al préstamo no encontrado' });
     }
-
     const item = itemRows[0];
 
-    // 5. Incrementar cantidad del artículo
+    // 3. Validar cantidad
+    const qty = parseInt(cantidad, 10);
+    if (!qty || qty < 1) {
+      return res.status(400).json({ message: 'Cantidad inválida' });
+    }
+    if (qty > prestamo.cantidad) {
+      return res.status(400).json({ message: 'No puedes devolver más de lo prestado' });
+    }
+
+    // 4. Sumar cantidad al inventario
     const prevQty = item.cantidad || 0;
-    const newQty = prevQty + 1;
+    const newQty = prevQty + qty;
     await pool.query(
       `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
       { newQty, id: item.id }
     );
 
-    // 6. Eliminar el registro de préstamo específico (por id)
-    await pool.query(
-      `DELETE FROM prestamos WHERE id = :id`,
-      { id: prestamo.id }
-    );
+    // 5. Actualizar/eliminar préstamo usando id
+    if (qty === prestamo.cantidad) {
+      // Devolver todo: eliminar préstamo por id
+      await pool.query(
+        `DELETE FROM prestamos WHERE id = :id`,
+        { id: prestamo.id }
+      );
+    } else {
+      // Devolver parcial: restar cantidad por id
+      await pool.query(
+        `UPDATE prestamos SET cantidad = cantidad - :qty WHERE id = :id`,
+        { qty, id: prestamo.id }
+      );
+    }
 
-    // 7. Log del cambio
+    // 6. Log del cambio
     await logCambio(
-      adminInfo.nombre || adminInfo.num_empleado,
+      prestamo.empleado || prestamo.num_empleado,
       'DEVOLUCION',
       {
         empleado: prestamo.empleado,
         num_empleado: prestamo.num_empleado,
         articulo: prestamo.articulo,
         ndp: item.ndp,
+        cantidad_devuelta: qty,
         cantidad_anterior: prevQty,
-        cantidad_nueva: newQty,
-        recibido_por: adminInfo.nombre
+        cantidad_nueva: newQty
       },
-      turno || 'N/A',
+      'N/A',
       prestamo
     );
 
-    res.json({ 
+    res.json({
       message: 'Artículo devuelto exitosamente',
       articulo: prestamo.articulo,
+      cantidad_devuelta: qty,
       cantidad_actual: newQty
     });
   } catch (e) {
-    console.error('Error devolviendo préstamo:', e);
-    res.status(500).json({ message: 'Error al devolver préstamo' });
+    console.error('Error devolviendo artículo:', e);
+    res.status(500).json({ message: 'Error devolviendo artículo' });
   }
 });
 

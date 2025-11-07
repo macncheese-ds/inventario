@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ImageUploader from '../components/ImageUploader.jsx';
 import LoginModal from '../components/LoginModal.jsx';
+import QuantityPromptModal from '../components/QuantityPromptModal.jsx';
 import { FaCog } from 'react-icons/fa';
 import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
@@ -1081,9 +1082,9 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onP
             <button 
               onClick={(e) => { e.stopPropagation(); onDecrement(item); }} 
               className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-1.5 py-0.5 rounded font-bold min-h-[28px] min-w-[28px]"
-              title="Usar 1 unidad (restar 1)"
+              title="Quitar unidades"
             >
-              -1
+              -
             </button>
           )}
         </div>
@@ -1281,7 +1282,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [employeeInfo, setEmployeeInfo] = useState(null);
-  const [adminPassword, setAdminPassword] = useState('');
+  const [cantidad, setCantidad] = useState(1);
 
   useEffect(() => {
     if (!open) {
@@ -1289,9 +1290,8 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
       setError('');
       setEmployeeInfo(null);
       setLoading(false);
-      setAdminPassword('');
+      setCantidad(1);
     } else {
-      // Show scanner immediately when modal opens
       setShowScanner(true);
     }
   }, [open]);
@@ -1319,12 +1319,12 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
     setError('');
     try {
       if (!employeeInfo) throw new Error('Empleado no seleccionado');
+      if (!cantidad || cantidad < 1 || cantidad > (item?.cantidad || 1)) throw new Error('Cantidad inválida');
       await onSubmit({
         employee_input: employeeInfo.num_empleado,
-        admin_employee_input: currentUser.username,
-        admin_password: adminPassword,
-        item_id: item.id,
-        turno
+        articulo: item.articulo,
+        cantidad,
+        item_id: item.id
       });
       onClose();
     } catch (err) {
@@ -1364,26 +1364,24 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
                   <p><b>{trLocal('usuario_label')}:</b> {employeeInfo.nombre}</p>
                   <p><b>N° {trLocal('usuario_label')}:</b> {employeeInfo.num_empleado}</p>
                 </div>
-
                 <div>
-                  <label className="block text-sm mb-1 font-medium">{trLocal('enter_password_confirm')}</label>
+                  <label className="block text-sm mb-1 font-medium">Cantidad a prestar</label>
                   <input
-                    type="password"
+                    type="number"
+                    min={1}
+                    max={item?.cantidad || 1}
+                    value={cantidad}
+                    onChange={e => setCantidad(Number(e.target.value))}
                     className="w-full border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm"
-                    value={adminPassword}
-                    onChange={e => setAdminPassword(e.target.value)}
-                    placeholder={trLocal('enter_password_confirm')}
-                    autoFocus
                     required
                   />
+                  <div className="text-xs text-slate-400 mt-1">Máximo: {item?.cantidad || 1}</div>
                 </div>
-
                 {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
-
                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
                   <button
                     type="button"
-                    onClick={() => { setShowScanner(true); setEmployeeInfo(null); setAdminPassword(''); setError(''); }}
+                    onClick={() => { setShowScanner(true); setEmployeeInfo(null); setCantidad(1); setError(''); }}
                     className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]"
                   >
                     {trLocal('scan_another')}
@@ -1425,11 +1423,11 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
 function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [password, setPassword] = useState('');
+  const [cantidad, setCantidad] = useState(1);
 
   useEffect(() => {
     if (!open) {
-      setPassword('');
+      setCantidad(1);
       setError('');
       setLoading(false);
     }
@@ -1440,12 +1438,10 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
     setLoading(true);
     setError('');
     try {
-      // send the prestamo object so backend can identify by num_empleado or id
+      if (!cantidad || cantidad < 1 || cantidad > (prestamo?.cantidad || 1)) throw new Error('Cantidad inválida');
       await onSubmit({
         prestamo,
-        admin_employee_input: currentUser.username,
-        admin_password: password,
-        turno
+        cantidad
       });
       onClose();
     } catch (err) {
@@ -1467,20 +1463,22 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
           <p><b>N° {trLocal('usuario_label')}:</b> {prestamo?.num_empleado}</p>
           <p><b>{trLocal('item_label')}:</b> {prestamo?.articulo}</p>
           <p><b>{trLocal('lend_item')} por:</b> {prestamo?.empleado1}</p>
+          <p><b>Cantidad prestada:</b> {prestamo?.cantidad || 1}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-sm mb-1 font-medium">{trLocal('enter_password_confirm')}</label>
+            <label className="block text-sm mb-1 font-medium">Cantidad a devolver</label>
             <input
-              type="password"
+              type="number"
+              min={1}
+              max={prestamo?.cantidad || 1}
+              value={cantidad}
+              onChange={e => setCantidad(Number(e.target.value))}
               className="w-full border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder={trLocal('enter_password_confirm')}
-              autoFocus
               required
             />
+            <div className="text-xs text-slate-400 mt-1">Máximo: {prestamo?.cantidad || 1}</div>
           </div>
 
           {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
@@ -1498,6 +1496,9 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
 }
 
 export default function Inventory() {
+  // --- NUEVO FLUJO: primero pedir cantidad, luego contraseña ---
+  const [qtyPrompt, setQtyPrompt] = useState({ open: false, item: null });
+  const [pendingQty, setPendingQty] = useState(null);
   const [token] = useState(localStorage.getItem('token'));
   const [user] = useState(() => (token ? jwtDecode(token) : null));
   const [lang, setLang] = useState(() => localStorage.getItem('inv_lang') || DEFAULT_LANG);
@@ -1713,8 +1714,20 @@ export default function Inventory() {
   }
 
   function handleDecrement(item) {
-    setPwPrompt({ open: true, action: 'decrement-item', context: item });
+    setQtyPrompt({ open: true, item });
   }
+
+  function handleQtySubmit(cantidad) {
+    setQtyPrompt({ open: false, item: null });
+    setPendingQty(cantidad);
+    // Después de cantidad, pedir contraseña
+    setPwPrompt({ open: true, action: 'decrement-item', context: { ...qtyPrompt.item, cantidad: cantidad } });
+  }
+
+  // Si se cierra el modal de contraseña, limpiar pendingQty
+  useEffect(() => {
+    if (!pwPrompt.open) setPendingQty(null);
+  }, [pwPrompt.open]);
 
   function handlePrestar(item) {
     if (item.cantidad <= 0) {
@@ -1742,8 +1755,9 @@ export default function Inventory() {
   async function handleDevolverSubmit(data) {
     try {
       await api.post(`/prestamos/${data.prestamo.num_empleado}/devolver`, {
-        admin_employee_input: data.admin_employee_input,
-        admin_password: data.admin_password
+        id: data.prestamo.id,
+        articulo: data.prestamo.articulo,
+        cantidad: data.cantidad
       });
       await loadItems();
       await loadPrestamos();
@@ -1798,8 +1812,8 @@ export default function Inventory() {
         await api.delete(`/items/${id}`, { data: { password } });
         loadItems();
       } else if (pwPrompt.action === 'decrement-item') {
-        const { id } = pwPrompt.context;
-        await api.patch(`/items/${id}/decrement`, { password, turno });
+        const { id, cantidad } = pwPrompt.context;
+        await api.patch(`/items/${id}/decrement`, { password, turno, cantidad: cantidad || 1 });
         loadItems();
       } else if (pwPrompt.action === 'edit-user') {
         const { username, rol, onSuccess } = pwPrompt.context;
@@ -2187,15 +2201,21 @@ export default function Inventory() {
       {showPasswordModal && (
         <PasswordModal onClose={() => setShowPasswordModal(false)} />
       )}
+      <QuantityPromptModal
+        open={qtyPrompt.open}
+        max={qtyPrompt.item?.cantidad || 1}
+        onClose={() => setQtyPrompt({ open: false, item: null })}
+        onSubmit={handleQtySubmit}
+      />
       <PasswordPromptModal
         open={pwPrompt.open}
         onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }}
         onSubmit={handlePwSubmit}
-   label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') :
-     pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') :
-     pwPrompt.action === 'decrement-item' ? `${trLocal('confirm_password_decrement')} ${pwPrompt.context?.articulo ? `(${pwPrompt.context.articulo})` : ''}` :
-     pwPrompt.action === 'edit-user' ? trLocal('confirm_password_admin_edit') :
-     pwPrompt.action === 'delete-user' ? trLocal('confirm_password_admin_delete') : trLocal('enter_password_confirm')}
+        label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') :
+          pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') :
+          pwPrompt.action === 'decrement-item' ? `Confirma tu contraseña para quitar ${pwPrompt.context?.cantidad || 1} unidad(es)${pwPrompt.context?.articulo ? ` (${pwPrompt.context.articulo})` : ''}` :
+          pwPrompt.action === 'edit-user' ? trLocal('confirm_password_admin_edit') :
+          pwPrompt.action === 'delete-user' ? trLocal('confirm_password_admin_delete') : trLocal('enter_password_confirm')}
         loading={pwLoading}
         error={pwError}
       />
