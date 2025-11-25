@@ -70,27 +70,25 @@ async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = nu
   }
 }
 
-// Listado con búsqueda y filtro por gaveta (número)
+// Listado con búsqueda y filtro por gaveta (número) - SIN LÍMITE para mostrar todos los registros
 router.get('/', authenticateToken, async (req, res) => {
-  const { q, gaveta, page = 1, pageSize = 100 } = req.query;
-  const offset = (parseInt(page) - 1) * parseInt(pageSize);
-  const params = { limit: parseInt(pageSize), offset };
+  const { q, gaveta } = req.query;
+  const params = {};
   const where = ['1=1'];
 
-    if (gaveta) { where.push('g.gaveta = :gaveta'); params.gaveta = gaveta; }
+  if (gaveta) { where.push('g.gaveta = :gaveta'); params.gaveta = gaveta; }
 
   const search = buildSearchClause(q, 'g');
   const whereSql = ` WHERE ${where.join(' AND ')} ${search.clause}`;
   Object.assign(params, search.params);
 
-    try {
+  try {
     const [rows] = await pool.query(
       `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
               g.equipo, g.tde, g.link
          FROM \`gavetas\` g
         ${whereSql}
-        ORDER BY g.nivel ASC, g.id ASC
-        LIMIT :limit OFFSET :offset`,
+        ORDER BY g.nivel ASC, g.id ASC`,
       params
     );
 
