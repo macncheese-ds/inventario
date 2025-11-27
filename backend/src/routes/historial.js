@@ -21,9 +21,21 @@ async function createCredConnection() {
 // Obtener historial global de cambios (solo admin)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    const [cambios] = await pool.query(
-      'SELECT id, username, accion, adetalle, detalle, fecha_hora, turno FROM cambios ORDER BY fecha_hora DESC LIMIT 500'
-    );
+    const userArea = req.user?.area ? String(req.user.area).toLowerCase() : null;
+
+    let query = 'SELECT id, username, accion, adetalle, detalle, fecha_hora, turno, area FROM cambios';
+    const params = [];
+
+    // Si el usuario tiene un área definida (ensamble, smt, etc.),
+    // solo mostrar cambios de esa misma área.
+    if (userArea) {
+      query += ' WHERE LOWER(area) = ?';
+      params.push(userArea);
+    }
+
+    query += ' ORDER BY fecha_hora DESC LIMIT 500';
+
+    const [cambios] = await pool.query(query, params);
     
     // El campo username ahora contiene el nombre de la persona
     // Mantener compatibilidad con registros antiguos que tengan num_empleado

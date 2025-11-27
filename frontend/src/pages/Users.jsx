@@ -1,6 +1,10 @@
 // frontend/src/pages/Users.jsx
 import React, { useState, useEffect } from 'react';
 import api from '../api.js';
+import Layout from '../components/Layout.jsx';
+import Card from '../components/ui/Card.jsx';
+import Button from '../components/ui/Button.jsx';
+import Input from '../components/ui/Input.jsx';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -62,66 +66,70 @@ export default function Users() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => window.location.href = '/'}
-              className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg font-medium"
-            >
-              ← Volver
-            </button>
-            <h1 className="text-2xl font-bold">Administrar Usuarios</h1>
-          </div>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
-          >
-            + Agregar Usuario
-          </button>
+    <Layout>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Administrar Usuarios</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Gestiona el acceso y roles del personal</p>
         </div>
+        <Button
+          variant="primary"
+          onClick={() => setShowAddForm(true)}
+        >
+          + Agregar Usuario
+        </Button>
+      </div>
 
-        {error && (
-          <div className="bg-red-900/20 border border-red-500 text-red-400 p-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-lg mb-6 flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {error}
+        </div>
+      )}
 
+      <Card className="overflow-hidden p-0">
         {loading ? (
-          <div className="text-center py-8">Cargando usuarios...</div>
+          <div className="text-center py-12 text-slate-500">
+            <svg className="animate-spin h-8 w-8 mx-auto mb-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Cargando usuarios...
+          </div>
         ) : (
-          <div className="bg-gray-800 rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-700">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
                 <tr>
-                  <th className="px-4 py-3 text-left">Nombre</th>
-                  <th className="px-4 py-3 text-left">Usuario</th>
-                  <th className="px-4 py-3 text-left">Num. Empleado</th>
-                  <th className="px-4 py-3 text-left">Rol</th>
-                  <th className="px-4 py-3 text-left">Permiso Inventario</th>
+                  <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Nombre</th>
+                  <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Usuario</th>
+                  <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Num. Empleado</th>
+                  <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Rol</th>
+                  <th className="px-6 py-4 font-semibold text-slate-900 dark:text-white">Permiso Inventario</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                 {users.map((user, idx) => (
-                  <tr key={idx} className="hover:bg-gray-750">
-                    <td className="px-4 py-3">{user.nombre}</td>
-                    <td className="px-4 py-3 text-gray-400">{user.username || '-'}</td>
-                    <td className="px-4 py-3">{user.username}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        ['The Goat', 'Administrador'].includes(user.rol) ? 'bg-purple-900/30 text-purple-300' :
-                        ['Lider', 'Operador'].includes(user.rol) ? 'bg-blue-900/30 text-blue-300' :
-                        'bg-gray-700 text-gray-300'
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{user.nombre}</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{user.username || '-'}</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-mono">{user.num_empleado || user.username}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        ['The Goat', 'Administrador'].includes(user.rol) ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
+                        ['Lider', 'Operador'].includes(user.rol) ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                        'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
                       }`}>
                         {user.rol}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        user.inventarioRol === 'admin' ? 'bg-green-900/30 text-green-300' :
-                        user.inventarioRol === 'operador' ? 'bg-yellow-900/30 text-yellow-300' :
-                        'bg-gray-700 text-gray-300'
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.inventarioRol === 'admin' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
+                        user.inventarioRol === 'operador' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
+                        'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
                       }`}>
                         {user.inventarioRol}
                       </span>
@@ -132,123 +140,100 @@ export default function Users() {
             </table>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Modal para agregar usuario */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Agregar Nuevo Usuario</h2>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Agregar Nuevo Usuario</h2>
             
             {formError && (
-              <div className="bg-red-900/20 border border-red-500 text-red-400 p-2 rounded mb-4 text-sm">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 p-3 rounded-lg mb-4 text-sm">
                 {formError}
               </div>
             )}
             
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Nombre Completo *
-                  </label>
-                  <input
-                    type="text"
-                    name="nombre"
-                    value={formData.nombre}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Nombre Completo *"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+                required
+              />
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Usuario (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    name="usuario"
-                    value={formData.usuario}
-                    onChange={handleChange}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <Input
+                label="Usuario (opcional)"
+                name="usuario"
+                value={formData.usuario}
+                onChange={handleChange}
+              />
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Número de Empleado *
-                  </label>
-                  <input
-                    type="number"
-                    name="num_empleado"
-                    value={formData.num_empleado}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <Input
+                label="Número de Empleado *"
+                type="number"
+                name="num_empleado"
+                value={formData.num_empleado}
+                onChange={handleChange}
+                required
+              />
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Contraseña *
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    minLength={4}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <Input
+                label="Contraseña *"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                minLength={4}
+              />
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Rol *
-                  </label>
-                  <select
-                    name="rol"
-                    value={formData.rol}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Operador">Operador</option>
-                    <option value="Lider">Lider</option>
-                    <option value="Soporte">Soporte</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="The Goat">The Goat</option>
-                    <option value="Invitado">Invitado</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Rol *
+                </label>
+                <select
+                  name="rol"
+                  value={formData.rol}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm"
+                >
+                  <option value="Operador">Operador</option>
+                  <option value="Lider">Lider</option>
+                  <option value="Soporte">Soporte</option>
+                  <option value="Administrador">Administrador</option>
+                  <option value="The Goat">The Goat</option>
+                  <option value="Invitado">Invitado</option>
+                </select>
               </div>
 
-              <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
+              <div className="flex gap-3 mt-8">
+                <Button
+                  variant="secondary"
                   onClick={() => {
                     setShowAddForm(false);
                     setFormError('');
                   }}
                   disabled={formBusy}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={formBusy}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+                  className="flex-1"
                 >
                   {formBusy ? 'Creando...' : 'Crear Usuario'}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
-    </div>
+    </Layout>
   );
 }

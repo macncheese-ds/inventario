@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
 import { API_BASE_URL } from '../api';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import Input from './ui/Input';
 
 export default function LoginModal({ visible, defaultEmployee = '', onClose, onConfirm, busy }) {
   const [phase, setPhase] = useState('scan'); // 'scan' or 'password'
@@ -164,8 +167,8 @@ export default function LoginModal({ visible, defaultEmployee = '', onClose, onC
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 text-gray-100 rounded-lg p-6 w-full max-w-sm shadow-2xl border border-gray-700">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-sm">
         {/* Simple scanner box (animation removed as requested) */}
         <style>{`
           .scanner-box { height: 120px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:2px dashed #4b5563; background:#1f2937 }
@@ -174,10 +177,10 @@ export default function LoginModal({ visible, defaultEmployee = '', onClose, onC
 
         {phase === 'scan' ? (
           <div>
-            <h3 className="text-lg font-semibold mb-3">Escanear Gaffet</h3>
-            <p className="text-sm text-gray-400 mb-4">Por favor, escanee su gaffet desde la PDA. La aplicación está esperando el escaneo.</p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Escanear Gaffet</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Por favor, escanee su gaffet desde la PDA. La aplicación está esperando el escaneo.</p>
 
-            <div className="mb-3">
+            <div className="mb-4">
               <div className="scanner-box mb-2" style={{ position: 'relative', overflow: 'hidden' }}>
                 {/* Large transparent input trap that fills the scan box - captures PDA scanner without showing keyboard */}
                 <input
@@ -206,55 +209,52 @@ export default function LoginModal({ visible, defaultEmployee = '', onClose, onC
                 />
                 <div className="scanner-text" style={{ pointerEvents: 'none', position: 'relative', zIndex: 1 }}>
                   {scanning ? 'Escaneando...' : 'ESCANEE SU GAFFET'}
-                  {scanBuffer && <div style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>Buffer: {scanBuffer}</div>}
+                  {scanBuffer && <div style={{ fontSize: '12px', marginTop: '8px', color: '#9ca3af' }}>Buffer: {scanBuffer}</div>}
                 </div>
               </div>
             </div>
 
-            {status && <div className="text-sm text-red-400 bg-red-900/20 p-2 rounded mb-3">{status}</div>}
+            {status && <div className="text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-2 rounded mb-3">{status}</div>}
 
-            <div className="flex gap-3 justify-end">
-                <button type="button" onClick={onClose} className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-gray-100">Cancelar</button>
+            <div className="flex justify-end">
+              <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+            </div>
+
+            {debugEnabled && (
+              <div className="mt-4 p-3 bg-slate-800 border border-slate-700 rounded text-xs text-slate-300">
+                <div><strong>Debug Scan</strong></div>
+                <div>buffer: <code>{scanBuffer}</code></div>
+                <div>lastUrl: <code>{lastLookupUrl}</code></div>
+                <div>lastResp: <pre style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(lastLookupResp || {}, null, 2)}</pre></div>
+                <div>lastErr: <pre style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(lastLookupErr || {}, null, 2)}</pre></div>
               </div>
-
-              {debugEnabled && (
-                <div className="mt-4 p-3 bg-gray-700 border border-gray-600 rounded text-xs text-gray-300">
-                  <div><strong>Debug Scan</strong></div>
-                  <div>buffer: <code>{scanBuffer}</code></div>
-                  <div>lastUrl: <code>{lastLookupUrl}</code></div>
-                  <div>lastResp: <pre style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(lastLookupResp || {}, null, 2)}</pre></div>
-                  <div>lastErr: <pre style={{whiteSpace:'pre-wrap'}}>{JSON.stringify(lastLookupErr || {}, null, 2)}</pre></div>
-                </div>
-              )}
+            )}
           </div>
         ) : (
           <div>
-            <h3 className="text-lg font-semibold mb-3">Gaffet Aceptado</h3>
-            <p className="text-sm text-gray-400 mb-4">Usuario encontrado: <strong className="text-gray-100">{foundUser?.nombre || foundUser?.usuario}</strong></p>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">Gaffet Aceptado</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Usuario encontrado: <strong className="text-slate-900 dark:text-white">{foundUser?.nombre || foundUser?.usuario}</strong></p>
 
-            <form onSubmit={submitPassword}>
-              <div className="mb-3">
-                <label className="block text-sm text-gray-300 mb-1">Contraseña</label>
-                <input
-                  type="password"
-                  className="w-full border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contraseña"
-                  required
-                />
-              </div>
+            <form onSubmit={submitPassword} className="space-y-4">
+              <Input
+                label="Contraseña"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña"
+                required
+              />
 
-              {status && <div className="text-sm text-red-400 bg-red-900/20 p-2 rounded mb-3">{status}</div>}
+              {status && <div className="text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-2 rounded">{status}</div>}
 
-              <div className="flex gap-3 justify-end">
-                <button type="button" onClick={() => { setPhase('scan'); setPassword(''); }} className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-600 text-gray-100">← Volver</button>
-                <button type="submit" className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50" disabled={busy}>{busy ? 'Verificando...' : 'Confirmar'}</button>
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+                <Button variant="secondary" onClick={() => { setPhase('scan'); setPassword(''); }}>← Volver</Button>
+                <Button type="submit" disabled={busy}>{busy ? 'Verificando...' : 'Confirmar'}</Button>
               </div>
             </form>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

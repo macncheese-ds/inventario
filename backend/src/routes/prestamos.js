@@ -58,12 +58,19 @@ async function getUserInfo(employeeInput) {
 }
 
 // Helper para auditoría
-async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = null) {
+async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = null, area = null) {
   try {
     await pool.query(
-      `INSERT INTO cambios (username, accion, detalle, fecha_hora, turno, adetalle)
-       VALUES (:u, :a, :d, NOW(), :t, :ad)`,
-      { u: username, a: accion, d: typeof detalle === 'string' ? detalle : JSON.stringify(detalle), t: turno, ad: adetalle ? (typeof adetalle === 'string' ? adetalle : JSON.stringify(adetalle)) : null }
+      `INSERT INTO cambios (username, accion, detalle, fecha_hora, turno, adetalle, area)
+       VALUES (:u, :a, :d, NOW(), :t, :ad, :area)`,
+      { 
+        u: username, 
+        a: accion, 
+        d: typeof detalle === 'string' ? detalle : JSON.stringify(detalle), 
+        t: turno, 
+        ad: adetalle ? (typeof adetalle === 'string' ? adetalle : JSON.stringify(adetalle)) : null,
+        area: area
+      }
     );
   } catch (e) {
     console.error('Log cambio fallo:', e.message);
@@ -167,7 +174,8 @@ router.post('/', authenticateToken, async (req, res) => {
         cantidad_nueva: newQty
       },
       'N/A',
-      item
+      item,
+      req.user?.area || item.area
     );
 
     res.status(201).json({
@@ -268,7 +276,8 @@ router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
         cantidad_nueva: newQty
       },
       'N/A',
-      prestamo
+      prestamo,
+      req.user?.area || item.area
     );
 
     res.json({

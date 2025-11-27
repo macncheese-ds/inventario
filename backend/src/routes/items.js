@@ -57,13 +57,20 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Helper para auditoría (ahora con adetalle)
-async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = null) {
+// Helper para auditoría (ahora con adetalle y area)
+async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = null, area = null) {
   try {
     await pool.query(
-      `INSERT INTO cambios (username, accion, detalle, fecha_hora, turno, adetalle)
-       VALUES (:u, :a, :d, NOW(), :t, :ad)` ,
-      { u: username, a: accion, d: typeof detalle === 'string' ? detalle : JSON.stringify(detalle), t: turno, ad: adetalle ? (typeof adetalle === 'string' ? adetalle : JSON.stringify(adetalle)) : null }
+      `INSERT INTO cambios (username, accion, detalle, fecha_hora, turno, adetalle, area)
+       VALUES (:u, :a, :d, NOW(), :t, :ad, :area)` ,
+      { 
+        u: username, 
+        a: accion, 
+        d: typeof detalle === 'string' ? detalle : JSON.stringify(detalle), 
+        t: turno, 
+        ad: adetalle ? (typeof adetalle === 'string' ? adetalle : JSON.stringify(adetalle)) : null,
+        area: area
+      }
     );
   } catch (e) {
     console.error('Log cambio fallo:', e.message);
@@ -109,9 +116,15 @@ router.get('/', authenticateToken, async (req, res) => {
 // Crear ítem (admin/toolroom) - acepta multipart/form-data con campo 'image'
 router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
   let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno } = req.body;
-  nivel = nivel !== undefined ? Number(nivel) : null;
-  if (nivel === null || isNaN(nivel) || nivel < 1) {
-    return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 1' });
+  // Permitir nivel null, vacío, 0 o cualquier entero >= 0
+  if (nivel === '' || nivel === undefined) {
+    nivel = null;
+  } else {
+    const parsedNivel = Number(nivel);
+    if (isNaN(parsedNivel) || parsedNivel < 0) {
+      return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 0 o vacío' });
+    }
+    nivel = parsedNivel;
   }
   let publicLink = link || null;
   if (req.file) {
@@ -125,7 +138,7 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
       { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink }
     );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id: result.insertId });
-    await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno);
+    await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno, null, req.user.area);
     res.status(201).json(rows[0]);
   } catch (e) {
     console.error(e);
@@ -138,9 +151,15 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
   const { id } = req.params;
   // si viene multipart, los campos estarán en req.body; si json, también
   let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, password } = req.body;
-  nivel = nivel !== undefined ? Number(nivel) : null;
-  if (nivel === null || isNaN(nivel) || nivel < 1) {
-    return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 1' });
+  // Permitir nivel null, vacío, 0 o cualquier entero >= 0
+  if (nivel === '' || nivel === undefined) {
+    nivel = null;
+  } else {
+    const parsedNivel = Number(nivel);
+    if (isNaN(parsedNivel) || parsedNivel < 0) {
+      return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 0 o vacío' });
+    }
+    nivel = parsedNivel;
   }
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;
@@ -165,7 +184,7 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
     { ndp, articulo, gaveta, nivel, cantidad, precio: Number(precio || 0), min, max, equipo, tde, link: finalLink, id }
   );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-    await logCambio(req.user.nombre || req.user.username, 'UPDATE', rows[0], turno, prev[0] || null);
+    await logCambio(req.user.nombre || req.user.username, 'UPDATE', rows[0], turno, prev[0] || null, req.user.area);
     res.json(rows[0]);
   } catch (e) {
     console.error(e);
@@ -219,7 +238,8 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolr
         cantidad_retirada: cantidad
       }, 
       turno || 'N/A',
-      prev[0]
+      prev[0],
+      req.user.area
     );
 
     res.json({ 
@@ -269,7 +289,7 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), as
     } catch (e) {
       console.warn('Error eliminando archivo asociado al ítem:', e.message);
     }
-    await logCambio(req.user.nombre || req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null);
+    await logCambio(req.user.nombre || req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null, req.user.area);
     res.json({ message: 'Ítem eliminado' });
   } catch (e) {
     console.error(e);
@@ -281,12 +301,20 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), as
 router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admin']), async (req, res) => {
   console.log('🔍 Export Excel - User:', req.user);
   console.log('🔍 Export Excel - User role:', req.user?.rol);
+  console.log('🔍 Export Excel - User area:', req.user?.area);
   console.log('🔍 Export Excel - Query params:', req.query);
   
   try {
     const { q, gaveta } = req.query;
+    const userArea = req.user?.area || null;
     const params = {};
     const where = ['1=1'];
+
+    // Filtrar por área del usuario si tiene una asignada
+    if (userArea) {
+      where.push('LOWER(g.area) = LOWER(:userArea)');
+      params.userArea = userArea;
+    }
 
     if (gaveta) { 
       where.push('g.gaveta = :gaveta'); 
@@ -299,12 +327,14 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
 
     console.log('🔍 Export Excel - SQL params:', params);
 
-    // Obtener todos los datos para exportar (sin filtro de gaveta para obtener todas)
+    // Obtener datos filtrados por área del usuario
     const [rows] = await pool.query(
    `SELECT g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
-        g.equipo, g.tde
+        g.equipo, g.tde, g.area
       FROM \`gavetas\` g
-      ORDER BY g.gaveta ASC, g.nivel ASC`
+      ${whereSql}
+      ORDER BY g.gaveta ASC, g.nivel ASC`,
+      params
     );
 
     console.log('🔍 Export Excel - Found rows:', rows.length);
@@ -322,9 +352,24 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
       gavetaGroups[gaveta].push(row);
     });
 
-    // Crear una hoja por cada gaveta
-    Object.keys(gavetaGroups).sort((a, b) => parseInt(a) - parseInt(b)).forEach(gaveta => {
-      const worksheet = workbook.addWorksheet(`Gaveta ${gaveta}`);
+    // Crear una hoja por cada gaveta (sanitizar nombre para evitar duplicados y caracteres inválidos)
+    // Ordenar alfabéticamente
+    const usedNames = new Set();
+    Object.keys(gavetaGroups).sort((a, b) => {
+      return String(a).localeCompare(String(b), 'es', { sensitivity: 'base' });
+    }).forEach(gaveta => {
+      // Sanitizar nombre de hoja (max 31 chars, sin caracteres especiales)
+      let sheetName = String(gaveta).replace(/[\[\]\*\?\/\\:]/g, '_').substring(0, 31);
+      // Evitar duplicados agregando sufijo numérico si es necesario
+      let finalName = sheetName;
+      let counter = 1;
+      while (usedNames.has(finalName.toLowerCase())) {
+        finalName = `${sheetName.substring(0, 28)}_${counter}`;
+        counter++;
+      }
+      usedNames.add(finalName.toLowerCase());
+      
+      const worksheet = workbook.addWorksheet(finalName);
       
       // Definir las columnas (incluye Precio y Total por ítem)
       worksheet.columns = [
@@ -414,9 +459,10 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
     await logCambio(
       req.user.nombre || req.user.username, 
       'EXPORTAR_EXCEL', 
-      `Exportó ${rows.length} registros a Excel (todas las gavetas)`,
+      `Exportó ${rows.length} registros a Excel (área: ${userArea || 'todas'})`,
       'N/A',
-      { filtros: { q }, total_registros: rows.length, gavetas: Object.keys(gavetaGroups).length }
+      { filtros: { q, area: userArea }, total_registros: rows.length, gavetas: Object.keys(gavetaGroups).length },
+      req.user.area
     );
 
     res.send(buffer);

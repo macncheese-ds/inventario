@@ -54,6 +54,9 @@ router.post('/change-password', authenticateToken, async (req, res) => {
 
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
+    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
+      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
+    }
     const conn = await createCredConnection();
     const [rows] = await conn.execute('SELECT num_empleado AS username, nombre, rol FROM users ORDER BY nombre ASC');
     await conn.end();
@@ -71,6 +74,9 @@ router.get('/info', authenticateToken, (req, res) => {
 
 router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
+    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
+      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
+    }
     const { nombre, usuario, num_empleado, password, rol } = req.body;
     
     // Validar campos requeridos
@@ -110,6 +116,9 @@ router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) =>
 
 router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
+    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
+      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
+    }
     const { username } = req.params;
     const { nombre, usuario, num_empleado, password, rol } = req.body;
     

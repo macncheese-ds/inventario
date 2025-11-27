@@ -48,7 +48,7 @@ router.post(
       const conn = await createCredConnection();
       
       const [rows] = await conn.execute(
-        'SELECT id, nombre, usuario, num_empleado, pass_hash, rol FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+        'SELECT id, nombre, usuario, num_empleado, pass_hash, rol, area FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
         [normalized, normalized]
       );
       await conn.end();
@@ -67,7 +67,8 @@ router.post(
         { 
           username: user.num_empleado, 
           rol: user.rol,
-          nombre: user.nombre
+          nombre: user.nombre,
+          area: user.area || null
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
@@ -78,7 +79,8 @@ router.post(
         user: { 
           username: user.num_empleado, 
           rol: user.rol,
-          nombre: user.nombre 
+          nombre: user.nombre,
+          area: user.area || null
         } 
       });
     } catch (e) {
@@ -98,7 +100,7 @@ router.get('/lookup/:employee_input', async (req, res) => {
     const conn = await createCredConnection();
     
     const [rows] = await conn.execute(
-      'SELECT id, nombre, usuario, num_empleado, rol FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      'SELECT id, nombre, usuario, num_empleado, rol, area FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
       [normalized, normalized]
     );
     await conn.end();
@@ -113,7 +115,8 @@ router.get('/lookup/:employee_input', async (req, res) => {
       nombre: user.nombre, 
       usuario: user.usuario, 
       num_empleado: user.num_empleado,
-      rol: user.rol
+      rol: user.rol,
+      area: user.area || null
     });
   } catch (err) {
     console.error('Error buscando usuario:', err);

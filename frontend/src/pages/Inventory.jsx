@@ -6,6 +6,10 @@ import { FaCog } from 'react-icons/fa';
 import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
 import { toggleTheme } from '../theme.js';
+import Layout from '../components/Layout.jsx';
+import Card from '../components/ui/Card.jsx';
+import Button from '../components/ui/Button.jsx';
+import Input from '../components/ui/Input.jsx';
 
 // Translations for UI labels (expanded)
 const TRANSLATIONS = {
@@ -315,18 +319,31 @@ const ROLE_GROUPS = {
   GUEST: ['Invitado']
 };
 
-function canAdminister(rol) {
-  // Only FULL_ACCESS roles can administer users and high-level settings
+function isGuest(rol) {
+  return ROLE_GROUPS.GUEST.includes(rol);
+}
+
+// Puede ver historial, exportar y préstamos (todos los FULL_ACCESS, incluyendo ensamble)
+function canViewHistory(rol, area) {
   return ROLE_GROUPS.FULL_ACCESS.includes(rol);
 }
 
-function canEdit(rol) {
-  // FULL_ACCESS and TOOL_ACCESS can edit inventory/tool-room items
+// Puede administrar usuarios (FULL_ACCESS pero NO ensamble)
+function canAdministerUsers(rol, area) {
+  if (area && area.toLowerCase() === 'ensamble') return false;
+  return ROLE_GROUPS.FULL_ACCESS.includes(rol);
+}
+
+// Puede editar items (agregar/editar/eliminar, decrementar)
+function canEditInventory(rol, area) {
+  // Si en el futuro quieres bloquear edición para ensamble, agrega aquí la condición.
   return [...ROLE_GROUPS.FULL_ACCESS, ...ROLE_GROUPS.TOOL_ACCESS].includes(rol);
 }
 
-function isGuest(rol) {
-  return ROLE_GROUPS.GUEST.includes(rol);
+// Puede hacer préstamos (NO ensamble)
+function canLendItems(rol, area) {
+  if (area && area.toLowerCase() === 'ensamble') return false;
+  return [...ROLE_GROUPS.FULL_ACCESS, ...ROLE_GROUPS.TOOL_ACCESS].includes(rol);
 }
 
 function diffObj(prev, curr) {
@@ -366,23 +383,23 @@ function Historial() {
   }, []);
   
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       {loading && <div className="text-slate-500 text-sm">Cargando historial...</div>}
-      {error && <div className="text-red-600 text-sm">{error}</div>}
+      {error && <div className="text-rose-600 text-sm">{error}</div>}
       {!loading && !error && (
-        <div className="overflow-x-auto -mx-3 sm:mx-0">
-          <table className="min-w-full text-xs">
-            <thead>
-              <tr className="bg-slate-800 dark:bg-slate-700">
-                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('fecha_hora')}</th>
-                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('usuario_label')}</th>
-                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('accion_label')}</th>
-                <th className="px-1 sm:px-2 py-1 text-left hidden md:table-cell">{trLocal('detalle_anterior')}</th>
-                <th className="px-1 sm:px-2 py-1 text-left">{trLocal('detalle_nuevo')}</th>
-                <th className="px-1 sm:px-2 py-1 text-left hidden lg:table-cell">{trLocal('turno_label')}</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('fecha_hora')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('usuario_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('accion_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden md:table-cell">{trLocal('detalle_anterior')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('detalle_nuevo')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden lg:table-cell">{trLocal('turno_label')}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {historial.map((h) => {
                 const detalle = parseDetalle(h.detalle);
                 const adetalle = parseDetalle(h.adetalle);
@@ -414,13 +431,13 @@ function Historial() {
                 }
                 
                 return (
-                  <tr key={h.id} className="border-b border-slate-700 dark:border-slate-700">
-                    <td className="px-1 sm:px-2 py-1 whitespace-nowrap text-xs">{new Date(h.fecha_hora).toLocaleString()}</td>
-                    <td className="px-1 sm:px-2 py-1 text-xs">{h.username}</td>
-                    <td className="px-1 sm:px-2 py-1 text-xs">{ACCION_LABELS[h.accion] || h.accion}</td>
-                    <td className="px-1 sm:px-2 py-1 max-w-xs text-xs hidden md:table-cell">{adetalleContent}</td>
-                    <td className="px-1 sm:px-2 py-1 max-w-xs text-xs">{detalleContent}</td>
-                    <td className="px-1 sm:px-2 py-1 text-xs hidden lg:table-cell">{h.turno}</td>
+                  <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-600 dark:text-slate-300">{new Date(h.fecha_hora).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-slate-900 dark:text-white font-medium">{h.username}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{ACCION_LABELS[h.accion] || h.accion}</td>
+                    <td className="px-4 py-3 max-w-xs text-slate-500 dark:text-slate-400 text-xs hidden md:table-cell">{adetalleContent}</td>
+                    <td className="px-4 py-3 max-w-xs text-slate-500 dark:text-slate-400 text-xs">{detalleContent}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden lg:table-cell">{h.turno}</td>
                   </tr>
                 );
               })}
@@ -573,66 +590,60 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
   }
 
   if (loading) return <div className="text-slate-500">{trLocal('loading_users')}</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (error) return <div className="text-rose-600">{error}</div>;
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-        <h4 className="font-semibold text-sm sm:text-base">{trLocal('manage_users')}</h4>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-3 py-1.5 rounded text-xs sm:text-sm font-medium min-h-[36px]"
-          >
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h4 className="text-lg font-bold text-slate-900 dark:text-white">{trLocal('manage_users')}</h4>
+        <div className="flex gap-3">
+          <Button onClick={() => setShowAddForm(true)}>
             {trLocal('add_user')}
-          </button>
-          <button
-            onClick={loadUsuarios}
-            className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline min-h-[36px]"
-          >
+          </Button>
+          <Button variant="secondary" onClick={loadUsuarios}>
             {trLocal('refresh')}
-          </button>
+          </Button>
         </div>
       </div>
 
       {usuarios.length === 0 ? (
         <div className="text-slate-500 text-sm">{trLocal('no_users')}</div>
       ) : (
-        <div className="overflow-x-auto -mx-3 sm:mx-0">
-          <table className="min-w-full text-xs sm:text-sm">
-            <thead>
-              <tr className="bg-slate-800 dark:bg-slate-700">
-                <th className="px-2 sm:px-3 py-2 text-left">Usuario</th>
-                <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">Nombre</th>
-                <th className="px-2 sm:px-3 py-2 text-left">Rol</th>
-                <th className="px-2 sm:px-3 py-2 text-right">Acciones</th>
+        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+              <tr>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">Usuario</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden sm:table-cell">Nombre</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">Rol</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {usuarios.map(user => (
-                <tr key={user.username} className="border-b border-slate-700 dark:border-slate-700">
-                  <td className="px-2 sm:px-3 py-2 font-medium">{user.username}</td>
-                  <td className="px-2 sm:px-3 py-2 hidden sm:table-cell">{user.nombre}</td>
-                  <td className="px-2 sm:px-3 py-2">
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                      canAdminister(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100' :
-                      canEdit(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
-                      'bg-slate-800 text-slate-200 dark:bg-slate-800 dark:text-slate-100'
+                <tr key={user.username} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{user.username}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{user.nombre}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      canAdminister(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                      canEdit(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                      'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
                     }`}>
                       {user.rol}
                     </span>
                   </td>
-                  <td className="px-2 sm:px-3 py-2 text-right">
-                    <div className="flex flex-col sm:flex-row justify-end gap-1 sm:gap-2">
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex flex-col sm:flex-row justify-end gap-2">
                       <button
                         onClick={() => handleEditUser(user)}
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-xs whitespace-nowrap min-h-[36px]"
+                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
                       >
                         {trLocal('edit')}
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user.username)}
-                        className="text-red-600 dark:text-red-400 hover:underline text-xs whitespace-nowrap min-h-[36px]"
+                        className="text-rose-600 hover:text-rose-900 dark:text-rose-400 dark:hover:text-rose-300 text-sm font-medium"
                       >
                         {trLocal('delete')}
                       </button>
@@ -647,130 +658,68 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal de confirmación para eliminar */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
-            <div className="mb-4 text-base sm:text-lg font-semibold text-red-700 dark:text-red-400">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md border-rose-200 dark:border-rose-900">
+            <div className="mb-4 text-lg font-bold text-rose-600 dark:text-rose-400">
               {trLocal('delete_confirm')}
             </div>
-            <div className="mb-6 text-sm sm:text-base text-slate-300 dark:text-slate-300">
-              {trLocal('delete_user_text')} <strong>{confirmDelete}</strong>?
+            <div className="mb-6 text-slate-600 dark:text-slate-300">
+              {trLocal('delete_user_text')} <strong className="text-slate-900 dark:text-white">{confirmDelete}</strong>?
               <br />
-              <span className="text-xs sm:text-sm text-slate-500">{trLocal('irreversible_action')}</span>
+              <span className="text-sm text-slate-500 mt-2 block">{trLocal('irreversible_action')}</span>
             </div>
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
-              <button
-                onClick={handleCancelDelete}
-                className="px-4 py-2.5 rounded-lg border border-slate-600 dark:border-slate-600 hover:bg-slate-700/50 dark:hover:bg-slate-600 text-sm min-h-[44px]"
-              >
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
+              <Button variant="secondary" onClick={handleCancelDelete}>
                 {trLocal('cancel')}
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm min-h-[44px]"
-              >
+              </Button>
+              <Button onClick={handleConfirmDelete} className="bg-rose-600 hover:bg-rose-700 text-white">
                 {trLocal('delete')}
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Modal para agregar usuario */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
-          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base sm:text-lg font-bold mb-4">{trLocal('add_new_user')}</h3>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('add_new_user')}</h3>
             
             {formError && (
-              <div className="bg-red-900/20 border border-red-500 text-red-600 dark:text-red-400 p-2 rounded mb-4 text-xs sm:text-sm">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 dark:bg-rose-900/20 dark:border-rose-900/30 dark:text-rose-400 p-3 rounded-lg mb-4 text-sm">
                 {formError}
               </div>
             )}
             
-            <form onSubmit={handleSubmitAdd}>
-              <div className="space-y-3 sm:space-y-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Nombre Completo *
-                  </label>
-                  <input
-                    type="text"
-                    name="nombre"
-                    value={formData.nombre}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
+            <form onSubmit={handleSubmitAdd} className="space-y-4">
+              <Input label="Nombre Completo *" name="nombre" value={formData.nombre} onChange={handleChange} required />
+              <Input label="Usuario (opcional)" name="usuario" value={formData.usuario} onChange={handleChange} />
+              <Input label="Número de Empleado *" name="num_empleado" value={formData.num_empleado} onChange={handleChange} required placeholder="Ej: 1234A" />
+              <Input label="Contraseña *" type="password" name="password" value={formData.password} onChange={handleChange} required minLength={4} />
 
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Usuario (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    name="usuario"
-                    value={formData.usuario}
-                    onChange={handleChange}
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Número de Empleado *
-                  </label>
-                  <input
-                    type="text"
-                    name="num_empleado"
-                    value={formData.num_empleado}
-                    onChange={handleChange}
-                    required
-                    placeholder="Ej: 1234A"
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Contraseña *
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    minLength={4}
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Rol *
-                  </label>
-                  <select
-                    name="rol"
-                    value={formData.rol}
-                    onChange={handleChange}
-                    required
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  >
-                    <option value="The Goat">The Goat</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Ingeniero">Ingeniero</option>
-                    <option value="Operador">Operador</option>
-                    <option value="Tecnico">Tecnico</option>
-                    <option value="Invitado">Invitado</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Rol *
+                </label>
+                <select
+                  name="rol"
+                  value={formData.rol}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                >
+                  <option value="The Goat">The Goat</option>
+                  <option value="Administrador">Administrador</option>
+                  <option value="Ingeniero">Ingeniero</option>
+                  <option value="Operador">Operador</option>
+                  <option value="Tecnico">Tecnico</option>
+                  <option value="Invitado">Invitado</option>
+                </select>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
+              <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button variant="secondary" onClick={() => {
                     setShowAddForm(false);
                     setFormError('');
                     setFormData({
@@ -780,149 +729,76 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                       password: '',
                       rol: 'Operador'
                     });
-                  }}
-                  disabled={formBusy}
-                  className="flex-1 bg-slate-800 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-500 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
-                >
+                  }} disabled={formBusy} className="flex-1">
                   {trLocal('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={formBusy}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
-                >
+                </Button>
+                <Button type="submit" disabled={formBusy} className="flex-1">
                   {formBusy ? trLocal('processing') : trLocal('create_user')}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
 
       {/* Modal para editar usuario */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-[60]">
-          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base sm:text-lg font-bold mb-4">{trLocal('edit_item') /* reuse edit label for modal */}</h3>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('edit_item')}</h3>
             
             {formError && (
-              <div className="bg-red-900/20 border border-red-500 text-red-600 dark:text-red-400 p-2 rounded mb-4 text-xs sm:text-sm">
+              <div className="bg-rose-50 border border-rose-200 text-rose-600 dark:bg-rose-900/20 dark:border-rose-900/30 dark:text-rose-400 p-3 rounded-lg mb-4 text-sm">
                 {formError}
               </div>
             )}
             
-            <form onSubmit={(e) => { e.preventDefault(); handleSaveUser(); }}>
-              <div className="space-y-3 sm:space-y-4">
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Nombre Completo *
-                  </label>
-                  <input
-                    type="text"
-                    name="nombre"
-                    value={editingUser.nombre}
-                    onChange={handleEditChange}
-                    required
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveUser(); }} className="space-y-4">
+              <Input label="Nombre Completo *" name="nombre" value={editingUser.nombre} onChange={handleEditChange} required />
+              <Input label="Usuario (opcional)" name="usuario" value={editingUser.usuario} onChange={handleEditChange} />
+              <Input label="Número de Empleado *" name="num_empleado" value={editingUser.num_empleado} onChange={handleEditChange} required placeholder="Ej: 1234A" />
+              <Input label="Nueva Contraseña (dejar vacío para no cambiar)" type="password" name="password" value={editingUser.password} onChange={handleEditChange} minLength={4} />
 
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Usuario (opcional)
-                  </label>
-                  <input
-                    type="text"
-                    name="usuario"
-                    value={editingUser.usuario}
-                    onChange={handleEditChange}
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Número de Empleado *
-                  </label>
-                  <input
-                    type="text"
-                    name="num_empleado"
-                    value={editingUser.num_empleado}
-                    onChange={handleEditChange}
-                    required
-                    placeholder="Ej: 1234A"
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Nueva Contraseña (dejar vacío para no cambiar)
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={editingUser.password}
-                    onChange={handleEditChange}
-                    minLength={4}
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium mb-1">
-                    Rol *
-                  </label>
-                  <select
-                    name="rol"
-                    value={editingUser.rol}
-                    onChange={handleEditChange}
-                    required
-                    className="w-full bg-slate-900 dark:bg-slate-700 border border-slate-600 dark:border-slate-600 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px]"
-                  >
-                    <option value="The Goat">The Goat</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Ingeniero">Ingeniero</option>
-                    <option value="Operador">Operador</option>
-                    <option value="Tecnico">Tecnico</option>
-                    <option value="Invitado">Invitado</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Rol *
+                </label>
+                <select
+                  name="rol"
+                  value={editingUser.rol}
+                  onChange={handleEditChange}
+                  required
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                >
+                  <option value="The Goat">The Goat</option>
+                  <option value="Administrador">Administrador</option>
+                  <option value="Ingeniero">Ingeniero</option>
+                  <option value="Operador">Operador</option>
+                  <option value="Tecnico">Tecnico</option>
+                  <option value="Invitado">Invitado</option>
+                </select>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
+              <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button variant="secondary" onClick={() => {
                     setEditingUser(null);
                     setFormError('');
-                  }}
-                  disabled={formBusy}
-                  className="flex-1 bg-slate-800 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-500 px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
-                >
+                  }} disabled={formBusy} className="flex-1">
                   {trLocal('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={formBusy}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium disabled:opacity-50 text-sm min-h-[44px]"
-                >
+                </Button>
+                <Button type="submit" disabled={formBusy} className="flex-1">
                   {formBusy ? trLocal('processing') : trLocal('save_changes')}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
 
-      {/* Botón de cerrar */}
-      <div className="flex justify-end mt-6">
-        <button
-          onClick={onClose}
-          className="px-4 py-2.5 rounded-lg border border-slate-600 dark:border-slate-600 hover:bg-slate-700/50 dark:hover:bg-slate-600 text-sm min-h-[44px]"
-        >
+      <div className="flex justify-end mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <Button variant="secondary" onClick={onClose}>
           Cerrar
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -930,58 +806,61 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
 function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
   return (
-    <div className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-700">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-200">
+    <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-900/30">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-200">
             {trLocal('loans_active')} ({prestamos.length})
           </h3>
           <button
             onClick={onClose}
-            className="text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 text-xl"
+            className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 transition-colors"
           >
-            ✕
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         
         {loading ? (
-          <div className="text-center text-slate-500 text-sm py-4">{trLocal('loading')}</div>
+          <div className="text-center text-slate-500 text-sm py-8">{trLocal('loading')}</div>
         ) : prestamos.length === 0 ? (
-          <div className="text-center text-slate-500 text-sm py-4">{trLocal('no_active_loans')}</div>
+          <div className="text-center text-slate-500 text-sm py-8">{trLocal('no_active_loans')}</div>
         ) : (
-          <div className="overflow-x-auto -mx-2 sm:mx-0">
-            <table className="min-w-full text-xs sm:text-sm">
-              <thead className="bg-blue-100 dark:bg-blue-900/40">
+          <div className="overflow-x-auto rounded-lg border border-indigo-100 dark:border-indigo-900/30 bg-white dark:bg-slate-800">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-indigo-50 dark:bg-indigo-900/40 border-b border-indigo-100 dark:border-indigo-900/30">
                 <tr>
-                  <th className="px-2 py-2 text-left">Empleado</th>
-                  <th className="px-2 py-2 text-left hidden sm:table-cell">N° Empleado</th>
-                  <th className="px-2 py-2 text-left">Artículo</th>
-                  <th className="px-2 py-2 text-left hidden md:table-cell">NDP</th>
-                  <th className="px-2 py-2 text-left hidden md:table-cell">Gaveta</th>
-                  <th className="px-2 py-2 text-left hidden lg:table-cell">Prestado por</th>
-                  <th className="px-2 py-2 text-left hidden xl:table-cell">Fecha</th>
-                  <th className="px-2 py-2 text-right">Acción</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200">Empleado</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden sm:table-cell">N° Empleado</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200">Artículo</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden md:table-cell">NDP</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden md:table-cell">Gaveta</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden lg:table-cell">Prestado por</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden xl:table-cell">Fecha</th>
+                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 text-right">Acción</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-indigo-50 dark:divide-indigo-900/20">
                 {prestamos.map((p) => (
-                  <tr key={p.id} className="border-b border-blue-200 dark:border-blue-800">
-                    <td className="px-2 py-2">{p.empleado}</td>
-                    <td className="px-2 py-2 hidden sm:table-cell">{p.num_empleado}</td>
-                    <td className="px-2 py-2">{p.articulo}</td>
-                    <td className="px-2 py-2 hidden md:table-cell">{p.ndp}</td>
-                    <td className="px-2 py-2 hidden md:table-cell">{p.gaveta}</td>
-                    <td className="px-2 py-2 hidden lg:table-cell">{p.empleado1}</td>
-                    <td className="px-2 py-2 hidden xl:table-cell">
+                  <tr key={p.id} className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors">
+                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{p.empleado}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{p.num_empleado}</td>
+                    <td className="px-4 py-3 text-slate-900 dark:text-white">{p.articulo}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">{p.ndp}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">{p.gaveta}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden lg:table-cell">{p.empleado1}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden xl:table-cell">
                       {p.fecha_prestamo ? new Date(p.fecha_prestamo).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-2 py-2 text-right">
-                      <button
+                    <td className="px-4 py-3 text-right">
+                      <Button 
+                        size="sm"
                         onClick={() => onDevolver(p)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm min-h-[36px]"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
                       >
                         {trLocal('return_item')}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -994,94 +873,33 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
   );
 }
 
-function Header({ user, onLogout, onOpenPassword, onOpenPrestamos, lang, setLang, grandTotalAll }) {
-  const t = (key) => (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) ? TRANSLATIONS[lang][key] : TRANSLATIONS[DEFAULT_LANG][key];
-  return (
-    <header className="sticky top-0 z-10 bg-slate-900 border-b border-slate-700 dark:bg-slate-900 dark:border-slate-700">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg font-semibold">{t('inventory')}</span>
-            <span className="text-xs text-slate-500 hidden md:inline">| Gestión de Gavetas</span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="text-xs sm:text-sm text-slate-300 dark:text-slate-300 text-right mr-2">
-              <div className="hidden sm:block"><span className="text-xs text-slate-500 mr-1">{t('total_general')}:</span> <b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
-              <div className="text-xs sm:hidden"><b>{formatCurrency(grandTotalAll.toFixed ? grandTotalAll.toFixed(2) : grandTotalAll)}</b></div>
-            </div>
 
-            <span className="text-xs sm:text-sm text-slate-400 dark:text-slate-300 hidden sm:block">
-              {user?.nombre ? (
-                <>
-                  <b>{user.rol}</b> - {user.nombre}
-                </>
-              ) : (
-                <>Rol: <b>{user.rol}</b></>
-              )}
-            </span>
 
-            <select value={lang} onChange={(e) => { setLang(e.target.value); localStorage.setItem('inv_lang', e.target.value); }} className="text-xs rounded border px-2 py-1 bg-slate-900 dark:bg-slate-800">
-              <option value="es">Español</option>
-              <option value="en">English</option>
-              <option value="ko">한국어</option>
-            </select>
-
-            <button
-              onClick={toggleTheme}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 text-xs sm:text-sm min-h-[44px] min-w-[44px] flex items-center justify-center"
-              title="Cambiar tema"
-            >
-              <span className="hidden sm:inline">Tema</span>
-              <span className="sm:hidden">🌓</span>
-            </button>
-            <button
-              onClick={onOpenPassword}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              title="Cambiar contraseña"
-            >
-              <FaCog />
-            </button>
-            <button
-              onClick={onOpenPrestamos}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 text-xs sm:text-sm min-h-[44px]"
-            >
-              {t('prestamos')}
-            </button>
-            <button
-              onClick={onLogout}
-              className="rounded-lg border px-2 sm:px-3 py-1.5 hover:bg-slate-700/50 dark:hover:bg-slate-700 dark:border-slate-700 text-xs sm:text-sm min-h-[44px]"
-            >
-              Salir
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar }) {
+function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar }) {
   const qtyClass =
     item.cantidad < item.min
-      ? 'text-red-600 font-semibold'
+      ? 'text-rose-600 font-bold'
       : item.cantidad > item.max
-      ? 'text-yellow-600 font-semibold'
-      : '';
+      ? 'text-amber-600 font-bold'
+      : 'text-slate-900 dark:text-white';
   
   return (
-    <tr onDoubleClick={() => onDoubleClick && onDoubleClick(item)} className="border-b border-slate-700 dark:border-slate-700 cursor-pointer hover:bg-slate-700/50 dark:hover:bg-slate-600/50">
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.ndp}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.articulo}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">{item.equipo}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.gaveta}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm">{item.nivel}</td>
-      <td className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${qtyClass}`}>
-        <div className="flex items-center gap-1 sm:gap-2">
+    <tr 
+      onDoubleClick={() => onDoubleClick && onDoubleClick(item)} 
+      className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+    >
+      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{item.ndp}</td>
+      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">{item.articulo}</td>
+      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 hidden md:table-cell">{item.equipo}</td>
+      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{item.gaveta}</td>
+      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{item.nivel}</td>
+      <td className={`px-4 py-3 text-sm ${qtyClass}`}>
+        <div className="flex items-center gap-2">
           <span>{item.cantidad}</span>
-          {canEdit(role) && item.cantidad > 0 && (
+          {canEditInventory(role, area) && item.cantidad > 0 && (
             <button 
               onClick={(e) => { e.stopPropagation(); onDecrement(item); }} 
-              className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-1.5 py-0.5 rounded font-bold min-h-[28px] min-w-[28px]"
+              className="bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-400 w-6 h-6 rounded flex items-center justify-center transition-colors"
               title="Quitar unidades"
             >
               -
@@ -1089,18 +907,41 @@ function ItemRow({ item, role, onEdit, onDelete, onDoubleClick, onDecrement, onP
           )}
         </div>
       </td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-right">{formatCurrency(item.precio)}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm text-right">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.min}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{item.max}</td>
-      <td className="px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">{item.tde}</td>
-      {/* imagen removida de la lista; se muestra en la tarjeta de detalle al hacer doble clic */}
-      {canEdit(role) && (
-        <td className="px-2 sm:px-3 py-2 text-right">
-          <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
-            <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="text-blue-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={!canEdit(role)}>Editar</button>
-            <button onClick={(e) => { e.stopPropagation(); onPrestar(item); }} className="text-purple-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={!canEdit(role) || item.cantidad <= 0}>Prestar</button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(item); }} className="text-red-600 hover:underline text-xs sm:text-sm whitespace-nowrap min-h-[36px]" disabled={!canEdit(role)}>Eliminar</button>
+      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 text-right font-mono">{formatCurrency(item.precio)}</td>
+      <td className="px-4 py-3 text-sm text-slate-900 dark:text-white text-right font-mono font-medium">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</td>
+      
+      {canEditInventory(role, area) && (
+        <td className="px-4 py-3 text-right">
+          <div className="flex items-center justify-end gap-2">
+            {canLendItems(role, area) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onPrestar(item); }}
+                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded dark:text-indigo-400 dark:hover:bg-indigo-900/30 transition-colors"
+                title="Prestar"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(item); }}
+              className="p-1.5 text-slate-600 hover:bg-slate-100 rounded dark:text-slate-400 dark:hover:bg-slate-700 transition-colors"
+              title="Editar"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(item); }}
+              className="p-1.5 text-rose-600 hover:bg-rose-50 rounded dark:text-rose-400 dark:hover:bg-rose-900/30 transition-colors"
+              title="Eliminar"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
         </td>
       )}
@@ -1133,59 +974,34 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
   }
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Input label={trLocal('part_number')} value={form.ndp} onChange={e => upd('ndp', e.target.value)} />
+        <Input label={trLocal('item_label')} value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
+        <Input label={trLocal('equipment')} value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
+        
         <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('part_number')}</label>
-          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.ndp} onChange={e => upd('ndp', e.target.value)} required />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('item_label')}</label>
-          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.articulo} onChange={e => upd('articulo', e.target.value)} required />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('equipment')}</label>
-          <input className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.equipo} onChange={e => upd('equipo', e.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('drawer_label')}</label>
-          <input list="gavetas-list" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
+          <Input label={trLocal('drawer_label')} list="gavetas-list" value={form.gaveta} onChange={e => upd('gaveta', e.target.value)} required />
           <datalist id="gavetas-list">
             {gavetas.map(g => <option key={g} value={g}>{g}</option>)}
           </datalist>
         </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('level_label')}</label>
-          <input type="number" min={1} className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.nivel} onChange={e => upd('nivel', Number(e.target.value))} />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('quantity_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} min={0} />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('price_label')}</label>
-          <input type="number" step="0.01" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.precio} onChange={e => upd('precio', Number(e.target.value))} min={0} />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('min_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.min} onChange={e => upd('min', Number(e.target.value))} min={0} />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('max_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.max} onChange={e => upd('max', Number(e.target.value))} min={0} />
-        </div>
-        <div>
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('tde_label')}</label>
-          <input type="number" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={form.tde} onChange={e => upd('tde', Number(e.target.value))} min={0} />
-        </div>
+
+        <Input label={trLocal('level_label')} type="number" min={0} value={form.nivel} onChange={e => upd('nivel', e.target.value)} />
+        <Input label={trLocal('quantity_label')} type="number" min={0} value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} />
+        <Input label={trLocal('price_label')} type="number" step="0.01" min={0} value={form.precio} onChange={e => upd('precio', Number(e.target.value))} />
+        <Input label={trLocal('min_label')} type="number" min={0} value={form.min} onChange={e => upd('min', Number(e.target.value))} />
+        <Input label={trLocal('max_label')} type="number" min={0} value={form.max} onChange={e => upd('max', Number(e.target.value))} />
+        <Input label={trLocal('tde_label')} type="number" min={0} value={form.tde} onChange={e => upd('tde', Number(e.target.value))} />
+        
         <div className="sm:col-span-2 lg:col-span-3">
-          <label className="text-xs sm:text-sm block mb-1">{trLocal('upload_image')}</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{trLocal('upload_image')}</label>
           <ImageUploader currentImage={form.link} onImageChange={handleImageChange} />
         </div>
       </div>
-      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
-        <button type="submit" className="rounded-lg bg-gray-900 text-white px-4 py-2.5 dark:bg-slate-800 dark:text-slate-100 text-sm min-h-[44px]">{trLocal('save')}</button>
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <Button variant="secondary" onClick={onCancel}>{trLocal('cancel')}</Button>
+        <Button type="submit">{trLocal('save')}</Button>
       </div>
     </form>
   );
@@ -1226,30 +1042,23 @@ function PasswordModal({ onClose }) {
   };
   
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
-        <h3 className="text-base sm:text-lg font-semibold mb-4">{trLocal('change_password')}</h3>
-        <form onSubmit={handleChange} className="space-y-3">
-          <div>
-            <label className="block text-xs sm:text-sm mb-1">{trLocal('current_password')}</label>
-            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={current} onChange={e => setCurrent(e.target.value)} required />
-          </div>
-          <div>
-            <label className="block text-xs sm:text-sm mb-1">{trLocal('new_password')}</label>
-            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={new1} onChange={e => setNew1(e.target.value)} required />
-          </div>
-          <div>
-            <label className="block text-xs sm:text-sm mb-1">{trLocal('repeat_new_password')}</label>
-            <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={new2} onChange={e => setNew2(e.target.value)} required />
-          </div>
-          {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-xs sm:text-sm">{success}</div>}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
-            <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>{trLocal('save')}</button>
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('change_password')}</h3>
+        <form onSubmit={handleChange} className="space-y-4">
+          <Input label={trLocal('current_password')} type="password" value={current} onChange={e => setCurrent(e.target.value)} required />
+          <Input label={trLocal('new_password')} type="password" value={new1} onChange={e => setNew1(e.target.value)} required />
+          <Input label={trLocal('repeat_new_password')} type="password" value={new2} onChange={e => setNew2(e.target.value)} required />
+          
+          {error && <div className="text-rose-600 text-sm">{error}</div>}
+          {success && <div className="text-emerald-600 text-sm">{success}</div>}
+          
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+            <Button variant="secondary" onClick={onClose}>{trLocal('cancel')}</Button>
+            <Button type="submit" disabled={loading}>{trLocal('save')}</Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -1260,18 +1069,18 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   useEffect(() => { if (!open) setPassword(''); }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
-        <h3 className="text-base sm:text-lg font-semibold mb-4">{label}</h3>
-        <form onSubmit={e => { e.preventDefault(); onSubmit(password); }} className="space-y-3">
-          <input type="password" className="w-full border rounded-lg px-2 sm:px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm" value={password} onChange={e => setPassword(e.target.value)} autoFocus required />
-          {error && <div className="text-red-600 text-xs sm:text-sm">{error}</div>}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">Cancelar</button>
-            <button type="submit" className="rounded-lg bg-blue-900 text-white px-4 py-2.5 dark:bg-blue-100 dark:text-blue-900 text-sm min-h-[44px]" disabled={loading}>Aceptar</button>
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{label}</h3>
+        <form onSubmit={e => { e.preventDefault(); onSubmit(password); }} className="space-y-4">
+          <Input type="password" value={password} onChange={e => setPassword(e.target.value)} autoFocus required placeholder="Ingrese contraseña" />
+          {error && <div className="text-rose-600 text-sm">{error}</div>}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+            <Button variant="secondary" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" disabled={loading}>Aceptar</Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -1349,70 +1158,62 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
       )}
 
       {!showScanner && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
-            <h3 className="text-base sm:text-lg font-semibold mb-2">{trLocal('confirm_lend')}</h3>
-            <div className="mb-4 p-2 bg-slate-800 dark:bg-slate-700 rounded text-sm">
-              <p><b>{trLocal('item_label')}:</b> {item?.articulo}</p>
-              <p><b>NDP:</b> {item?.ndp}</p>
-              <p><b>{trLocal('quantity_label')} disponible:</b> {item?.cantidad}</p>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('confirm_lend')}</h3>
+            <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm space-y-1">
+              <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('item_label')}:</span> {item?.articulo}</p>
+              <p><span className="font-semibold text-slate-700 dark:text-slate-300">NDP:</span> {item?.ndp}</p>
+              <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('quantity_label')} disponible:</span> {item?.cantidad}</p>
             </div>
 
             {employeeInfo ? (
-              <form onSubmit={handleConfirm} className="space-y-3">
-                <div className="mb-3 p-2 bg-green-100 dark:bg-green-900/30 rounded text-sm">
-                  <p><b>{trLocal('usuario_label')}:</b> {employeeInfo.nombre}</p>
-                  <p><b>N° {trLocal('usuario_label')}:</b> {employeeInfo.num_empleado}</p>
+              <form onSubmit={handleConfirm} className="space-y-4">
+                <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-lg text-sm space-y-1">
+                  <p><span className="font-semibold text-emerald-800 dark:text-emerald-300">{trLocal('usuario_label')}:</span> {employeeInfo.nombre}</p>
+                  <p><span className="font-semibold text-emerald-800 dark:text-emerald-300">N° {trLocal('usuario_label')}:</span> {employeeInfo.num_empleado}</p>
                 </div>
-                <div>
-                  <label className="block text-sm mb-1 font-medium">Cantidad a prestar</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={item?.cantidad || 1}
-                    value={cantidad}
-                    onChange={e => setCantidad(Number(e.target.value))}
-                    className="w-full border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm"
-                    required
-                  />
-                  <div className="text-xs text-slate-400 mt-1">Máximo: {item?.cantidad || 1}</div>
-                </div>
-                {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => { setShowScanner(true); setEmployeeInfo(null); setCantidad(1); setError(''); }}
-                    className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]"
-                  >
+                
+                <Input 
+                  label="Cantidad a prestar" 
+                  type="number" 
+                  min={1} 
+                  max={item?.cantidad || 1} 
+                  value={cantidad} 
+                  onChange={e => setCantidad(Number(e.target.value))} 
+                  required 
+                />
+                <div className="text-xs text-slate-500 mt-1">Máximo: {item?.cantidad || 1}</div>
+                
+                {error && <div className="text-rose-600 text-sm bg-rose-50 dark:bg-rose-900/20 p-2 rounded">{error}</div>}
+                
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+                  <Button variant="secondary" onClick={() => { setShowScanner(true); setEmployeeInfo(null); setCantidad(1); setError(''); }}>
                     {trLocal('scan_another')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="rounded-lg bg-purple-600 text-white px-4 py-2.5 dark:bg-purple-500 text-sm min-h-[44px]"
-                    disabled={loading}
-                  >
+                  </Button>
+                  <Button type="submit" disabled={loading}>
                     {loading ? trLocal('processing') : trLocal('confirm_lend')}
-                  </button>
+                  </Button>
                 </div>
               </form>
             ) : (
-              <div className="text-center text-slate-500 dark:text-slate-400">
+              <div className="text-center text-slate-500 dark:text-slate-400 py-4">
                 {loading ? trLocal('processing') : trLocal('scan_badge')}
               </div>
             )}
 
             {error && !employeeInfo && (
-              <div className="mt-3 text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">
+              <div className="mt-4 text-rose-600 text-sm bg-rose-50 dark:bg-rose-900/20 p-3 rounded text-center">
                 {error}
                 <button
                   onClick={() => { setShowScanner(true); setError(''); }}
-                  className="block w-full mt-2 text-center text-blue-600 dark:text-blue-400 hover:underline"
+                  className="block w-full mt-2 text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                 >
                   Intentar de nuevo
                 </button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
     </>
@@ -1454,43 +1255,40 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="w-full max-w-md bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border dark:border-slate-700">
-        <h3 className="text-base sm:text-lg font-semibold mb-2">{trLocal('confirm_return')}</h3>
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('confirm_return')}</h3>
 
-        <div className="mb-4 p-2 bg-slate-800 dark:bg-slate-700 rounded text-sm">
-          <p><b>{trLocal('usuario_label')}:</b> {prestamo?.empleado}</p>
-          <p><b>N° {trLocal('usuario_label')}:</b> {prestamo?.num_empleado}</p>
-          <p><b>{trLocal('item_label')}:</b> {prestamo?.articulo}</p>
-          <p><b>{trLocal('lend_item')} por:</b> {prestamo?.empleado1}</p>
-          <p><b>Cantidad prestada:</b> {prestamo?.cantidad || 1}</p>
+        <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm space-y-1">
+          <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('usuario_label')}:</span> {prestamo?.empleado}</p>
+          <p><span className="font-semibold text-slate-700 dark:text-slate-300">N° {trLocal('usuario_label')}:</span> {prestamo?.num_empleado}</p>
+          <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('item_label')}:</span> {prestamo?.articulo}</p>
+          <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('lend_item')} por:</span> {prestamo?.empleado1}</p>
+          <p><span className="font-semibold text-slate-700 dark:text-slate-300">Cantidad prestada:</span> {prestamo?.cantidad || 1}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="block text-sm mb-1 font-medium">Cantidad a devolver</label>
-            <input
-              type="number"
-              min={1}
-              max={prestamo?.cantidad || 1}
-              value={cantidad}
-              onChange={e => setCantidad(Number(e.target.value))}
-              className="w-full border rounded-lg px-3 py-2 dark:bg-slate-800 dark:border-slate-700 text-sm"
-              required
-            />
-            <div className="text-xs text-slate-400 mt-1">Máximo: {prestamo?.cantidad || 1}</div>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input 
+            label="Cantidad a devolver" 
+            type="number" 
+            min={1} 
+            max={prestamo?.cantidad || 1} 
+            value={cantidad} 
+            onChange={e => setCantidad(Number(e.target.value))} 
+            required 
+          />
+          <div className="text-xs text-slate-500 mt-1">Máximo: {prestamo?.cantidad || 1}</div>
 
-          {error && <div className="text-red-600 text-xs sm:text-sm bg-red-100 dark:bg-red-900/30 p-2 rounded">{error}</div>}
+          {error && <div className="text-rose-600 text-sm bg-rose-50 dark:bg-rose-900/20 p-2 rounded">{error}</div>}
 
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2.5 dark:border-slate-700 text-sm min-h-[44px]">{trLocal('cancel')}</button>
-            <button type="submit" className="rounded-lg bg-green-600 text-white px-4 py-2.5 dark:bg-green-500 text-sm min-h-[44px]" disabled={loading}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
+            <Button variant="secondary" onClick={onClose}>{trLocal('cancel')}</Button>
+            <Button type="submit" disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
               {loading ? trLocal('processing') : trLocal('confirm_return')}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -1831,11 +1629,12 @@ export default function Inventory() {
     setPwLoading(false);
   }
 
-  // Función para exportar a Excel
+  // Función para exportar a Excel (exporta TODAS las gavetas del área del usuario)
   async function handleExportExcel() {
     try {
       const params = {};
-      if (activeGaveta !== null) params.gaveta = activeGaveta;
+      // No enviamos gaveta para exportar TODAS las gavetas del área
+      // El backend filtra automáticamente por el área del usuario
       if (q) params.q = q;
 
       const response = await api.get('/items/export/excel', { 
@@ -1852,11 +1651,11 @@ export default function Inventory() {
       const link = document.createElement('a');
       link.href = url;
       
-      // Generar nombre de archivo con fecha
+      // Generar nombre de archivo con fecha y área
       const today = new Date().toISOString().slice(0, 10);
-      const gavetaText = activeGaveta !== null ? `_gaveta${activeGaveta}` : '';
+      const areaText = user?.area ? `_${user.area}` : '';
       const searchText = q ? `_filtrado` : '';
-      link.download = `inventario${gavetaText}${searchText}_${today}.xlsx`;
+      link.download = `inventario${areaText}${searchText}_${today}.xlsx`;
       
       document.body.appendChild(link);
       link.click();
@@ -1905,336 +1704,204 @@ export default function Inventory() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 dark:bg-slate-900 dark:text-slate-100">
-        <Header 
-        user={user} 
-        onLogout={logout} 
-        onOpenPassword={() => setShowPasswordModal(true)}
-        onOpenPrestamos={() => setShowPrestamos(!showPrestamos)}
-        lang={lang}
-        setLang={setLang}
-        grandTotalAll={grandTotalAllState}
-      />
-      {showPrestamos && (
-        <PrestamosPanel
-          prestamos={prestamos}
-          onDevolver={handleDevolver}
-          onClose={() => setShowPrestamos(false)}
-          loading={prestamosLoading}
-        />
-      )}
-      <main className="max-w-7xl mx-auto w-full px-2 sm:px-4 py-3 sm:py-6">
-        <div className="mb-2 text-right text-xs sm:text-sm text-blue-900 dark:text-blue-200 font-semibold">
-          {trLocal('turno_prefix')} <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100">{turno}</span>
-        </div>
-        {/* Gavetas */}
-        <div className="flex gap-1 sm:gap-2 overflow-x-auto mb-3 pb-2">
-          {gavetas.map((g) => {
-            const tieneResultados = false; // Cambiar lógica si es necesario
-            let btnClass = 'px-3 sm:px-4 py-2 rounded-full border dark:border-slate-700 transition-colors duration-200 text-xs sm:text-sm whitespace-nowrap min-h-[44px] ';
-            if (g === activeGaveta) {
-              btnClass += 'bg-slate-900 text-slate-100 dark:bg-slate-800 dark:text-slate-100';
-            } else if (tieneResultados) {
-              btnClass += 'bg-green-200 text-green-900 border-green-400 dark:bg-green-300 dark:text-green-900 dark:border-green-400 animate-pulse';
-            } else {
-              btnClass += 'bg-slate-800 text-slate-100 dark:bg-slate-800 dark:text-slate-100';
-            }
-            return (
+    <Layout fullWidth>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+           <div className="flex flex-wrap gap-1 w-full">
+            {gavetas.map((g) => (
               <button
                 key={g}
                 onClick={() => setActiveGaveta(g)}
-                className={btnClass}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-grow sm:flex-grow-0 ${
+                  g === activeGaveta
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                }`}
               >
-                {trLocal('drawer_label')} {g}
+                {g}
               </button>
-            );
-          })}
-        </div>
-        {/* Botones y barra de búsqueda */}
-        <div className="flex flex-col sm:flex-row items-stretch gap-2 mb-4">
-          <div className="flex flex-wrap gap-2">
-            {canAdminister(user?.rol) && (
-              <>
-                <button
-                  onClick={() => setModal({ mode: 'historial' })}
-                  className="rounded-xl bg-blue-900 text-white px-3 sm:px-4 py-2 dark:bg-blue-400 dark:text-blue-900 font-semibold border border-blue-900 dark:border-blue-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
-                >
-                  <span className="hidden sm:inline">{trLocal('ver_historial')}</span>
-                  <span className="sm:hidden">Historial</span>
-                </button>
-                <button
-                  onClick={() => setModal({ mode: 'usuarios' })}
-                  className="rounded-xl bg-green-900 text-white px-3 sm:px-4 py-2 dark:bg-green-400 dark:text-green-900 font-semibold border border-green-900 dark:border-green-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
-                >
-                  <span className="hidden sm:inline">{trLocal('administrar_usuarios')}</span>
-                  <span className="sm:hidden">Usuarios</span>
-                </button>
-              </>
-            )}
-            {canEdit(user?.rol) && (
-              <>
-                <button
-                  onClick={handleExportExcel}
-                  className="rounded-xl bg-orange-900 text-white px-3 sm:px-4 py-2 dark:bg-orange-400 dark:text-orange-900 font-semibold border border-orange-900 dark:border-orange-400 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
-                  title="Exportar datos a Excel"
-                >
-                  <span className="hidden sm:inline">{trLocal('export_excel')}</span>
-                  <span className="sm:hidden">Excel</span>
-                </button>
-                <button
-                  onClick={() => setModal({ mode: 'add' })}
-                  className="rounded-xl bg-gray-900 text-white px-3 sm:px-4 py-2 dark:bg-slate-800 dark:text-slate-100 text-xs sm:text-sm min-h-[44px] flex-1 sm:flex-none"
-                >
-                  {trLocal('agregar')}
-                </button>
-              </>
-            )}
-          </div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={trLocal('search_placeholder')}
-            className="w-full sm:w-72 rounded-xl border px-3 py-2 dark:bg-slate-800 dark:border-slate-700 sm:ml-auto text-sm min-h-[44px]"
-          />
-        </div>
-        <div className="mb-2 flex justify-end">
-          {(filtroNdp || filtroArticulo || filtroEquipo || filtroGaveta || filtroNivel) && (
-            <button
-              onClick={limpiarFiltros}
-              className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:underline min-h-[36px]"
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-        {/* Totales por gaveta (server-provided). Show only the currently selected gaveta's total. */}
-        <div className="mb-3">
-          <div className="text-sm text-slate-300 dark:text-slate-300">
-            <b>{trLocal('totals_by_gaveta')}</b>
-            <div className="mt-2">
-              {/* If there are no server totals at all */}
-              {gavetaTotals.length === 0 ? (
-                <div className="text-xs text-slate-500">Sin datos</div>
-              ) : (
-                // Show only the total for the active (selected) gaveta
-                (() => {
-                  if (activeGaveta === null || activeGaveta === undefined) {
-                    return <div className="text-xs text-slate-500">{trLocal('select_gaveta')}</div>;
-                  }
-                  const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
-                  const val = Number(sel?.total || 0);
-                  return (
-                    <div className="text-xs">{trLocal('drawer_label')} {activeGaveta}: <b>{formatCurrency(val.toFixed(2))}</b></div>
-                  );
-                })()
-              )}
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-sm border border-slate-700 dark:border-slate-700 overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-slate-700/50 dark:bg-slate-700/50">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+           <Input 
+             placeholder={trLocal('search_placeholder')} 
+             value={q} 
+             onChange={(e) => setQ(e.target.value)}
+             className="w-full sm:w-64"
+           />
+           
+           <div className="flex flex-wrap gap-2 justify-end">
+             {canViewHistory(user?.rol, user?.area) && (
+               <>
+                 <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
+                   {trLocal('ver_historial')}
+                 </Button>
+                 <Button variant="secondary" onClick={handleExportExcel}>
+                   {trLocal('export_excel')}
+                 </Button>
+               </>
+             )}
+             {canLendItems(user?.rol, user?.area) && (
+               <Button variant="secondary" onClick={() => setShowPrestamos(true)}>
+                 {trLocal('prestamos')}
+               </Button>
+             )}
+             {canAdministerUsers(user?.rol, user?.area) && (
+               <Button variant="secondary" onClick={() => setModal({ mode: 'usuarios' })}>
+                 {trLocal('administrar_usuarios')}
+               </Button>
+             )}
+             {canEditInventory(user?.rol, user?.area) && (
+               <Button variant="primary" onClick={() => setModal({ mode: 'add' })}>
+                 {trLocal('agregar')}
+               </Button>
+             )}
+           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="p-4 flex items-center justify-between">
+           <div>
+             <p className="text-sm text-slate-500 dark:text-slate-400">{trLocal('turno_prefix')}</p>
+             <p className="text-lg font-bold text-slate-900 dark:text-white">{turno}</p>
+           </div>
+           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+             T
+           </div>
+        </Card>
+        
+        <Card className="p-4 flex items-center justify-between">
+           <div>
+             <p className="text-sm text-slate-500 dark:text-slate-400">{trLocal('totals_by_gaveta')}</p>
+             <p className="text-lg font-bold text-slate-900 dark:text-white">
+               {activeGaveta ? (
+                 (() => {
+                   const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
+                   return formatCurrency(Number(sel?.total || 0).toFixed(2));
+                 })()
+               ) : '-'}
+             </p>
+           </div>
+           <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+             $
+           </div>
+        </Card>
+
+        <Card className="p-4 flex items-center justify-between">
+           <div>
+             <p className="text-sm text-slate-500 dark:text-slate-400">{trLocal('showing_label')}</p>
+             <p className="text-lg font-bold text-slate-900 dark:text-white">{itemsFiltrados.length} / {total}</p>
+           </div>
+           <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+             #
+           </div>
+        </Card>
+      </div>
+
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('part_number')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('item_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden md:table-cell">{trLocal('equipment')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('drawer_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('level_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('quantity_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('price_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm">{trLocal('total_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{trLocal('min_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden lg:table-cell">{trLocal('max_label')}</th>
-                <th className="text-left px-2 sm:px-3 py-2 text-xs sm:text-sm hidden xl:table-cell">{trLocal('tde_label')}</th>
-                {/* Imagen column removed from list view */}
-                {canEdit(user?.rol) && <th className="px-2 sm:px-3 py-2"></th>}
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('part_number')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('item_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden md:table-cell">{trLocal('equipment')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('drawer_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('level_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('quantity_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white text-right">{trLocal('price_label')}</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white text-right">{trLocal('total_label')}</th>
+                {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-3"></th>}
               </tr>
-              <tr>
-                <th className="px-1 sm:px-2 py-1">
-                  <input
-                    type="text"
-                    value={filtroNdp}
-                    onChange={(e) => setFiltroNdp(e.target.value)}
-                    placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
-                  />
-                </th>
-                <th className="px-1 sm:px-2 py-1">
-                  <input
-                    type="text"
-                    value={filtroArticulo}
-                    onChange={(e) => setFiltroArticulo(e.target.value)}
-                    placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
-                  />
-                </th>
-                <th className="px-1 sm:px-2 py-1 hidden md:table-cell">
-                  <input
-                    type="text"
-                    value={filtroEquipo}
-                    onChange={(e) => setFiltroEquipo(e.target.value)}
-                    placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
-                  />
-                </th>
-                <th className="px-1 sm:px-2 py-1">
-                  <input
-                    type="text"
-                    value={filtroGaveta}
-                    onChange={(e) => setFiltroGaveta(e.target.value)}
-                    placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
-                  />
-                </th>
-                <th className="px-1 sm:px-2 py-1">
-                  <input
-                    type="text"
-                    value={filtroNivel}
-                    onChange={(e) => setFiltroNivel(e.target.value)}
-                    placeholder="..."
-                    className="w-full text-xs px-1 sm:px-2 py-1 border rounded dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
-                  />
-                </th>
-                <th className="px-1 sm:px-2 py-1"></th>
-                <th className="px-1 sm:px-2 py-1"></th>
-                <th className="px-1 sm:px-2 py-1 hidden lg:table-cell"></th>
-                <th className="px-1 sm:px-2 py-1 hidden lg:table-cell"></th>
-                <th className="px-1 sm:px-2 py-1 hidden xl:table-cell"></th>
-                {canEdit(user?.rol) && <th className="px-1 sm:px-2 py-1"></th>}
+              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder="Filtro..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder="Filtro..." /></th>
+                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder="Filtro..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtro..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtro..." /></th>
+                <th colSpan={4}></th>
               </tr>
             </thead>
-            <tbody>
-              {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.map((it) => (
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              {!loading && itemsFiltrados.map((it) => (
                 <ItemRow
                   key={it.id}
                   item={it}
                   role={user?.rol}
-                  onEdit={canEdit(user?.rol) ? (item) => setModal({ mode: 'edit', item }) : undefined}
-                  onDelete={canEdit(user?.rol) ? handleDelete : undefined}
-                  onDecrement={canEdit(user?.rol) ? handleDecrement : undefined}
-                  onPrestar={canEdit(user?.rol) ? handlePrestar : undefined}
+                  area={user?.area}
+                  onEdit={canEditInventory(user?.rol, user?.area) ? (item) => setModal({ mode: 'edit', item }) : undefined}
+                  onDelete={canEditInventory(user?.rol, user?.area) ? handleDelete : undefined}
+                  onDecrement={canEditInventory(user?.rol, user?.area) ? handleDecrement : undefined}
+                  onPrestar={canEditInventory(user?.rol, user?.area) ? handlePrestar : undefined}
                   onDoubleClick={(item) => { setModal({ mode: 'detail', item }); }}
                 />
               ))}
             </tbody>
           </table>
-          {loading && <div className="p-4 sm:p-6 text-center text-slate-500 text-sm">{trLocal('loading')}</div>}
-          {!loading && Array.isArray(itemsFiltrados) && itemsFiltrados.length === 0 && <div className="p-4 sm:p-6 text-center text-slate-500 text-sm">{trLocal('no_results')}</div>}
+          {loading && <div className="p-8 text-center text-slate-500">Cargando inventario...</div>}
+          {!loading && itemsFiltrados.length === 0 && <div className="p-8 text-center text-slate-500">No se encontraron resultados</div>}
         </div>
-        <div className="mt-3 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          {trLocal('total_label')}: <b>{total}</b> | {trLocal('showing_label')}: <b>{itemsFiltrados.length}</b>
-        </div>
-      </main>
+      </Card>
+
       {modal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
-          <div className="w-full max-w-3xl bg-slate-900 dark:bg-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-5 border dark:border-slate-700 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto my-auto">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base sm:text-lg font-semibold">
-                {modal.mode === 'edit' ? 'Editar' : modal.mode === 'historial' ? 'Historial de acciones' : modal.mode === 'usuarios' ? 'Administrar usuarios' : 'Agregar ítem'}
-              </h3>
-              <button onClick={() => setModal(null)} className="text-slate-500 hover:text-slate-200 dark:hover:text-slate-200 text-2xl w-10 h-10 flex items-center justify-center min-h-[44px] min-w-[44px]">
-                ✕
-              </button>
-            </div>
-            {modal.mode === 'historial' ? (
-              <Historial />
-            ) : modal.mode === 'usuarios' ? (
-              <UsuariosAdmin 
-                onClose={() => setModal(null)} 
-                onPasswordPrompt={(promptData) => {
-                  setModal(null); // Cerrar modal de usuarios
-                  setPwPrompt({
-                    open: true,
-                    action: promptData.action,
-                    context: promptData.context
-                  });
-                }}
-              />
-            ) : modal.mode === 'detail' ? (
-              // detalle de ítem (tarjeta con imagen si existe)
-              <div>
-                <div className="mb-3">
-                  <h4 className="text-base sm:text-lg font-semibold">{modal.item.articulo} (N° {modal.item.ndp})</h4>
-                  <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-400">Equipo: {modal.item.equipo} — Gaveta: {modal.item.gaveta} — Nivel: {modal.item.nivel}</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="text-sm">
-                    <p><b>Cantidad:</b> {modal.item.cantidad}</p>
-                    <p><b>Mín:</b> {modal.item.min}</p>
-                    <p><b>Máx:</b> {modal.item.max}</p>
-                    <p className="mt-2"><b>TDE:</b> {modal.item.tde}</p>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+             <div className="flex justify-between items-center mb-4">
+               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                 {modal.mode === 'edit' ? 'Editar Ítem' : modal.mode === 'historial' ? 'Historial' : modal.mode === 'usuarios' ? 'Usuarios' : modal.mode === 'detail' ? 'Detalle' : 'Agregar Ítem'}
+               </h3>
+               <button onClick={() => setModal(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
+             </div>
+             
+             {modal.mode === 'historial' ? <Historial /> : 
+              modal.mode === 'usuarios' ? <UsuariosAdmin onClose={() => setModal(null)} onPasswordPrompt={(d) => { setModal(null); setPwPrompt({ open: true, ...d }); }} /> :
+              modal.mode === 'detail' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-lg font-semibold mb-2">{modal.item.articulo}</h4>
+                    <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                      <p><b>N° Parte:</b> {modal.item.ndp}</p>
+                      <p><b>Equipo:</b> {modal.item.equipo}</p>
+                      <p><b>Ubicación:</b> Gaveta {modal.item.gaveta}, Nivel {modal.item.nivel}</p>
+                      <p><b>Stock:</b> {modal.item.cantidad} (Min: {modal.item.min}, Max: {modal.item.max})</p>
+                      <p><b>Precio:</b> {formatCurrency(modal.item.precio)}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg p-4">
                     {modal.item.link ? (
-                      <>
-                        <img 
-                          src={resolveImageUrl(modal.item.link)} 
-                          alt={modal.item.articulo} 
-                          className="max-h-60 sm:max-h-80 object-contain" 
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                        <div 
-                          className="max-h-60 sm:max-h-80 bg-gray-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 rounded"
-                          style={{display: 'none'}}
-                        >
-                          <span className="text-xs sm:text-sm p-4">{trLocal('error_loading_image')}</span>
-                        </div>
-                      </>
+                      <img src={resolveImageUrl(modal.item.link)} alt={modal.item.articulo} className="max-h-64 object-contain" />
                     ) : (
-                      <div className="max-h-60 sm:max-h-80 w-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 rounded p-8">
-                        <span className="text-xs sm:text-sm">{trLocal('no_image')}</span>
-                      </div>
+                      <span className="text-slate-400">Sin imagen</span>
                     )}
                   </div>
                 </div>
-              </div>
-            ) : (
+              ) :
               <ItemForm initial={modal.item} onCancel={() => setModal(null)} onSave={handleSave} gavetas={gavetas} />
-            )}
-          </div>
+             }
+          </Card>
         </div>
       )}
-      {showPasswordModal && (
-        <PasswordModal onClose={() => setShowPasswordModal(false)} />
+
+      {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
+      <QuantityPromptModal open={qtyPrompt.open} max={qtyPrompt.item?.cantidad || 1} onClose={() => setQtyPrompt({ open: false, item: null })} onSubmit={handleQtySubmit} />
+      <PasswordPromptModal open={pwPrompt.open} onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }} onSubmit={handlePwSubmit} label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') : pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') : pwPrompt.action === 'decrement-item' ? 'Confirmar uso' : 'Confirmar'} loading={pwLoading} error={pwError} />
+      <PrestarModal open={prestarModal.open} item={prestarModal.item} onClose={() => setPrestarModal({ open: false, item: null })} onSubmit={handlePrestarSubmit} turno={turno} currentUser={user} />
+      <DevolverModal open={devolverModal.open} prestamo={devolverModal.prestamo} onClose={() => setDevolverModal({ open: false, prestamo: null })} onSubmit={handleDevolverSubmit} turno={turno} currentUser={user} />
+      
+      {showPrestamos && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Préstamos Activos</h3>
+              <button onClick={() => setShowPrestamos(false)}>✕</button>
+            </div>
+            <PrestamosPanel prestamos={prestamos} onDevolver={handleDevolver} onClose={() => setShowPrestamos(false)} loading={prestamosLoading} />
+          </Card>
+        </div>
       )}
-      <QuantityPromptModal
-        open={qtyPrompt.open}
-        max={qtyPrompt.item?.cantidad || 1}
-        onClose={() => setQtyPrompt({ open: false, item: null })}
-        onSubmit={handleQtySubmit}
-      />
-      <PasswordPromptModal
-        open={pwPrompt.open}
-        onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }}
-        onSubmit={handlePwSubmit}
-        label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') :
-          pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') :
-          pwPrompt.action === 'decrement-item' ? `Confirma tu contraseña para quitar ${pwPrompt.context?.cantidad || 1} unidad(es)${pwPrompt.context?.articulo ? ` (${pwPrompt.context.articulo})` : ''}` :
-          pwPrompt.action === 'edit-user' ? trLocal('confirm_password_admin_edit') :
-          pwPrompt.action === 'delete-user' ? trLocal('confirm_password_admin_delete') : trLocal('enter_password_confirm')}
-        loading={pwLoading}
-        error={pwError}
-      />
-      <PrestarModal
-        open={prestarModal.open}
-        item={prestarModal.item}
-        onClose={() => setPrestarModal({ open: false, item: null })}
-        onSubmit={handlePrestarSubmit}
-        turno={turno}
-        currentUser={user}
-      />
-      <DevolverModal
-        open={devolverModal.open}
-        prestamo={devolverModal.prestamo}
-        onClose={() => setDevolverModal({ open: false, prestamo: null })}
-        onSubmit={handleDevolverSubmit}
-        turno={turno}
-        currentUser={user}
-      />
-    </div>
+    </Layout>
   );
 }

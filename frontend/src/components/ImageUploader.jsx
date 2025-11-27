@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import Button from './ui/Button';
 import api from '../api.js';
 
 const ImageUploader = ({ currentImage, onImageChange }) => {
@@ -99,43 +100,76 @@ const ImageUploader = ({ currentImage, onImageChange }) => {
   return (
     <div className="space-y-4">
       <div className="flex justify-center">
-        <div className="relative">
+        <div className="relative group">
           {previewImage ? (
-            <div className="relative group">
+            <>
               <img 
                 src={previewImage} 
                 alt="Preview" 
-                className="w-32 h-32 rounded-md object-contain border-4 border-gray-600 shadow-lg bg-white" 
+                className="w-32 h-32 rounded-lg object-contain border-2 border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800" 
                 onError={(e) => {
                   e.target.style.display = 'none';
                   e.target.nextSibling.style.display = 'flex';
                 }}
               />
               <div 
-                className="w-32 h-32 rounded-md bg-gray-700 border-4 border-gray-600 flex items-center justify-center shadow-lg"
-                style={previewImage ? {display: 'none'} : {}}
+                className="w-32 h-32 rounded-lg bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm hidden"
               >
-                <span className="text-gray-400 text-xs">Error cargando imagen</span>
+                <span className="text-slate-400 text-xs">Error cargando</span>
               </div>
-              <button type="button" onClick={removeImage} className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm">✕</button>
-              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white text-xs">Clic para cambiar</span></div>
-            </div>
+              <button 
+                type="button" 
+                onClick={removeImage} 
+                className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md transition-colors"
+                title="Eliminar imagen"
+              >
+                ✕
+              </button>
+              <div 
+                className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <span className="text-white text-xs font-medium">Cambiar</span>
+              </div>
+            </>
           ) : (
-            <div className="w-32 h-32 rounded-md bg-gray-700 border-4 border-gray-600 flex items-center justify-center shadow-lg"><span className="text-gray-400 text-xs">Sin imagen</span></div>
+            <div 
+              className="w-32 h-32 rounded-lg bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <span className="text-2xl mb-1">📷</span>
+              <span className="text-slate-400 text-xs">Sin imagen</span>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="flex justify-center gap-3">
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2">
-          {isUploading ? (<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Subiendo...</>) : (<><span>📷</span>{previewImage ? 'Cambiar' : 'Subir'} Imagen</>)}
-        </button>
+      <div className="flex justify-center">
+        <Button 
+          type="button" 
+          onClick={() => fileInputRef.current?.click()} 
+          disabled={isUploading} 
+          variant="secondary"
+          className="w-full sm:w-auto"
+        >
+          {isUploading ? (
+            <span className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              Subiendo...
+            </span>
+          ) : (
+            <span>{previewImage ? 'Cambiar Imagen' : 'Subir Imagen'}</span>
+          )}
+        </Button>
       </div>
 
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
-      {uploadError && <div className="text-red-400 text-sm text-center">{uploadError}</div>}
-      <div className="text-gray-400 text-xs text-center space-y-1"><p>Formatos soportados: JPEG, PNG, GIF, WebP</p><p>Tamaño máximo: 10MB</p></div>
+      {uploadError && <div className="text-rose-500 text-sm text-center">{uploadError}</div>}
+      <div className="text-slate-400 text-xs text-center space-y-1">
+        <p>Formatos: JPEG, PNG, GIF, WebP</p>
+        <p>Máximo: 10MB</p>
+      </div>
     </div>
   );
 };
