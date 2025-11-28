@@ -1,6 +1,9 @@
 // frontend/src/main.jsx
 import { initTheme } from './theme.js';
+import { initDevToolsProtection } from './devtools-protection.js';
+
 initTheme();
+initDevToolsProtection();
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
