@@ -83,6 +83,13 @@ router.get('/', authenticateToken, async (req, res) => {
   const params = {};
   const where = ['1=1'];
 
+  // Filtrar por área del usuario para evitar mostrar items de otras áreas con la misma gaveta
+  const userArea = req.user?.area || null;
+  if (userArea) {
+    where.push('LOWER(g.area) = LOWER(:userArea)');
+    params.userArea = userArea;
+  }
+
   if (gaveta) { where.push('g.gaveta = :gaveta'); params.gaveta = gaveta; }
 
   const search = buildSearchClause(q, 'g');
@@ -116,16 +123,15 @@ router.get('/', authenticateToken, async (req, res) => {
 // Crear ítem (admin/toolroom) - acepta multipart/form-data con campo 'image'
 router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
   let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno } = req.body;
-  // Permitir nivel null, vacío, 0 o cualquier entero >= 0
-  if (nivel === '' || nivel === undefined) {
+  // Permitir nivel como valor alfanumérico (varchar) - puede ser vacío, número o texto
+  if (nivel === '' || nivel === undefined || nivel === null) {
     nivel = null;
   } else {
-    const parsedNivel = Number(nivel);
-    if (isNaN(parsedNivel) || parsedNivel < 0) {
-      return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 0 o vacío' });
-    }
-    nivel = parsedNivel;
+    // Mantener como string para valores alfanuméricos
+    nivel = String(nivel).trim();
   }
+  // Obtener el área del usuario autenticado
+  const area = req.user?.area || null;
   let publicLink = link || null;
   if (req.file) {
     // ruta pública relativa al servidor
@@ -133,9 +139,9 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
   }
     try {
     const [result] = await pool.query(
-      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link)
-       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:precio,:min,:max,:equipo,:tde,:link)`,
-      { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink }
+      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link, area)
+       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:precio,:min,:max,:equipo,:tde,:link,:area)`,
+      { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink, area }
     );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id: result.insertId });
     await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno, null, req.user.area);
@@ -151,15 +157,12 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
   const { id } = req.params;
   // si viene multipart, los campos estarán en req.body; si json, también
   let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, password } = req.body;
-  // Permitir nivel null, vacío, 0 o cualquier entero >= 0
-  if (nivel === '' || nivel === undefined) {
+  // Permitir nivel como valor alfanumérico (varchar) - puede ser vacío, número o texto
+  if (nivel === '' || nivel === undefined || nivel === null) {
     nivel = null;
   } else {
-    const parsedNivel = Number(nivel);
-    if (isNaN(parsedNivel) || parsedNivel < 0) {
-      return res.status(400).json({ message: 'Nivel inválido: debe ser un entero mayor o igual a 0 o vacío' });
-    }
-    nivel = parsedNivel;
+    // Mantener como string para valores alfanuméricos
+    nivel = String(nivel).trim();
   }
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;

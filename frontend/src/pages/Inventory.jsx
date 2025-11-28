@@ -987,7 +987,7 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
           </datalist>
         </div>
 
-        <Input label={trLocal('level_label')} type="number" min={0} value={form.nivel} onChange={e => upd('nivel', e.target.value)} />
+        <Input label={trLocal('level_label')} value={form.nivel} onChange={e => upd('nivel', e.target.value)} placeholder="Ej: 1, A, 2B" />
         <Input label={trLocal('quantity_label')} type="number" min={0} value={form.cantidad} onChange={e => upd('cantidad', Number(e.target.value))} />
         <Input label={trLocal('price_label')} type="number" step="0.01" min={0} value={form.precio} onChange={e => upd('precio', Number(e.target.value))} />
         <Input label={trLocal('min_label')} type="number" min={0} value={form.min} onChange={e => upd('min', Number(e.target.value))} />
@@ -1667,11 +1667,18 @@ export default function Inventory() {
     }
   }
 
-  // Ordenar items por nivel ascendente (de menor a mayor)
+  // Ordenar items por nivel ascendente (de menor a mayor) - soporta valores alfanuméricos
   const itemsOrdenados = [...items].sort((a, b) => {
-    const nivelA = a.nivel || 0;
-    const nivelB = b.nivel || 0;
-    return nivelA - nivelB;
+    const nivelA = a.nivel ?? '';
+    const nivelB = b.nivel ?? '';
+    // Intentar comparación numérica si ambos son números
+    const numA = Number(nivelA);
+    const numB = Number(nivelB);
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return numA - numB;
+    }
+    // Si no son números, usar comparación alfanumérica natural
+    return String(nivelA).localeCompare(String(nivelB), 'es', { numeric: true, sensitivity: 'base' });
   });
 
   // Aplicar filtros por columna
@@ -1733,6 +1740,11 @@ export default function Inventory() {
            />
            
            <div className="flex flex-wrap gap-2 justify-end">
+             <Button variant="secondary" onClick={() => { loadGavetas(); loadItems(); loadTotals(); }} title={trLocal('refresh')}>
+               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+               </svg>
+             </Button>
              {canViewHistory(user?.rol, user?.area) && (
                <>
                  <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
