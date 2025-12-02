@@ -92,7 +92,7 @@ inventario/
 	```
 
 ## Uso Básico
-Accede a la interfaz web en `http://localhost:5173` (o el puerto configurado). Inicia sesión con un usuario registrado o crea uno usando los scripts de backend.
+Accede a la interfaz web en `http://localhost:201` (o el puerto configurado). Inicia sesión con un usuario registrado o crea uno usando los scripts de backend.
 
 ## Rutas y Endpoints Principales
 ### Backend (Express)
@@ -112,7 +112,7 @@ Accede a la interfaz web en `http://localhost:5173` (o el puerto configurado). I
 ## Variables de Entorno
 Ejemplo de `.env` para backend:
 ```
-PORT=3001
+PORT=101
 DB_URL=sqlite://./inventario.db
 JWT_SECRET=tu_clave_secreta
 ```

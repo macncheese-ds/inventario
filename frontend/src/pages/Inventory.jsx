@@ -626,8 +626,8 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{user.nombre}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      canAdminister(user.rol) ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
-                      canEdit(user.rol) ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                      canAdministerUsers(user.rol, user.area) ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                      canEditInventory(user.rol, user.area) ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
                       'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
                     }`}>
                       {user.rol}

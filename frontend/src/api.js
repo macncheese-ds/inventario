@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://10.229.52.148:4000/api';
+// Use relative path - nginx proxies /api to backend
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 export const API_BASE_URL = API_URL;
 
 export const api = axios.create({ baseURL: API_URL });

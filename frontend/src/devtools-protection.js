@@ -2,7 +2,7 @@
 // ============================================
 // TOGGLE THIS TO ENABLE/DISABLE PROTECTION
 // ============================================
-const ENABLE_DEVTOOLS_PROTECTION = true;
+const ENABLE_DEVTOOLS_PROTECTION = false;
 // ============================================
 
 export function initDevToolsProtection() {

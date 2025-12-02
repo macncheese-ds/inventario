@@ -60,6 +60,6 @@ app.post('/api/dev/seed-admin', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 101;
 app.listen(PORT, '0.0.0.0', () => console.log(`API on ${PORT}`));
 

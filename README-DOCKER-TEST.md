@@ -5,13 +5,13 @@ This is a simplified Docker setup that runs **frontend + backend in ONE containe
 ## Port Mapping
 
 ### Test Environment (Docker)
-- **Frontend**: http://localhost:5174
-- **Backend**: http://localhost:5001/api
+- **Frontend**: http://localhost:201
+- **Backend**: http://localhost:101/api
 - **Database**: Uses your local MySQL (localhost:3306)
 
 ### Main Environment (Your usual setup)
-- **Frontend**: http://localhost:5173
-- **Backend**: http://localhost:5000/api
+- **Frontend**: http://localhost:201
+- **Backend**: http://localhost:101/api
 - **Database**: localhost:3306 (same as test)
 
 ## Prerequisites
@@ -98,8 +98,8 @@ docker-compose -f docker-compose.test.yml down -v
 - **Single container** runs both frontend and backend
 - Uses your **local MySQL database** (same as main app)
 - Both environments use **hot reload** - changes to code will automatically refresh
-- Test backend runs on port **5001**, main backend on **5000**
-- Test frontend runs on port **5174**, main frontend on **5173**
+- Backend runs on port **101**
+- Frontend runs on port **201**
 - You can run both main and test environments **simultaneously**
 
 ## Troubleshooting
