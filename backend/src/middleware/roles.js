@@ -1,19 +1,18 @@
 // Roles hierarchy (kept for backward reference)
 const ROLES = {
-  SUPER_ADMIN: ['The Goat'],                    // Nivel más alto - acceso total
   HIGH_ADMIN: ['Administrador', 'Ingeniero'],   // Administradores - acceso total
   OPERATOR: ['Operador', 'Tecnico'],            // legacy grouping
   GUEST: ['Invitado']                           // Solo lectura
 };
 
 // Authoritative role groups as requested:
-// - FULL_ACCESS: The Goat, Ingeniero, Administrador
-// - TOOL_ROOM: Tool Room (can edit tool-room related things)
-// - VIEW_ONLY: Calidad, Soporte, Lider, Operador, Invitado, Recursos Humanos
+// - FULL_ACCESS: Ingeniero, Administrador
+// - TOOL_ACCESS: roles that can edit tool-room related things
+// - GUEST: Invitado (read-only)
 const ROLE_GROUPS = {
-  FULL_ACCESS: ['The Goat', 'Ingeniero', 'Administrador'],
-  TOOL_ROOM: ['Tool Room'],
-  VIEW_ONLY: ['Calidad', 'Soporte', 'Lider', 'Operador', 'Invitado', 'Recursos Humanos']
+  FULL_ACCESS: ['Ingeniero', 'Administrador'],
+  TOOL_ACCESS: ['AOI', 'Mantenimiento', 'Supervisor', 'Modula', 'Tecnico', 'Magazines', 'Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'],
+  GUEST: ['Invitado']
 };
 
 // Normaliza un role para comparaciones: trim + lowercase
@@ -24,10 +23,10 @@ function normalizeRole(r) {
 
 // Helper to check if role has edit permissions
 function canEdit(rol) {
-  // Full access and Tool Room can edit; VIEW_ONLY cannot.
+  // Full access and Tool access can edit; GUEST cannot.
   const normalized = normalizeRole(rol);
   const full = ROLE_GROUPS.FULL_ACCESS.map(normalizeRole);
-  const tool = ROLE_GROUPS.TOOL_ROOM.map(normalizeRole);
+  const tool = ROLE_GROUPS.TOOL_ACCESS.map(normalizeRole);
   return full.includes(normalized) || tool.includes(normalized);
 }
 
@@ -70,11 +69,11 @@ export function authorizeRoles(...allowed) {
         break;
       }
 
-      // 'view' shortcut => any role that has at least view permission (full, tool, or view-only)
+      // 'view' shortcut => any role that has at least view permission (full, tool, or guest)
       if (allowedRole === 'view') {
         const isViewer = ROLE_GROUPS.FULL_ACCESS.map(normalizeRole).includes(userRoleNorm)
-          || ROLE_GROUPS.TOOL_ROOM.map(normalizeRole).includes(userRoleNorm)
-          || ROLE_GROUPS.VIEW_ONLY.map(normalizeRole).includes(userRoleNorm);
+          || ROLE_GROUPS.TOOL_ACCESS.map(normalizeRole).includes(userRoleNorm)
+          || ROLE_GROUPS.GUEST.map(normalizeRole).includes(userRoleNorm);
         if (isViewer) {
           hasPermission = true;
           break;

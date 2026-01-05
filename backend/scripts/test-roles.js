@@ -5,22 +5,27 @@ import { ROLE_GROUPS, canEdit, canAdminister, normalizeRole } from '../src/middl
 
 console.log('🧪 Testing Role Authorization Logic\n');
 
-// Test cases
+// Test cases - Updated roles (The Goat removed)
 const testCases = [
-  { role: 'The Goat', expectEdit: true, expectAdmin: true, description: 'The Goat (Full Access)' },
   { role: 'Administrador', expectEdit: true, expectAdmin: true, description: 'Administrador (Full Access)' },
   { role: 'Ingeniero', expectEdit: true, expectAdmin: true, description: 'Ingeniero (Full Access)' },
-  { role: 'Tool Room', expectEdit: true, expectAdmin: false, description: 'Tool Room (Edit only)' },
-  { role: 'Operador', expectEdit: false, expectAdmin: false, description: 'Operador (View Only)' },
-  { role: 'Calidad', expectEdit: false, expectAdmin: false, description: 'Calidad (View Only)' },
-  { role: 'Soporte', expectEdit: false, expectAdmin: false, description: 'Soporte (View Only)' },
-  { role: 'Lider', expectEdit: false, expectAdmin: false, description: 'Lider (View Only)' },
-  { role: 'Invitado', expectEdit: false, expectAdmin: false, description: 'Invitado (View Only)' },
-  { role: 'Recursos Humanos', expectEdit: false, expectAdmin: false, description: 'Recursos Humanos (View Only)' },
+  { role: 'Tool Room', expectEdit: true, expectAdmin: false, description: 'Tool Room (Tool Access)' },
+  { role: 'Operador', expectEdit: true, expectAdmin: false, description: 'Operador (Tool Access)' },
+  { role: 'Calidad', expectEdit: true, expectAdmin: false, description: 'Calidad (Tool Access)' },
+  { role: 'Soporte', expectEdit: true, expectAdmin: false, description: 'Soporte (Tool Access)' },
+  { role: 'Lider', expectEdit: true, expectAdmin: false, description: 'Lider (Tool Access)' },
+  { role: 'Supervisor', expectEdit: true, expectAdmin: false, description: 'Supervisor (Tool Access)' },
+  { role: 'Tecnico', expectEdit: true, expectAdmin: false, description: 'Tecnico (Tool Access)' },
+  { role: 'AOI', expectEdit: true, expectAdmin: false, description: 'AOI (Tool Access)' },
+  { role: 'Mantenimiento', expectEdit: true, expectAdmin: false, description: 'Mantenimiento (Tool Access)' },
+  { role: 'Modula', expectEdit: true, expectAdmin: false, description: 'Modula (Tool Access)' },
+  { role: 'Magazines', expectEdit: true, expectAdmin: false, description: 'Magazines (Tool Access)' },
+  { role: 'Recursos Humanos', expectEdit: true, expectAdmin: false, description: 'Recursos Humanos (Tool Access)' },
+  { role: 'Invitado', expectEdit: false, expectAdmin: false, description: 'Invitado (Guest - View Only)' },
   // Test with whitespace/casing
   { role: '  Tool Room  ', expectEdit: true, expectAdmin: false, description: 'Tool Room with spaces' },
   { role: 'INGENIERO', expectEdit: true, expectAdmin: true, description: 'Ingeniero uppercase' },
-  { role: 'operador', expectEdit: false, expectAdmin: false, description: 'operador lowercase' },
+  { role: 'operador', expectEdit: true, expectAdmin: false, description: 'operador lowercase' },
 ];
 
 let passed = 0;
@@ -28,8 +33,8 @@ let failed = 0;
 
 console.log('Role Groups Configuration:');
 console.log('FULL_ACCESS:', ROLE_GROUPS.FULL_ACCESS);
-console.log('TOOL_ROOM:', ROLE_GROUPS.TOOL_ROOM);
-console.log('VIEW_ONLY:', ROLE_GROUPS.VIEW_ONLY);
+console.log('TOOL_ACCESS:', ROLE_GROUPS.TOOL_ACCESS);
+console.log('GUEST:', ROLE_GROUPS.GUEST);
 console.log('\n' + '='.repeat(60) + '\n');
 
 testCases.forEach(({ role, expectEdit, expectAdmin, description }) => {

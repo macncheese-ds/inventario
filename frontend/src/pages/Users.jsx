@@ -118,8 +118,9 @@ export default function Users() {
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-mono">{user.num_empleado || user.username}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        ['The Goat', 'Administrador'].includes(user.rol) ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
-                        ['Lider', 'Operador'].includes(user.rol) ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                        ['Ingeniero', 'Administrador'].includes(user.rol) ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300' :
+                        ['Lider', 'Operador', 'Supervisor', 'Tecnico'].includes(user.rol) ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                        ['AOI', 'Mantenimiento', 'Modula', 'Magazines', 'Calidad', 'Soporte', 'Recursos Humanos', 'Tool Room'].includes(user.rol) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
                         'bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300'
                       }`}>
                         {user.rol}
@@ -200,11 +201,20 @@ export default function Users() {
                   required
                   className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm"
                 >
-                  <option value="Operador">Operador</option>
-                  <option value="Lider">Lider</option>
-                  <option value="Soporte">Soporte</option>
                   <option value="Administrador">Administrador</option>
-                  <option value="The Goat">The Goat</option>
+                  <option value="Ingeniero">Ingeniero</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Lider">Lider</option>
+                  <option value="Operador">Operador</option>
+                  <option value="Tecnico">Tecnico</option>
+                  <option value="AOI">AOI</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                  <option value="Modula">Modula</option>
+                  <option value="Magazines">Magazines</option>
+                  <option value="Calidad">Calidad</option>
+                  <option value="Soporte">Soporte</option>
+                  <option value="Recursos Humanos">Recursos Humanos</option>
+                  <option value="Tool Room">Tool Room</option>
                   <option value="Invitado">Invitado</option>
                 </select>
               </div>

@@ -99,7 +99,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
-              g.equipo, g.tde, g.link
+              g.equipo, g.tde, g.link, g.linea
          FROM \`gavetas\` g
         ${whereSql}
         ORDER BY g.nivel ASC, g.id ASC`,
@@ -122,7 +122,7 @@ router.get('/', authenticateToken, async (req, res) => {
 
 // Crear ítem (admin/toolroom) - acepta multipart/form-data con campo 'image'
 router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
-  let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno } = req.body;
+  let { ndp, articulo, gaveta, nivel, cantidad, min, max, equipo, tde, link, turno, linea } = req.body;
   // Permitir nivel como valor alfanumérico (varchar) - puede ser vacío, número o texto
   if (nivel === '' || nivel === undefined || nivel === null) {
     nivel = null;
@@ -132,6 +132,9 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
   }
   // Obtener el área del usuario autenticado
   const area = req.user?.area || null;
+  // Solo guardar linea si el usuario es del área Ensamble
+  const isMantenimiento = req.user?.area === 'Ensamble';
+  const finalLinea = isMantenimiento ? (linea || null) : null;
   let publicLink = link || null;
   if (req.file) {
     // ruta pública relativa al servidor
@@ -139,9 +142,9 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
   }
     try {
     const [result] = await pool.query(
-      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link, area)
-       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:precio,:min,:max,:equipo,:tde,:link,:area)`,
-      { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink, area }
+      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link, area, linea)
+       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:precio,:min,:max,:equipo,:tde,:link,:area,:linea)`,
+      { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink, area, linea: finalLinea }
     );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id: result.insertId });
     await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno, null, req.user.area);
@@ -156,7 +159,7 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
 router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
   const { id } = req.params;
   // si viene multipart, los campos estarán en req.body; si json, también
-  let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, password } = req.body;
+  let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, password, linea } = req.body;
   // Permitir nivel como valor alfanumérico (varchar) - puede ser vacío, número o texto
   if (nivel === '' || nivel === undefined || nivel === null) {
     nivel = null;
@@ -164,6 +167,9 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
     // Mantener como string para valores alfanuméricos
     nivel = String(nivel).trim();
   }
+  // Solo guardar linea si el usuario es del área Ensamble
+  const isMantenimiento = req.user?.area === 'Ensamble';
+  const finalLinea = isMantenimiento ? (linea || null) : null;
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;
   try {
@@ -178,13 +184,15 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
       if (!finalLink) {
         finalLink = prev[0] ? prev[0].link : null;
       }
+      // Si no es Mantenimiento, conservar el valor anterior de linea
+      const lineaToSave = isMantenimiento ? finalLinea : (prev[0]?.linea || null);
 
     await pool.query(
     `UPDATE \`gavetas\`
       SET ndp=:ndp, articulo=:articulo, gaveta=:gaveta, nivel=:nivel,
-        cantidad=:cantidad, precio=:precio, \`min\`=:min, \`max\`=:max, equipo=:equipo, tde=:tde, link=:link
+        cantidad=:cantidad, precio=:precio, \`min\`=:min, \`max\`=:max, equipo=:equipo, tde=:tde, link=:link, linea=:linea
     WHERE id=:id`,
-    { ndp, articulo, gaveta, nivel, cantidad, precio: Number(precio || 0), min, max, equipo, tde, link: finalLink, id }
+    { ndp, articulo, gaveta, nivel, cantidad, precio: Number(precio || 0), min, max, equipo, tde, link: finalLink, linea: lineaToSave, id }
   );
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
     await logCambio(req.user.nombre || req.user.username, 'UPDATE', rows[0], turno, prev[0] || null, req.user.area);

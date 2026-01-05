@@ -11,10 +11,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import App from './app.jsx'
 import Login from './pages/Login.jsx'
+// Snow effect removed
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
+      
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/*" element={<App />} />

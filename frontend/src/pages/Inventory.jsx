@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import ImageUploader from '../components/ImageUploader.jsx';
 import LoginModal from '../components/LoginModal.jsx';
 import QuantityPromptModal from '../components/QuantityPromptModal.jsx';
+import QRModal from '../components/QRModal.jsx';
+import QRBulkModal from '../components/QRBulkModal.jsx';
 import { FaCog } from 'react-icons/fa';
 import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
@@ -314,8 +316,8 @@ function parseDetalle(detalle) {
 // - TOOL_ACCESS: can view data and edit tool-room related items, but NOT manage users
 // - GUEST: read-only
 const ROLE_GROUPS = {
-  FULL_ACCESS: ['The Goat', 'Ingeniero', 'Administrador'],
-  TOOL_ACCESS: ['Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'],
+  FULL_ACCESS: ['Ingeniero', 'Administrador'],
+  TOOL_ACCESS: ['AOI', 'Mantenimiento', 'Supervisor', 'Modula', 'Tecnico', 'Magazines', 'Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'],
   GUEST: ['Invitado']
 };
 
@@ -709,11 +711,20 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   required
                   className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
                 >
-                  <option value="The Goat">The Goat</option>
                   <option value="Administrador">Administrador</option>
                   <option value="Ingeniero">Ingeniero</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Lider">Lider</option>
                   <option value="Operador">Operador</option>
                   <option value="Tecnico">Tecnico</option>
+                  <option value="AOI">AOI</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                  <option value="Modula">Modula</option>
+                  <option value="Magazines">Magazines</option>
+                  <option value="Calidad">Calidad</option>
+                  <option value="Soporte">Soporte</option>
+                  <option value="Recursos Humanos">Recursos Humanos</option>
+                  <option value="Tool Room">Tool Room</option>
                   <option value="Invitado">Invitado</option>
                 </select>
               </div>
@@ -770,11 +781,20 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   required
                   className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
                 >
-                  <option value="The Goat">The Goat</option>
                   <option value="Administrador">Administrador</option>
                   <option value="Ingeniero">Ingeniero</option>
+                  <option value="Supervisor">Supervisor</option>
+                  <option value="Lider">Lider</option>
                   <option value="Operador">Operador</option>
                   <option value="Tecnico">Tecnico</option>
+                  <option value="AOI">AOI</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                  <option value="Modula">Modula</option>
+                  <option value="Magazines">Magazines</option>
+                  <option value="Calidad">Calidad</option>
+                  <option value="Soporte">Soporte</option>
+                  <option value="Recursos Humanos">Recursos Humanos</option>
+                  <option value="Tool Room">Tool Room</option>
                   <option value="Invitado">Invitado</option>
                 </select>
               </div>
@@ -875,48 +895,89 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
 
 
 
-function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar }) {
-  const qtyClass =
-    item.cantidad < item.min
-      ? 'text-rose-600 font-bold'
-      : item.cantidad > item.max
-      ? 'text-amber-600 font-bold'
-      : 'text-slate-900 dark:text-white';
+function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar, onShowQR }) {
+  // Determine stock status
+  const stockStatus = item.cantidad < item.min ? 'low' : item.cantidad > item.max ? 'high' : 'normal';
+  const statusStyles = {
+    low: 'text-rose-600 dark:text-rose-400',
+    high: 'text-amber-600 dark:text-amber-400', 
+    normal: 'text-emerald-600 dark:text-emerald-400'
+  };
+  const statusBadge = {
+    low: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800',
+    high: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
+    normal: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+  };
+  const isMantenimiento = area === 'Ensamble';
   
   return (
     <tr 
       onDoubleClick={() => onDoubleClick && onDoubleClick(item)} 
-      className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+      className="group border-b border-slate-100 dark:border-slate-700/50 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 dark:hover:from-indigo-900/10 dark:hover:to-purple-900/10 transition-all duration-200 cursor-pointer"
     >
-      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{item.ndp}</td>
-      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">{item.articulo}</td>
-      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 hidden md:table-cell">{item.equipo}</td>
-      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{item.gaveta}</td>
-      <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{item.nivel}</td>
-      <td className={`px-4 py-3 text-sm ${qtyClass}`}>
+      <td className="px-4 py-3.5">
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 font-mono">{item.ndp || '-'}</span>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.articulo}</span>
+      </td>
+      <td className="px-4 py-3.5 hidden md:table-cell">
+        <span className="text-sm text-slate-500 dark:text-slate-400">{item.equipo || '-'}</span>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+          {item.gaveta}
+        </span>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className="text-sm text-slate-500 dark:text-slate-400">{item.nivel || '-'}</span>
+      </td>
+      {isMantenimiento && (
+        <td className="px-4 py-3.5">
+          <span className="text-sm text-slate-500 dark:text-slate-400">{item.linea || '-'}</span>
+        </td>
+      )}
+      <td className="px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <span>{item.cantidad}</span>
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${statusBadge[stockStatus]}`}>
+            {item.cantidad}
+          </span>
           {canEditInventory(role, area) && item.cantidad > 0 && (
             <button 
               onClick={(e) => { e.stopPropagation(); onDecrement(item); }} 
-              className="bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 dark:text-amber-400 w-6 h-6 rounded flex items-center justify-center transition-colors"
+              className="opacity-0 group-hover:opacity-100 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 dark:text-amber-400 w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm"
               title="Quitar unidades"
             >
-              -
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+              </svg>
             </button>
           )}
         </div>
       </td>
-      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 text-right font-mono">{formatCurrency(item.precio)}</td>
-      <td className="px-4 py-3 text-sm text-slate-900 dark:text-white text-right font-mono font-medium">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</td>
+      <td className="px-4 py-3.5 text-right">
+        <span className="text-sm text-slate-600 dark:text-slate-400 font-mono">{formatCurrency(item.precio)}</span>
+      </td>
+      <td className="px-4 py-3.5 text-right">
+        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 font-mono">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</span>
+      </td>
       
       {canEditInventory(role, area) && (
-        <td className="px-4 py-3 text-right">
-          <div className="flex items-center justify-end gap-2">
+        <td className="px-4 py-3.5 text-right">
+          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <button
+              onClick={(e) => { e.stopPropagation(); onShowQR(item); }}
+              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 transition-all duration-200 hover:scale-110"
+              title="Generar QR"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+            </button>
             {canLendItems(role, area) && (
               <button
                 onClick={(e) => { e.stopPropagation(); onPrestar(item); }}
-                className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded dark:text-indigo-400 dark:hover:bg-indigo-900/30 transition-colors"
+                className="p-2 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg dark:text-slate-400 dark:hover:text-purple-400 dark:hover:bg-purple-900/30 transition-all duration-200 hover:scale-110"
                 title="Prestar"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -926,7 +987,7 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className="p-1.5 text-slate-600 hover:bg-slate-100 rounded dark:text-slate-400 dark:hover:bg-slate-700 transition-colors"
+              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-all duration-200 hover:scale-110"
               title="Editar"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -935,7 +996,7 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(item); }}
-              className="p-1.5 text-rose-600 hover:bg-rose-50 rounded dark:text-rose-400 dark:hover:bg-rose-900/30 transition-colors"
+              className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30 transition-all duration-200 hover:scale-110"
               title="Eliminar"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -949,10 +1010,11 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
   );
 }
 
-function ItemForm({ initial, onCancel, onSave, gavetas }) {
+function ItemForm({ initial, onCancel, onSave, gavetas, user }) {
+  const isMantenimiento = user?.area === 'Ensamble';
   const [form, setForm] = useState(
     initial || {
-      ndp: '', articulo: '', equipo: '', gaveta: gavetas[0] || '', nivel: '', cantidad: 0, precio: 0, min: 0, max: 0, tde: 0, link: ''
+      ndp: '', articulo: '', equipo: '', gaveta: gavetas[0] || '', nivel: '', cantidad: 0, precio: 0, min: 0, max: 0, tde: 0, link: '', linea: ''
     }
   );
   
@@ -993,6 +1055,11 @@ function ItemForm({ initial, onCancel, onSave, gavetas }) {
         <Input label={trLocal('min_label')} type="number" min={0} value={form.min} onChange={e => upd('min', Number(e.target.value))} />
         <Input label={trLocal('max_label')} type="number" min={0} value={form.max} onChange={e => upd('max', Number(e.target.value))} />
         <Input label={trLocal('tde_label')} type="number" min={0} value={form.tde} onChange={e => upd('tde', Number(e.target.value))} />
+        
+        {/* Campo Linea - solo visible para Mantenimiento */}
+        {isMantenimiento && (
+          <Input label="Línea" value={form.linea || ''} onChange={e => upd('linea', e.target.value)} placeholder="Ej: L1, L2, L3" />
+        )}
         
         <div className="sm:col-span-2 lg:col-span-3">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{trLocal('upload_image')}</label>
@@ -1255,7 +1322,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
       <Card className="w-full max-w-md">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('confirm_return')}</h3>
 
@@ -1354,6 +1421,7 @@ export default function Inventory() {
   const [filtroEquipo, setFiltroEquipo] = useState('');
   const [filtroGaveta, setFiltroGaveta] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
+  const [filtroLinea, setFiltroLinea] = useState('');
 
   // Estados para préstamos
   const [showPrestamos, setShowPrestamos] = useState(false);
@@ -1361,6 +1429,10 @@ export default function Inventory() {
   const [prestamosLoading, setPrestamosLoading] = useState(false);
   const [prestarModal, setPrestarModal] = useState({ open: false, item: null });
   const [devolverModal, setDevolverModal] = useState({ open: false, prestamo: null });
+  
+  // Estado para QR Code
+  const [qrModal, setQrModal] = useState({ open: false, item: null });
+  const [qrBulkModal, setQrBulkModal] = useState(false);
 
   function logout() {
     setAuthToken(null);
@@ -1688,8 +1760,9 @@ export default function Inventory() {
     const matchEquipo = !filtroEquipo || (item.equipo && item.equipo.toLowerCase().includes(filtroEquipo.toLowerCase()));
     const matchGaveta = !filtroGaveta || (item.gaveta && item.gaveta.toString().includes(filtroGaveta));
     const matchNivel = !filtroNivel || (item.nivel && item.nivel.toString().includes(filtroNivel));
+    const matchLinea = !filtroLinea || (item.linea && item.linea.toLowerCase().includes(filtroLinea.toLowerCase()));
     
-    return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel;
+    return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea;
   });
 
   // Totales por gaveta (traídos desde el backend) y totales generales
@@ -1708,52 +1781,78 @@ export default function Inventory() {
     setFiltroEquipo('');
     setFiltroGaveta('');
     setFiltroNivel('');
+    setFiltroLinea('');
   };
 
   return (
     <Layout fullWidth>
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-           <div className="flex flex-wrap gap-1 w-full">
-            {gavetas.map((g) => (
-              <button
-                key={g}
-                onClick={() => setActiveGaveta(g)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-grow sm:flex-grow-0 ${
-                  g === activeGaveta
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                {g}
-              </button>
-            ))}
+      {/* Header Section */}
+      <div className="mb-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          {/* Gaveta Pills */}
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+            <div className="flex flex-wrap gap-2 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-2 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+              {gavetas.map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setActiveGaveta(g)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex-grow sm:flex-grow-0 ${
+                    g === activeGaveta
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200/60 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-           <Input 
-             placeholder={trLocal('search_placeholder')} 
-             value={q} 
-             onChange={(e) => setQ(e.target.value)}
-             className="w-full sm:w-64"
-           />
-           
-           <div className="flex flex-wrap gap-2 justify-end">
-             <Button variant="secondary" onClick={() => { loadGavetas(); loadItems(); loadTotals(); }} title={trLocal('refresh')}>
-               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-               </svg>
-             </Button>
-             {canViewHistory(user?.rol, user?.area) && (
-               <>
-                 <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
-                   {trLocal('ver_historial')}
-                 </Button>
-                 <Button variant="secondary" onClick={handleExportExcel}>
-                   {trLocal('export_excel')}
-                 </Button>
-               </>
+          {/* Search and Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div className="relative w-full sm:w-72">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder={trLocal('search_placeholder')}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200"
+              />
+            </div>
+             
+            <div className="flex flex-wrap gap-2 justify-end">
+              <Button 
+                variant="secondary" 
+                onClick={() => { loadGavetas(); loadItems(); loadTotals(); }} 
+                title={trLocal('refresh')}
+                icon={
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                }
+              />
+              {canViewHistory(user?.rol, user?.area) && (
+                <>
+                  <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
+                    {trLocal('ver_historial')}
+                  </Button>
+                  <Button variant="secondary" onClick={handleExportExcel}>
+                    {trLocal('export_excel')}
+                  </Button>
+                </>
+              )}
+             {canEditInventory(user?.rol, user?.area) && (
+               <Button variant="secondary" onClick={() => setQrBulkModal(true)} title="Generar QR en lote">
+                 <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                 </svg>
+                 QR Lote
+               </Button>
              )}
              {canLendItems(user?.rol, user?.area) && (
                <Button variant="secondary" onClick={() => setShowPrestamos(true)}>
@@ -1772,72 +1871,83 @@ export default function Inventory() {
              )}
            </div>
         </div>
+        </div>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="p-4 flex items-center justify-between">
-           <div>
-             <p className="text-sm text-slate-500 dark:text-slate-400">{trLocal('turno_prefix')}</p>
-             <p className="text-lg font-bold text-slate-900 dark:text-white">{turno}</p>
-           </div>
-           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-             T
-           </div>
+        <Card hover className="p-5 flex items-center justify-between group">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('turno_prefix')}</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{turno}</p>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </Card>
         
-        <Card className="p-4 flex items-center justify-between">
-           <div>
-             <p className="text-sm text-slate-500 dark:text-slate-400">{trLocal('totals_by_gaveta')}</p>
-             <p className="text-lg font-bold text-slate-900 dark:text-white">
-               {activeGaveta ? (
-                 (() => {
-                   const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
-                   return formatCurrency(Number(sel?.total || 0).toFixed(2));
-                 })()
-               ) : '-'}
-             </p>
-           </div>
-           <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-             $
-           </div>
+        <Card hover className="p-5 flex items-center justify-between group">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('totals_by_gaveta')}</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              {activeGaveta ? (
+                (() => {
+                  const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
+                  return formatCurrency(Number(sel?.total || 0).toFixed(2));
+                })()
+              ) : '-'}
+            </p>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
         </Card>
 
-        <Card className="p-4 flex items-center justify-between">
-           <div>
-             <p className="text-sm text-slate-500 dark:text-slate-400">{trLocal('showing_label')}</p>
-             <p className="text-lg font-bold text-slate-900 dark:text-white">{itemsFiltrados.length} / {total}</p>
-           </div>
-           <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-             #
-           </div>
+        <Card hover className="p-5 flex items-center justify-between group">
+          <div>
+            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('showing_label')}</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{itemsFiltrados.length} / {total}</p>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
         </Card>
       </div>
 
+      {/* Data Table */}
       <Card className="overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+            <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-b border-slate-200 dark:border-slate-600">
               <tr>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('part_number')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('item_label')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden md:table-cell">{trLocal('equipment')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('drawer_label')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('level_label')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{trLocal('quantity_label')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white text-right">{trLocal('price_label')}</th>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white text-right">{trLocal('total_label')}</th>
-                {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-3"></th>}
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('part_number')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('item_label')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 hidden md:table-cell">{trLocal('equipment')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('drawer_label')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('level_label')}</th>
+                {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">Linea</th>}
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('quantity_label')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('price_label')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('total_label')}</th>
+                {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">Acciones</th>}
               </tr>
-              <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder="Filtro..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder="Filtro..." /></th>
-                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder="Filtro..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtro..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtro..." /></th>
+              <tr className="bg-white/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-700/50">
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtrar..." /></th>
+                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder="Filtrar..." /></th>}
                 <th colSpan={4}></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
               {!loading && itemsFiltrados.map((it) => (
                 <ItemRow
                   key={it.id}
@@ -1848,25 +1958,50 @@ export default function Inventory() {
                   onDelete={canEditInventory(user?.rol, user?.area) ? handleDelete : undefined}
                   onDecrement={canEditInventory(user?.rol, user?.area) ? handleDecrement : undefined}
                   onPrestar={canEditInventory(user?.rol, user?.area) ? handlePrestar : undefined}
+                  onShowQR={(item) => setQrModal({ open: true, item })}
                   onDoubleClick={(item) => { setModal({ mode: 'detail', item }); }}
                 />
               ))}
             </tbody>
           </table>
-          {loading && <div className="p-8 text-center text-slate-500">Cargando inventario...</div>}
-          {!loading && itemsFiltrados.length === 0 && <div className="p-8 text-center text-slate-500">No se encontraron resultados</div>}
+          {loading && (
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center gap-3">
+                <svg className="animate-spin h-6 w-6 text-indigo-600" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Cargando inventario...</span>
+              </div>
+            </div>
+          )}
+          {!loading && itemsFiltrados.length === 0 && (
+            <div className="p-16 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+                <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">No se encontraron resultados</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Intenta ajustar los filtros de busqueda</p>
+            </div>
+          )}
         </div>
       </Card>
 
       {modal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-             <div className="flex justify-between items-center mb-4">
-               <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                 {modal.mode === 'edit' ? 'Editar Ítem' : modal.mode === 'historial' ? 'Historial' : modal.mode === 'usuarios' ? 'Usuarios' : modal.mode === 'detail' ? 'Detalle' : 'Agregar Ítem'}
-               </h3>
-               <button onClick={() => setModal(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
-             </div>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in shadow-2xl">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
+                {modal.mode === 'edit' ? 'Editar Item' : modal.mode === 'historial' ? 'Historial' : modal.mode === 'usuarios' ? 'Usuarios' : modal.mode === 'detail' ? 'Detalle' : 'Agregar Item'}
+              </h3>
+              <button onClick={() => setModal(null)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-all duration-200">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
              
              {modal.mode === 'historial' ? <Historial /> : 
               modal.mode === 'usuarios' ? <UsuariosAdmin onClose={() => setModal(null)} onPasswordPrompt={(d) => { setModal(null); setPwPrompt({ open: true, ...d }); }} /> :
@@ -1880,6 +2015,10 @@ export default function Inventory() {
                       <p><b>Ubicación:</b> Gaveta {modal.item.gaveta}, Nivel {modal.item.nivel}</p>
                       <p><b>Stock:</b> {modal.item.cantidad} (Min: {modal.item.min}, Max: {modal.item.max})</p>
                       <p><b>Precio:</b> {formatCurrency(modal.item.precio)}</p>
+                      {/* Mostrar línea solo si el usuario es del área Ensamble y existe el valor */}
+                      {user?.area === 'Ensamble' && modal.item.linea && (
+                        <p><b>Línea:</b> {modal.item.linea}</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg p-4">
@@ -1891,7 +2030,7 @@ export default function Inventory() {
                   </div>
                 </div>
               ) :
-              <ItemForm initial={modal.item} onCancel={() => setModal(null)} onSave={handleSave} gavetas={gavetas} />
+              <ItemForm initial={modal.item} onCancel={() => setModal(null)} onSave={handleSave} gavetas={gavetas} user={user} />
              }
           </Card>
         </div>
@@ -1902,6 +2041,7 @@ export default function Inventory() {
       <PasswordPromptModal open={pwPrompt.open} onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }} onSubmit={handlePwSubmit} label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') : pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') : pwPrompt.action === 'decrement-item' ? 'Confirmar uso' : 'Confirmar'} loading={pwLoading} error={pwError} />
       <PrestarModal open={prestarModal.open} item={prestarModal.item} onClose={() => setPrestarModal({ open: false, item: null })} onSubmit={handlePrestarSubmit} turno={turno} currentUser={user} />
       <DevolverModal open={devolverModal.open} prestamo={devolverModal.prestamo} onClose={() => setDevolverModal({ open: false, prestamo: null })} onSubmit={handleDevolverSubmit} turno={turno} currentUser={user} />
+      <QRModal open={qrModal.open} item={qrModal.item} onClose={() => setQrModal({ open: false, item: null })} />
       
       {showPrestamos && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -1914,6 +2054,12 @@ export default function Inventory() {
           </Card>
         </div>
       )}
+      
+      <QRBulkModal 
+        open={qrBulkModal} 
+        onClose={() => setQrBulkModal(false)} 
+        allItems={items} 
+      />
     </Layout>
   );
 }

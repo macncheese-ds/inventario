@@ -60,7 +60,7 @@ router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => 
     const conn = await createCredConnection();
     const [rows] = await conn.execute('SELECT num_empleado AS username, nombre, rol FROM users ORDER BY nombre ASC');
     await conn.end();
-    const users = rows.map(u => ({ username: u.username, nombre: u.nombre, rol: u.rol, inventarioRol: ['The Goat', 'Administrador'].includes(u.rol) ? 'admin' : ['Lider', 'Operador'].includes(u.rol) ? 'operador' : 'guest' }));
+    const users = rows.map(u => ({ username: u.username, nombre: u.nombre, rol: u.rol, inventarioRol: ['Ingeniero', 'Administrador'].includes(u.rol) ? 'admin' : ['Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'].includes(u.rol) ? 'operador' : 'guest' }));
     res.json(users);
   } catch (e) {
     console.error(e);
@@ -69,7 +69,7 @@ router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => 
 });
 
 router.get('/info', authenticateToken, (req, res) => {
-  res.json({ message: 'Los usuarios se gestionan desde el sistema de credenciales.', roles: { 'The Goat': 'Acceso total (admin)', 'Administrador': 'Acceso total (admin)', 'Lider': 'Puede editar (operador)', 'Operador': 'Puede editar (operador)', 'Invitado': 'Solo lectura (guest)' } });
+  res.json({ message: 'Los usuarios se gestionan desde el sistema de credenciales.', roles: { 'Administrador': 'Acceso total (admin)', 'Ingeniero': 'Acceso total (admin)', 'Lider': 'Puede editar (operador)', 'Operador': 'Puede editar (operador)', 'Invitado': 'Solo lectura (guest)' } });
 });
 
 router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
@@ -85,7 +85,7 @@ router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) =>
     }
     
     // Validar rol
-    const rolesValidos = ['The Goat', 'Administrador', 'Soporte', 'Lider', 'Operador', 'Invitado'];
+    const rolesValidos = ['AOI', 'Mantenimiento', 'Supervisor', 'Modula', 'Tecnico', 'Ingeniero', 'Administrador', 'Magazines', 'Calidad', 'Soporte', 'Lider', 'Operador', 'Invitado', 'Recursos Humanos', 'Tool Room'];
     if (!rolesValidos.includes(rol)) {
       return res.status(400).json({ message: `Rol inválido. Debe ser uno de: ${rolesValidos.join(', ')}` });
     }
@@ -128,7 +128,7 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
     }
     
     // Validar rol
-    const rolesValidos = ['The Goat', 'Administrador', 'Soporte', 'Lider', 'Operador', 'Invitado'];
+    const rolesValidos = ['AOI', 'Mantenimiento', 'Supervisor', 'Modula', 'Tecnico', 'Ingeniero', 'Administrador', 'Magazines', 'Calidad', 'Soporte', 'Lider', 'Operador', 'Invitado', 'Recursos Humanos', 'Tool Room'];
     if (!rolesValidos.includes(rol)) {
       return res.status(400).json({ message: `Rol inválido. Debe ser uno de: ${rolesValidos.join(', ')}` });
     }
