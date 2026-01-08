@@ -97,14 +97,16 @@ router.get('/', authenticateToken, async (req, res) => {
   Object.assign(params, search.params);
 
   try {
-    const [rows] = await pool.query(
-      `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
-              g.equipo, g.tde, g.link, g.linea
-         FROM \`gavetas\` g
-        ${whereSql}
-        ORDER BY g.nivel ASC, g.id ASC`,
-      params
-    );
+      const [rows] = await pool.query(
+          `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
+                  g.equipo, g.tde, g.link, g.linea,
+                  IFNULL(o.ordered, 0) AS ordered, o.ordered_by, o.ordered_at
+           FROM \`gavetas\` g
+           LEFT JOIN \`orders\` o ON o.gaveta_id = g.id
+          ${whereSql}
+          ORDER BY g.nivel ASC, g.id ASC`,
+        params
+      );
 
     const [[{ total }]] = await pool.query(
       `SELECT COUNT(*) AS total
@@ -266,6 +268,65 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolr
   }
 });
 
+// Obtener notificaciones: items con cantidad <= min o sin stock
+router.get('/notifications', authenticateToken, async (req, res) => {
+  const userArea = req.user?.area || null;
+  const params = {};
+  const where = ['(g.cantidad <= g.`min` OR g.cantidad = 0)'];
+  if (userArea) { where.push('LOWER(g.area) = LOWER(:userArea)'); params.userArea = userArea; }
+  const whereSql = ` WHERE ${where.join(' AND ')}`;
+  try {
+    const [rows] = await pool.query(
+      `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.\`min\` AS min, g.\`max\` AS max,
+              g.equipo, g.tde, g.area, IFNULL(o.ordered,0) AS ordered, o.ordered_by, o.ordered_at
+         FROM \`gavetas\` g
+         LEFT JOIN \`orders\` o ON o.gaveta_id = g.id
+        ${whereSql}
+        ORDER BY g.gaveta ASC, g.nivel ASC`,
+      params
+    );
+    res.json({ data: rows, total: rows.length });
+  } catch (e) {
+    console.error('Error obteniendo notificaciones:', e);
+    res.status(500).json({ message: 'Error obteniendo notificaciones' });
+  }
+});
+
+// Marcar/Desmarcar ítem como ordenado
+router.patch('/:id/ordered', authenticateToken, authorizeRoles('admin','toolroom'), async (req, res) => {
+  const { id } = req.params; // gaveta id
+  const { ordered, note } = req.body;
+  try {
+    // verificar que el ítem existe
+    const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
+    if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
+
+    if (ordered) {
+      // insert or update
+      await pool.query(
+        `INSERT INTO \`orders\` (gaveta_id, ordered, ordered_by, ordered_at, note)
+         VALUES (:id, 1, :user, NOW(), :note)
+         ON DUPLICATE KEY UPDATE ordered=1, ordered_by=:user, ordered_at=NOW(), note=:note`,
+        { id, user: req.user.nombre || req.user.username, note: note || null }
+      );
+      await logCambio(req.user.nombre || req.user.username, 'ORDER', { id, articulo: prev[0].articulo }, 'N/A', null, req.user.area);
+    } else {
+      // remove order row (or mark as not ordered)
+      await pool.query(`DELETE FROM \`orders\` WHERE gaveta_id = :id`, { id });
+      await logCambio(req.user.nombre || req.user.username, 'CANCEL_ORDER', { id, articulo: prev[0].articulo }, 'N/A', null, req.user.area);
+    }
+
+    const [[updated]] = await pool.query(
+      `SELECT g.*, IFNULL(o.ordered,0) AS ordered, o.ordered_by, o.ordered_at FROM \`gavetas\` g LEFT JOIN \`orders\` o ON o.gaveta_id=g.id WHERE g.id=:id`,
+      { id }
+    );
+    res.json({ message: 'OK', item: updated });
+  } catch (e) {
+    console.error('Error marcando ordenado:', e);
+    res.status(500).json({ message: 'Error actualizando estado de orden' });
+  }
+});
+
 // Eliminar ítem (admin u operador)
 router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
@@ -341,8 +402,10 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
     // Obtener datos filtrados por área del usuario
     const [rows] = await pool.query(
    `SELECT g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
-        g.equipo, g.tde, g.area
+        g.equipo, g.tde, g.area,
+        IFNULL(o.ordered, 0) AS ordered, o.ordered_by, o.ordered_at
       FROM \`gavetas\` g
+      LEFT JOIN \`orders\` o ON o.gaveta_id = g.id
       ${whereSql}
       ORDER BY g.gaveta ASC, g.nivel ASC`,
       params
@@ -393,7 +456,10 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
         { header: 'Mínimo', key: 'min', width: 10 },
         { header: 'Máximo', key: 'max', width: 10 },
         { header: 'Equipo', key: 'equipo', width: 20 },
-        { header: 'TDE', key: 'tde', width: 15 }
+        { header: 'TDE', key: 'tde', width: 15 },
+        { header: 'Ordered', key: 'ordered', width: 10 },
+        { header: 'Ordered By', key: 'ordered_by', width: 20 },
+        { header: 'Ordered At', key: 'ordered_at', width: 20 }
       ];
 
       // Agregar los datos de esta gaveta y calcular totales
@@ -410,7 +476,10 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
           min: row.min,
           max: row.max,
           equipo: row.equipo || '',
-          tde: row.tde || ''
+          tde: row.tde || '',
+          ordered: row.ordered ? 'Yes' : 'No',
+          ordered_by: row.ordered_by || '',
+          ordered_at: row.ordered_at ? new Date(row.ordered_at).toLocaleString() : ''
         });
       });
 

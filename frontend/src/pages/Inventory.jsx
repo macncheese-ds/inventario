@@ -9,6 +9,7 @@ import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
 import { toggleTheme } from '../theme.js';
 import Layout from '../components/Layout.jsx';
+import NotificationsModal from '../components/NotificationsModal.jsx';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
@@ -1400,6 +1401,10 @@ export default function Inventory() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
   const [gavetas, setGavetas] = useState([]);
+  // Notifications for low/no stock
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifError, setNotifError] = useState('');
   const [activeGaveta, setActiveGaveta] = useState(null);
   const [serverGavetaTotals, setServerGavetaTotals] = useState([]);
   const [grandTotalAllState, setGrandTotalAllState] = useState(0);
@@ -1408,6 +1413,7 @@ export default function Inventory() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState(null);
+  const [showNotifModal, setShowNotifModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [turno, setTurno] = useState('');
   // Estado para modales de contraseña
@@ -1556,6 +1562,34 @@ export default function Inventory() {
   useEffect(() => { loadGavetas(); }, []);
   useEffect(() => { loadTotals(); }, []);
   useEffect(() => { loadItems(); }, [activeGaveta, q]);
+
+  // Load notifications (items at/below min or out of stock)
+  async function fetchNotifications() {
+    setNotifLoading(true);
+    setNotifError('');
+    try {
+      const { data } = await api.get('/items/notifications');
+      setNotifications(data.data || []);
+    } catch (e) {
+      console.error('Error loading notifications', e);
+      setNotifError('Error loading notifications');
+      setNotifications([]);
+    } finally {
+      setNotifLoading(false);
+    }
+  }
+  useEffect(() => { fetchNotifications(); }, []);
+
+  async function toggleOrdered(id, flag) {
+    try {
+      await api.patch(`/items/${id}/ordered`, { ordered: !!flag });
+      await fetchNotifications();
+      await loadItems();
+    } catch (e) {
+      console.error('Error toggling ordered', e);
+      alert('Error updating ordered state');
+    }
+  }
 
   // item: either plain object or FormData; isForm indicates FormData
   async function handleSave(item, isForm = false, initial = null) {
@@ -1844,6 +1878,9 @@ export default function Inventory() {
                   <Button variant="secondary" onClick={handleExportExcel}>
                     {trLocal('export_excel')}
                   </Button>
+                  <Button variant="secondary" onClick={() => setShowNotifModal(true)}>
+                    Notificaciones
+                  </Button>
                 </>
               )}
              {canEditInventory(user?.rol, user?.area) && (
@@ -1919,6 +1956,15 @@ export default function Inventory() {
           </div>
         </Card>
       </div>
+
+      <NotificationsModal
+        open={showNotifModal}
+        onClose={() => setShowNotifModal(false)}
+        notifications={notifications}
+        fetchNotifications={fetchNotifications}
+        toggleOrdered={toggleOrdered}
+        onOpenItem={(item) => { setModal({ mode: 'detail', item }); setShowNotifModal(false); }}
+      />
 
       {/* Data Table */}
       <Card className="overflow-hidden p-0">
