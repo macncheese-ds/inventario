@@ -1,23 +1,19 @@
-import React from 'react';
-
-export default function Card({ children, className = '', variant = 'default', hover = false, ...props }) {
+export default function Card({ children, className = "", variant = "default", hover = false, ...props }) {
+  /* Modern dark card designs with glass morphism and minimal styling */
   const variants = {
-    default: 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60',
-    glass: 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl border border-white/30 dark:border-slate-600/30',
-    gradient: 'bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border border-slate-200/60 dark:border-slate-700/60',
-    elevated: 'bg-white dark:bg-slate-800 border-0 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50',
-  };
+    default: "bg-slate-800/40 backdrop-blur-sm border border-slate-700/30",
+    glass: "bg-slate-800/20 backdrop-blur-xl border border-slate-700/20",
+    elevated: "bg-slate-800/60 backdrop-blur-md border border-slate-700/40 shadow-xl shadow-slate-900/20",
+    dark: "bg-slate-900/50 border border-slate-800 shadow-lg shadow-slate-900/30 backdrop-blur-sm",
+  }
 
-  const hoverEffect = hover 
-    ? 'transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 hover:border-indigo-200 dark:hover:border-indigo-800' 
-    : 'transition-all duration-200';
+  const hoverEffect = hover
+    ? "transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 hover:-translate-y-0.5 hover:border-blue-500/30"
+    : "transition-all duration-200"
 
   return (
-    <div 
-      className={`rounded-2xl shadow-lg p-6 ${variants[variant] || variants.default} ${hoverEffect} ${className}`}
-      {...props}
-    >
+    <div className={`rounded-2xl p-6 ${variants[variant] || variants.default} ${hoverEffect} ${className}`} {...props}>
       {children}
     </div>
-  );
+  )
 }
