@@ -17,19 +17,50 @@ import prestamosRoutes from './routes/prestamos.js';
 dotenv.config();
 const app = express();
 
-app.use(helmet());
+app.use(helmet({
+  xssFilter: false, // Remove x-xss-protection header
+  hidePoweredBy: true, // Remove x-powered-by header
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  contentSecurityPolicy: false // Configure separately if needed
+}));
+
+// Add custom security and performance headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'public, max-age=3600'); // Default cache for dynamic content
+  next();
+});
+
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(morgan('dev'));
 
-// servir archivos estáticos de uploads (imágenes) con headers CORS
+// servir archivos estáticos de uploads (imágenes) con headers CORS y cache-control
 app.use('/uploads', (req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET');
   res.header('Cross-Origin-Resource-Policy', 'cross-origin');
   res.header('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  res.header('Cache-Control', 'public, max-age=31536000, immutable'); // Long-term cache for static uploads
   next();
 }, express.static(path.join(path.resolve(), 'uploads')));
+
+// Serve static assets (JS, CSS) with immutable cache-control header
+app.use('/assets', (req, res, next) => {
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  next();
+}, express.static(path.join(path.resolve(), '../frontend/dist/assets')));
+
+// Favicon with proper content-type and cache control
+app.get('/favicon.ico', (req, res) => {
+  res.setHeader('Content-Type', 'image/x-icon');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.status(204).end(); // Return 204 No Content if no favicon file exists
+});
 
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
 
