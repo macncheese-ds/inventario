@@ -27,9 +27,9 @@ router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => 
     const params = [];
 
     // Si el usuario tiene un área definida (ensamble, smt, etc.),
-    // solo mostrar cambios de esa misma área.
+    // solo mostrar cambios de esa misma área, pero también mostrar cambios sin área (compatibilidad con datos antiguos)
     if (userArea) {
-      query += ' WHERE LOWER(area) = ?';
+      query += ' WHERE (LOWER(area) = ? OR area IS NULL OR area = "")';
       params.push(userArea);
     }
 

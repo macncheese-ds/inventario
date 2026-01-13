@@ -9,7 +9,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const area = req.user?.area || null;
 
-    const whereClause = area ? 'WHERE area = ?' : '';
+    const whereClause = area ? 'WHERE LOWER(gavetas.area) = LOWER(?)' : '';
     const params = area ? [area] : [];
 
     // Return distinct gaveta values as strings. Try to sort numerically when possible
@@ -31,7 +31,7 @@ router.get('/totales', authenticateToken, async (req, res) => {
   try {
     const area = req.user?.area || null;
 
-    const whereClause = area ? 'WHERE area = ?' : '';
+    const whereClause = area ? 'WHERE LOWER(gavetas.area) = LOWER(?)' : '';
     const params = area ? [area] : [];
 
     const [rows] = await pool.query(

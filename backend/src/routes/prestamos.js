@@ -77,13 +77,37 @@ async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = nu
   }
 }
 
-// Listar préstamos activos
+// Listar préstamos activos (filtrados por área del usuario)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      `SELECT * FROM prestamos`
-    );
-    res.json(rows);
+    const userArea = req.user?.area || null;
+    const params = {};
+    let whereClause = '';
+    
+    // Filtrar por área: solo mostrar préstamos de items del área del usuario
+    if (userArea) {
+      whereClause = ` WHERE (LOWER(p.area) = LOWER(:userArea) OR p.area IS NULL)`;
+      params.userArea = userArea;
+    }
+    
+    try {
+      const [rows] = await pool.query(
+        `SELECT p.* FROM prestamos p ${whereClause}`,
+        params
+      );
+      res.json(rows);
+    } catch (err) {
+      // Si falla porque la columna area no existe, hacer la query sin filtro
+      if (err.message.includes('Unknown column')) {
+        console.warn('Columna area no existe en tabla prestamos, devolviendo todos los préstamos');
+        const [rows] = await pool.query(
+          `SELECT p.* FROM prestamos p`
+        );
+        res.json(rows);
+      } else {
+        throw err;
+      }
+    }
   } catch (e) {
     console.error('Error listando préstamos:', e);
     res.status(500).json({ message: 'Error listando préstamos' });
@@ -140,15 +164,17 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'No hay suficientes unidades disponibles para prestar' });
     }
 
-    // 4. Crear registro de préstamo (una fila por préstamo, con cantidad)
+    // 4. Crear registro de préstamo (una fila por préstamo, con cantidad y área)
+    const itemArea = req.user?.area || item.area || null;
     await pool.query(
-      `INSERT INTO prestamos (empleado, num_empleado, articulo, cantidad)
-       VALUES (:empleado, :num_empleado, :articulo, :cantidad)`,
+      `INSERT INTO prestamos (empleado, num_empleado, articulo, cantidad, area)
+       VALUES (:empleado, :num_empleado, :articulo, :cantidad, :area)`,
       {
         empleado: employeeInfo.nombre,
         num_empleado: employeeInfo.num_empleado,
         articulo: item.articulo,
-        cantidad: qty
+        cantidad: qty,
+        area: itemArea
       }
     );
 

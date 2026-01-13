@@ -84,9 +84,10 @@ router.get('/', authenticateToken, async (req, res) => {
   const where = ['1=1'];
 
   // Filtrar por área del usuario para evitar mostrar items de otras áreas con la misma gaveta
+  // También mostrar items sin área asignada (para compatibilidad con datos antiguos)
   const userArea = req.user?.area || null;
   if (userArea) {
-    where.push('LOWER(g.area) = LOWER(:userArea)');
+    where.push('(LOWER(g.area) = LOWER(:userArea) OR g.area IS NULL OR g.area = "")');
     params.userArea = userArea;
   }
 
@@ -273,7 +274,7 @@ router.get('/notifications', authenticateToken, async (req, res) => {
   const userArea = req.user?.area || null;
   const params = {};
   const where = ['(g.cantidad <= g.`min` OR g.cantidad = 0)'];
-  if (userArea) { where.push('LOWER(g.area) = LOWER(:userArea)'); params.userArea = userArea; }
+  if (userArea) { where.push('(LOWER(g.area) = LOWER(:userArea) OR g.area IS NULL OR g.area = "")'); params.userArea = userArea; }
   const whereSql = ` WHERE ${where.join(' AND ')}`;
   try {
     const [rows] = await pool.query(
@@ -383,8 +384,9 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
     const where = ['1=1'];
 
     // Filtrar por área del usuario si tiene una asignada
+    // También mostrar items sin área asignada (para compatibilidad con datos antiguos)
     if (userArea) {
-      where.push('LOWER(g.area) = LOWER(:userArea)');
+      where.push('(LOWER(g.area) = LOWER(:userArea) OR g.area IS NULL OR g.area = "")');
       params.userArea = userArea;
     }
 
