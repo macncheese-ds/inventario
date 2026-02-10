@@ -124,4 +124,68 @@ router.get('/lookup/:employee_input', async (req, res) => {
   }
 });
 
+// Change password - only employee 258 can change passwords
+router.post('/change-password', async (req, res) => {
+  const { currentPassword, newPassword, current } = req.body;
+  const token = req.headers.authorization?.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ message: 'No autorizado' });
+  }
+
+  try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const username = decoded.username;
+
+    // Only employee 258 or 258A can change passwords
+    const allowedEmps = ['258', '258A'];
+    const isAllowed = allowedEmps.some(emp => 
+      username === emp || username === emp.toLowerCase() || username.toUpperCase() === emp
+    );
+    
+    if (!isAllowed) {
+      return res.status(403).json({ message: 'Solo el empleado 258 puede cambiar contraseñas' });
+    }
+
+    // Validate current password
+    const conn = await createCredConnection();
+    const [rows] = await conn.execute(
+      'SELECT pass_hash FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [username, username]
+    );
+    await conn.end();
+
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ message: 'Usuario no encontrado' });
+    }
+
+    const bcrypt = (await import('bcryptjs')).default;
+    const pwd = currentPassword || current;
+    const hash = Buffer.isBuffer(rows[0].pass_hash) ? rows[0].pass_hash.toString() : rows[0].pass_hash;
+    const ok = await bcrypt.compare(pwd, hash);
+
+    if (!ok) {
+      return res.status(400).json({ message: 'Contraseña actual incorrecta' });
+    }
+
+    // Update password
+    const newHash = await bcrypt.hash(newPassword, 10);
+    const connUpdate = await createCredConnection();
+    await connUpdate.execute(
+      'UPDATE users SET pass_hash = ? WHERE num_empleado = ? OR usuario = ?',
+      [newHash, username, username]
+    );
+    await connUpdate.end();
+
+    res.json({ message: 'Contraseña cambiada correctamente' });
+  } catch (e) {
+    console.error(e);
+    if (e.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Token inválido' });
+    }
+    res.status(500).json({ message: 'Error cambiando contraseña' });
+  }
+});
+
 export default router;

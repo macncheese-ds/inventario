@@ -35,10 +35,23 @@ async function validatePassword(username, password) {
 }
 
 router.post('/change-password', authenticateToken, async (req, res) => {
-  const { current, newPassword } = req.body;
+  const { current, newPassword, currentPassword } = req.body;
   const username = req.user.username;
+  
+  // Only employee 258 or 258A can change passwords
+  const allowedEmps = ['258', '258A'];
+  const isAllowed = allowedEmps.some(emp => 
+    username === emp || username === emp.toLowerCase() || username.toUpperCase() === emp
+  );
+  
+  if (!isAllowed) {
+    return res.status(403).json({ message: 'Solo el empleado 258 puede cambiar contraseñas' });
+  }
+  
   try {
-    const ok = await validatePassword(username, current);
+    // Support both parameter names: current or currentPassword
+    const pwd = current || currentPassword;
+    const ok = await validatePassword(username, pwd);
     if (!ok) return res.status(400).json({ message: 'Contraseña actual incorrecta' });
     const bcrypt = (await import('bcryptjs')).default;
     const newHash = await bcrypt.hash(newPassword, 10);
