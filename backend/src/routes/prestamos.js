@@ -166,14 +166,18 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // 4. Crear registro de préstamo (una fila por préstamo, con cantidad y área)
     const itemArea = req.user?.area || item.area || null;
+    const lenderName = req.user?.nombre || req.user?.username || 'Sistema';
     await pool.query(
-      `INSERT INTO prestamos (empleado, num_empleado, articulo, cantidad, area)
-       VALUES (:empleado, :num_empleado, :articulo, :cantidad, :area)`,
+      `INSERT INTO prestamos (empleado, num_empleado, articulo, ndp, gaveta, cantidad, empleado1, area)
+       VALUES (:empleado, :num_empleado, :articulo, :ndp, :gaveta, :cantidad, :empleado1, :area)`,
       {
         empleado: employeeInfo.nombre,
         num_empleado: employeeInfo.num_empleado,
         articulo: item.articulo,
+        ndp: item.ndp || null,
+        gaveta: item.gaveta || null,
         cantidad: qty,
+        empleado1: lenderName,
         area: itemArea
       }
     );

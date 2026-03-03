@@ -138,6 +138,14 @@ export default function Login() {
               </div>
             </div>
           </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-700/50">
+            <div className="text-center space-y-1">
+              <p className="text-xs text-slate-500"><span className="font-semibold text-slate-400">F-OP-SMT-008</span> — Matriz de Refacciones</p>
+              <p className="text-xs text-slate-500">Ing. Edgar Alberto Guajardo Castro</p>
+              <p className="text-xs text-slate-600">Dev. Marcelo Bazaldua Morales</p>
+            </div>
+          </div>
         </Card>
       </div>
     </div>

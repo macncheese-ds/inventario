@@ -5,7 +5,7 @@ import Card from './ui/Card';
 import Button from './ui/Button';
 import Input from './ui/Input';
 
-export default function LoginModal({ visible, defaultEmployee = '', onClose, onConfirm, busy }) {
+export default function LoginModal({ visible, defaultEmployee = '', onClose, onConfirm, busy, requirePassword = true }) {
   const [phase, setPhase] = useState('scan'); // 'scan' or 'password'
   const [employeeInput, setEmployeeInput] = useState(defaultEmployee);
   const [password, setPassword] = useState('');
@@ -64,7 +64,17 @@ export default function LoginModal({ visible, defaultEmployee = '', onClose, onC
         setLastLookupErr(null);
         setFoundUser(resp);
         setEmployeeInput(resp.num_empleado || resp.usuario || cleaned);
-        setPhase('password');
+        
+        // If password not required, call onConfirm directly with employee info
+        if (!requirePassword) {
+          try {
+            await onConfirm({ employee_input: resp.num_empleado || resp.usuario || cleaned, user: resp });
+          } catch (err) {
+            setStatus(err?.message || 'Error procesando');
+          }
+        } else {
+          setPhase('password');
+        }
       } catch (err) {
         console.error('[LoginModal] lookup FAILED:', err);
         setLastLookupErr({ message: err.message, status: err.status });

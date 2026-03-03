@@ -59,7 +59,7 @@ router.post(
 
       const user = rows[0];
       const bcrypt = (await import('bcryptjs')).default;
-      const hash = Buffer.isBuffer(user.pass_hash) ? user.pass_hash.toString() : user.pass_hash;
+      const hash = Buffer.isBuffer(user.pass_hash) ? user.pass_hash.toString('utf8') : user.pass_hash;
       const ok = await bcrypt.compare(password, hash);
       if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
 
@@ -162,7 +162,7 @@ router.post('/change-password', async (req, res) => {
 
     const bcrypt = (await import('bcryptjs')).default;
     const pwd = currentPassword || current;
-    const hash = Buffer.isBuffer(rows[0].pass_hash) ? rows[0].pass_hash.toString() : rows[0].pass_hash;
+    const hash = Buffer.isBuffer(rows[0].pass_hash) ? rows[0].pass_hash.toString('utf8') : rows[0].pass_hash;
     const ok = await bcrypt.compare(pwd, hash);
 
     if (!ok) {

@@ -459,12 +459,13 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [filtroUsuario, setFiltroUsuario] = useState('');
   const [formData, setFormData] = useState({
     nombre: '',
-    usuario: '',
     num_empleado: '',
     password: '',
-    rol: 'Operador'
+    rol: 'Operador',
+    area: ''
   });
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState('');
@@ -497,10 +498,10 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       setShowAddForm(false);
       setFormData({
         nombre: '',
-        usuario: '',
         num_empleado: '',
         password: '',
-        rol: 'Operador'
+        rol: 'Operador',
+        area: ''
       });
       await loadUsuarios();
     } catch (err) {
@@ -518,10 +519,10 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     setEditingUser({
       username: user.username,
       nombre: user.nombre,
-      usuario: user.usuario || '',
       num_empleado: user.username,
       password: '',
       rol: user.rol,
+      area: user.area || '',
       originalUsername: user.username
     });
   }
@@ -543,9 +544,9 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
       // Preparar datos para enviar
       const updateData = {
         nombre: editingUser.nombre,
-        usuario: editingUser.usuario || null,
         num_empleado: editingUser.num_empleado,
-        rol: editingUser.rol
+        rol: editingUser.rol,
+        area: editingUser.area || null
       };
       
       // Solo incluir password si se proporcionó uno nuevo
@@ -592,38 +593,66 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     setEditingUser(null);
   }
 
+  const usuariosFiltrados = usuarios.filter(user => {
+    if (!filtroUsuario) return true;
+    const q = filtroUsuario.toLowerCase();
+    return (
+      (user.username && user.username.toLowerCase().includes(q)) ||
+      (user.nombre && user.nombre.toLowerCase().includes(q)) ||
+      (user.rol && user.rol.toLowerCase().includes(q)) ||
+      (user.area && user.area.toLowerCase().includes(q))
+    );
+  });
+
   if (loading) return <div className="text-slate-500">{trLocal('loading_users')}</div>;
   if (error) return <div className="text-rose-600">{error}</div>;
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h4 className="text-lg font-bold text-slate-900 dark:text-white">{trLocal('manage_users')}</h4>
-        <div className="flex gap-3">
-          <Button onClick={() => setShowAddForm(true)}>
-            {trLocal('add_user')}
-          </Button>
-          <Button variant="secondary" onClick={loadUsuarios}>
-            {trLocal('refresh')}
-          </Button>
+      <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 pb-4 -mx-6 px-6 -mt-2 pt-2 border-b border-slate-200 dark:border-slate-700 mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h4 className="text-lg font-bold text-slate-900 dark:text-white">{trLocal('manage_users')}</h4>
+          <div className="flex gap-3">
+            <Button onClick={() => setShowAddForm(true)}>
+              {trLocal('add_user')}
+            </Button>
+            <Button variant="secondary" onClick={loadUsuarios}>
+              {trLocal('refresh')}
+            </Button>
+            <Button variant="secondary" onClick={onClose}>
+              Cerrar
+            </Button>
+          </div>
         </div>
       </div>
 
-      {usuarios.length === 0 ? (
-        <div className="text-slate-500 text-sm">{trLocal('no_users')}</div>
+      {/* Filtro de búsqueda */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={filtroUsuario}
+          onChange={e => setFiltroUsuario(e.target.value)}
+          placeholder="Buscar por nombre, número de empleado, rol o área..."
+          className="w-full text-sm p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400"
+        />
+      </div>
+
+      {usuariosFiltrados.length === 0 ? (
+        <div className="text-slate-500 text-sm">{filtroUsuario ? 'No se encontraron usuarios con ese filtro' : trLocal('no_users')}</div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">Usuario</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">Num. Empleado</th>
                 <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden sm:table-cell">Nombre</th>
                 <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white">Rol</th>
+                <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white hidden md:table-cell">Área</th>
                 <th className="px-4 py-3 font-semibold text-slate-900 dark:text-white text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-              {usuarios.map(user => (
+              {usuariosFiltrados.map(user => (
                 <tr key={user.username} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{user.username}</td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{user.nombre}</td>
@@ -635,6 +664,15 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     }`}>
                       {user.rol}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden md:table-cell">
+                    {user.area ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300">
+                        {user.area}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-xs">Sin área</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex flex-col sm:flex-row justify-end gap-2">
@@ -661,7 +699,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal de confirmación para eliminar */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
           <Card className="w-full max-w-md border-rose-200 dark:border-rose-900">
             <div className="mb-4 text-lg font-bold text-rose-600 dark:text-rose-400">
               {trLocal('delete_confirm')}
@@ -685,7 +723,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal para agregar usuario */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
           <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('add_new_user')}</h3>
             
@@ -697,7 +735,6 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
             
             <form onSubmit={handleSubmitAdd} className="space-y-4">
               <Input label="Nombre Completo *" name="nombre" value={formData.nombre} onChange={handleChange} required />
-              <Input label="Usuario (opcional)" name="usuario" value={formData.usuario} onChange={handleChange} />
               <Input label="Número de Empleado *" name="num_empleado" value={formData.num_empleado} onChange={handleChange} required placeholder="Ej: 1234A" />
               <Input label="Contraseña *" type="password" name="password" value={formData.password} onChange={handleChange} required minLength={4} />
 
@@ -730,16 +767,32 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Área
+                </label>
+                <select
+                  name="area"
+                  value={formData.area}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                >
+                  <option value="">Sin área</option>
+                  <option value="SMT">SMT</option>
+                  <option value="Ensamble">Ensamble</option>
+                </select>
+              </div>
+
               <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <Button variant="secondary" onClick={() => {
                     setShowAddForm(false);
                     setFormError('');
                     setFormData({
                       nombre: '',
-                      usuario: '',
                       num_empleado: '',
                       password: '',
-                      rol: 'Operador'
+                      rol: 'Operador',
+                      area: ''
                     });
                   }} disabled={formBusy} className="flex-1">
                   {trLocal('cancel')}
@@ -755,7 +808,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal para editar usuario */}
       {editingUser && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
           <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('edit_item')}</h3>
             
@@ -767,7 +820,6 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
             
             <form onSubmit={(e) => { e.preventDefault(); handleSaveUser(); }} className="space-y-4">
               <Input label="Nombre Completo *" name="nombre" value={editingUser.nombre} onChange={handleEditChange} required />
-              <Input label="Usuario (opcional)" name="usuario" value={editingUser.usuario} onChange={handleEditChange} />
               <Input label="Número de Empleado *" name="num_empleado" value={editingUser.num_empleado} onChange={handleEditChange} required placeholder="Ej: 1234A" />
               <Input label="Nueva Contraseña (dejar vacío para no cambiar)" type="password" name="password" value={editingUser.password} onChange={handleEditChange} minLength={4} />
 
@@ -800,6 +852,22 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Área
+                </label>
+                <select
+                  name="area"
+                  value={editingUser.area}
+                  onChange={handleEditChange}
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                >
+                  <option value="">Sin área</option>
+                  <option value="SMT">SMT</option>
+                  <option value="Ensamble">Ensamble</option>
+                </select>
+              </div>
+
               <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <Button variant="secondary" onClick={() => {
                     setEditingUser(null);
@@ -815,12 +883,6 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
           </Card>
         </div>
       )}
-
-      <div className="flex justify-end mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-        <Button variant="secondary" onClick={onClose}>
-          Cerrar
-        </Button>
-      </div>
     </div>
   );
 }
@@ -1137,7 +1199,7 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   useEffect(() => { if (!open) setPassword(''); }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[80]">
       <Card className="w-full max-w-md">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{label}</h3>
         <form onSubmit={e => { e.preventDefault(); onSubmit(password); }} className="space-y-4">
@@ -1177,7 +1239,13 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
     setLoading(true);
     setError('');
     try {
-      // Lookup employee info using the scanned badge
+      // If user info is passed directly (requirePassword=false mode), use it
+      if (credentials.user) {
+        setEmployeeInfo(credentials.user);
+        setShowScanner(false);
+        return;
+      }
+      // Otherwise lookup employee info using the scanned badge
       const info = await api.lookupUser(credentials.employee_input);
       setEmployeeInfo(info);
       setShowScanner(false);
@@ -1439,6 +1507,7 @@ export default function Inventory() {
   // Estado para QR Code
   const [qrModal, setQrModal] = useState({ open: false, item: null });
   const [qrBulkModal, setQrBulkModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   function logout() {
     setAuthToken(null);
@@ -1870,6 +1939,15 @@ export default function Inventory() {
                   </svg>
                 }
               />
+              <Button
+                variant="secondary"
+                onClick={() => setShowInfoModal(true)}
+                title="Información del sistema"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </Button>
               {canViewHistory(user?.rol, user?.area) && (
                 <>
                   <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
@@ -2084,7 +2162,7 @@ export default function Inventory() {
 
       {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
       <QuantityPromptModal open={qtyPrompt.open} max={qtyPrompt.item?.cantidad || 1} onClose={() => setQtyPrompt({ open: false, item: null })} onSubmit={handleQtySubmit} />
-      <PasswordPromptModal open={pwPrompt.open} onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }} onSubmit={handlePwSubmit} label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') : pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') : pwPrompt.action === 'decrement-item' ? 'Confirmar uso' : 'Confirmar'} loading={pwLoading} error={pwError} />
+      <PasswordPromptModal open={pwPrompt.open} onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }} onSubmit={handlePwSubmit} label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') : pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') : pwPrompt.action === 'decrement-item' ? 'Confirmar uso' : pwPrompt.action === 'delete-user' ? trLocal('confirm_password_admin_delete') : 'Confirmar'} loading={pwLoading} error={pwError} />
       <PrestarModal open={prestarModal.open} item={prestarModal.item} onClose={() => setPrestarModal({ open: false, item: null })} onSubmit={handlePrestarSubmit} turno={turno} currentUser={user} />
       <DevolverModal open={devolverModal.open} prestamo={devolverModal.prestamo} onClose={() => setDevolverModal({ open: false, prestamo: null })} onSubmit={handleDevolverSubmit} turno={turno} currentUser={user} />
       <QRModal open={qrModal.open} item={qrModal.item} onClose={() => setQrModal({ open: false, item: null })} />
@@ -2105,7 +2183,44 @@ export default function Inventory() {
         open={qrBulkModal} 
         onClose={() => setQrBulkModal(false)} 
         allItems={items} 
+
       />
+
+      {/* Info Modal */}
+      {showInfoModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Información del Sistema</h3>
+              <button onClick={() => setShowInfoModal(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-all">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mb-1">No. de Control</p>
+                <p className="text-lg font-bold text-indigo-900 dark:text-indigo-200">F-OP-SMT-008</p>
+                <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1">Matriz de Refacciones</p>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Ingeniero a Cargo</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Edgar Alberto Guajardo Castro</p>
+                </div>
+                <div className="border-t border-slate-200 dark:border-slate-600 pt-3">
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Desarrollador</p>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">Marcelo Bazaldua Morales</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Cerrar</Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </Layout>
   );
 }
