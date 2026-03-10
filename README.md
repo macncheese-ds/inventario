@@ -22,7 +22,7 @@ A comprehensive inventory management system designed for controlling articles, t
 
 ## Demo
 
-![Inventario Demo](docs/demos/main-demo.gif)
+![Inventario Demo](docs/inventario.gif)
 
 ---
 
