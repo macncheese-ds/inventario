@@ -1,146 +1,377 @@
 # Inventario
 
-Sistema de gestión de inventario para control de artículos, historial de movimientos, usuarios y roles.
-
-## Estructura del proyecto
-- **backend/**: API Node.js (Express), autenticación, rutas, scripts y base de datos (SQLite/PostgreSQL).
-- **frontend/**: Interfaz React con Vite y TailwindCSS.
-- **docker-compose.yml**: Orquestación de servicios para desarrollo.
-
-## Funcionalidades principales
-- Gestión de artículos, gavetas y usuarios
-- Historial de movimientos
-- Subida de imágenes
-- Autenticación y roles
-
-## Instalación rápida
-1. Clona el repositorio y entra a la carpeta `inventario`.
-2. Configura los archivos `.env` en backend y frontend.
-3. Instala dependencias en ambos (`npm install`).
-4. Inicia backend y frontend (`npm run dev`).
-# Inventario
-
-Sistema integral para la gestión de inventario, control de artículos, historial de movimientos, usuarios y roles. Incluye autenticación, subida de imágenes y un historial detallado de operaciones.
+A comprehensive inventory management system designed for controlling articles, tracking movements, managing users, and handling permissions with a modern web interface.
 
 ---
 
-## Tabla de Contenidos
-- [Descripción General](#descripción-general)
-- [Tecnologías Utilizadas](#tecnologías-utilizadas)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Instalación y Configuración](#instalación-y-configuración)
-- [Uso Básico](#uso-básico)
-- [Rutas y Endpoints Principales](#rutas-y-endpoints-principales)
-- [Variables de Entorno](#variables-de-entorno)
-- [Ejemplos de Uso](#ejemplos-de-uso)
-- [Notas y Recomendaciones](#notas-y-recomendaciones)
+## Table of Contents
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation)
+- [Environment Configuration](#environment-configuration)
+- [Running the Application](#running-the-application)
+- [Project Structure](#project-structure)
+- [API Endpoints](#api-endpoints)
+- [Database](#database)
+- [User Roles and Permissions](#user-roles-and-permissions)
+- [Development](#development)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## Descripción General
-Inventario es una solución web para el control y gestión de artículos, usuarios y movimientos en almacenes o laboratorios. Permite llevar un registro histórico, gestionar roles y permisos, y adjuntar imágenes a los artículos.
+## Demo
 
-## Tecnologías Utilizadas
-- **Backend:** Node.js, Express, SQLite/PostgreSQL, JWT, Multer
-- **Frontend:** React, Vite, TailwindCSS, Axios
-- **DevOps:** Docker, Docker Compose
+![Inventario Demo](docs/demos/main-demo.gif)
 
-## Estructura del Proyecto
+---
+
+## Overview
+
+Inventario is a comprehensive full-stack web application for managing inventory, articles, storage locations, user accounts, and detailed movement history. It provides real-time tracking, role-based access control, image uploads, and comprehensive audit logs.
+
+---
+
+## Features
+
+- Article Management: Create, read, update, and delete articles with detailed metadata
+- Drawer/Storage Location Management: Organize items by storage location
+- Movement History: Complete audit trail of all inventory movements
+- User Management: Create and manage user accounts with role-based access
+- Authentication: Secure JWT-based authentication system
+- Image Uploads: Attach images to articles for visual identification
+- Role-Based Access Control: Different permission levels for different user types
+- Real-time Database: Track all changes with timestamps and user information
+- QR Code Generation: Generate QR codes for articles
+- Excel Export: Export inventory data to Excel format
+
+---
+
+## Tech Stack
+
+### Backend
+- Node.js with Express
+- Authentication: JWT (jsonwebtoken), bcryptjs
+- File Upload: Multer
+- Data Validation: express-validator
+- Excel Export: ExcelJS
+- Security: Helmet, CORS
+- Logging: Morgan
+- Database: MySQL 2
+
+### Frontend
+- React 18
+- Build Tool: Vite
+- Styling: Tailwind CSS
+- HTTP Client: Axios
+- Routing: React Router DOM
+- QR Code: qrcode and qrcode.react
+- Icons: React Icons
+- Token Decoding: jwt-decode
+
+### DevOps
+- Docker & Docker Compose (optional)
+
+---
+
+## Project Structure
+
 ```
 inventario/
 ├── backend/
 │   ├── src/
-│   │   ├── routes/
-│   │   ├── middleware/
-│   │   └── utils/
-│   ├── scripts/
-│   ├── schema.sql/
-│   └── uploads/
+│   │   ├── routes/           # API endpoint definitions
+│   │   ├── middleware/       # Authentication and validation middleware
+│   │   ├── utils/            # Utility functions
+│   │   └── index.js          # Express server entry point
+│   ├── scripts/              # Database initialization and utility scripts
+│   ├── schema.sql/           # Database schema files
+│   ├── uploads/              # User-uploaded files and images
+│   ├── package.json
+│   └── .env                  # Environment variables (not committed)
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   └── pages/
-│   └── index.html
+│   │   ├── components/       # React UI components
+│   │   ├── pages/            # Page components
+│   │   ├── App.jsx           # Main app component
+│   │   └── main.jsx          # Entry point
+│   ├── public/               # Static assets
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.cjs
+│   ├── package.json
+│   └── .env                  # Environment variables (not committed)
 ├── docker-compose.yml
+├── .gitignore
 └── README.md
 ```
 
-## Instalación y Configuración
-1. **Clona el repositorio:**
-	```bash
-	git clone <repo_url>
-	cd inventario
-	```
-2. **Configura variables de entorno:**
-	- Copia `.env.example` a `.env` en backend y frontend, y edítalos según tu entorno.
-3. **Instala dependencias:**
-	```bash
-	cd backend && npm install
-	cd ../frontend && npm install
-	```
-4. **Inicializa la base de datos:**
-	- Ejecuta los scripts SQL en `backend/schema.sql/` si es necesario.
-5. **Ejecuta los servidores:**
-	- En dos terminales separados:
-	  ```bash
-	  cd backend && npm run dev
-	  cd frontend && npm run dev
-	  ```
-6. **(Opcional) Usa Docker Compose:**
-	```bash
-	docker-compose up --build
-	```
+---
 
-## Uso Básico
-Accede a la interfaz web en `http://localhost:201` (o el puerto configurado). Inicia sesión con un usuario registrado o crea uno usando los scripts de backend.
+## Quick Start
 
-## Rutas y Endpoints Principales
-### Backend (Express)
-- `POST /api/auth/login` — Autenticación de usuarios
-- `GET /api/items` — Listado de artículos
-- `POST /api/items` — Crear artículo
-- `PUT /api/items/:id` — Editar artículo
-- `DELETE /api/items/:id` — Eliminar artículo
-- `GET /api/historial` — Historial de movimientos
-- `POST /api/upload` — Subida de imágenes
+```bash
+# Clone the repository
+git clone <repository-url>
+cd inventario
 
-### Frontend (React)
-- Página de login
-- Panel de inventario
-- Gestión de usuarios y gavetas
+# Install backend dependencies
+cd backend
+npm install
 
-## Variables de Entorno
-Ejemplo de `.env` para backend:
-```
-PORT=101
-DB_URL=sqlite://./inventario.db
-JWT_SECRET=tu_clave_secreta
+# Install frontend dependencies
+cd ../frontend
+npm install
+
+# Configure environment variables
+# Copy .env.example to .env and update values in:
+# - backend/.env
+# - frontend/.env
+
+# Start backend (from backend directory)
+npm run dev
+
+# In a new terminal, start frontend (from frontend directory)
+npm run dev
 ```
 
-## Ejemplos de Uso
-### Crear un artículo
-```http
-POST /api/items
-Content-Type: application/json
-{
-  "nombre": "Microscopio",
-  "cantidad": 5,
-  "ubicacion": "Gaveta 2"
-}
-```
-
-### Subir una imagen
-```http
-POST /api/upload
-Content-Type: multipart/form-data
-file: imagen.jpg
-```
-
-## Notas y Recomendaciones
-- Usa los scripts en `backend/scripts/` para crear usuarios admin o poblar la base de datos.
-- El sistema soporta roles (admin, usuario) y control de acceso por middleware.
-- Puedes adaptar la base de datos a PostgreSQL modificando la configuración.
-- Incluye seeds y ejemplos para pruebas rápidas.
+Then open your browser to `http://localhost:5173` (or the configured VITE_PORT).
 
 ---
-¡Contribuciones y sugerencias son bienvenidas!
+
+## Installation
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+- MySQL Server (if using MySQL)
+
+### Step-by-step Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd inventario
+   ```
+
+2. Install backend dependencies:
+   ```bash
+   cd backend
+   npm install
+   cd ..
+   ```
+
+3. Install frontend dependencies:
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+4. Run database initialization scripts if needed:
+   ```bash
+   # From backend directory, run your schema setup scripts
+   # This depends on your specific database setup
+   ```
+
+---
+
+## Environment Configuration
+
+### Backend Environment Variables
+
+Create a `.env` file in the `backend/` directory:
+
+```env
+PORT=3000
+DATABASE_URL=mysql://user:password@localhost:3306/inventario
+JWT_SECRET=your_jwt_secret_key_here_change_in_production
+JWT_EXPIRE=7d
+MULTER_DEST=uploads
+NODE_ENV=development
+LOG_LEVEL=debug
+```
+
+### Frontend Environment Variables
+
+Create a `.env` file in the `frontend/` directory:
+
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_PORT=5173
+```
+
+---
+
+## Running the Application
+
+### Development Mode
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+npm run dev
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd frontend
+npm run dev
+```
+
+The application will be available at:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+
+### Production Build
+
+**Backend:**
+```bash
+cd backend
+npm run start
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+### Docker (Optional)
+
+```bash
+docker-compose up --build
+```
+
+---
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/register` - New user registration
+- `POST /api/auth/refresh` - Refresh JWT token
+
+### Articles
+- `GET /api/articles` - Get all articles
+- `GET /api/articles/:id` - Get specific article
+- `POST /api/articles` - Create new article
+- `PUT /api/articles/:id` - Update article
+- `DELETE /api/articles/:id` - Delete article
+
+### Drawers/Locations
+- `GET /api/drawers` - Get all storage locations
+- `POST /api/drawers` - Create storage location
+- `PUT /api/drawers/:id` - Update storage location
+- `DELETE /api/drawers/:id` - Delete storage location
+
+### Movements/History
+- `GET /api/movements` - Get movement history
+- `POST /api/movements` - Record new movement
+- `GET /api/movements/:id` - Get specific movement
+
+### Users
+- `GET /api/users` - Get all users
+- `GET /api/users/:id` - Get specific user
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
+
+### Uploads
+- `POST /api/uploads` - Upload image for article
+- `GET /api/uploads/:filename` - Retrieve uploaded image
+
+---
+
+## Database
+
+The application uses MySQL as the primary database. Database schema includes tables for:
+- Users (with roles and permissions)
+- Articles (inventory items)
+- Drawers (storage locations)
+- Movements (transaction history with audit trail)
+- Uploads (image metadata)
+
+Initialize the database using the SQL schema files in `backend/schema.sql/`.
+
+---
+
+## User Roles and Permissions
+
+The system supports multiple user roles:
+- **Admin**: Full access to all features and user management
+- **Supervisor**: Can view reports and manage articles
+- **Operator**: Can perform inventory movements and view articles
+- **Viewer**: Read-only access to inventory
+
+Each role has specific permissions for create, read, update, and delete operations.
+
+---
+
+## Development
+
+### Code Style
+- Use ES6+ syntax
+- Follow consistent naming conventions
+- Comment complex logic sections
+- Keep components small and reusable
+
+### Running Tests
+```bash
+cd backend
+npm test
+
+cd ../frontend
+npm test
+```
+
+### Building for Production
+```bash
+# Frontend
+cd frontend
+npm run build
+
+# Backend
+cd backend
+npm run build
+```
+
+---
+
+## Troubleshooting
+
+### Port Already in Use
+If port 3000 or 5173 is in use, update the PORT variable in `.env` files.
+
+### Database Connection Error
+- Verify MySQL server is running
+- Check DATABASE_URL in backend/.env
+- Ensure database exists and credentials are correct
+
+### CORS Errors
+- Verify VITE_API_URL in frontend/.env matches backend URL
+- Check CORS configuration in backend
+
+### JWT Token Expired
+- Clear browser cookies
+- Log in again
+- Token is configured to expire after 7 days by default (configurable)
+
+### Image Upload Issues
+- Verify uploads/ directory has write permissions
+- Check MULTER_DEST in backend/.env
+- Ensure file size doesn't exceed limits
+
+---
+
+## License
+
+This project is proprietary and confidential.
+
+---
+
+## Support
+
+For issues, questions, or feature requests, contact the development team.
