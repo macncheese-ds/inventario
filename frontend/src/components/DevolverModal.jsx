@@ -9,8 +9,7 @@ export default function DevolverModal({ open, prestamo, onClose, onSubmit }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Assuming we might need a password or just confirmation. 
-        // Sending password if entered, otherwise just prestamo_id.
+
         onSubmit({ prestamo_id: prestamo.id, password });
         onClose();
     };

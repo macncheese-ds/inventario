@@ -86,7 +86,7 @@ export function initDevToolsProtection() {
     
     // Option C: Just log a warning (current default)
     console.clear();
-    console.log('%c⚠️ DevTools detectado', 'font-size: 30px; color: red;');
+    console.log('%c DevTools detectado', 'font-size: 30px; color: red;');
   };
 
   // 6. Console clearing loop (makes console harder to use)
