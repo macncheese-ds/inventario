@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: inventario_backend
+    ports:
+      - "101:101"
+    environment:
+      # Inject environment variables the backend expects
+      # The values here could also be referenced directly in .env without copying them here
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=101
+    volumes:
+      # Keep image uploads persistent
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: inventario_frontend
+    ports:
+      - "3000:80" # Exposed internally on port 3000, but Nginx inside container runs on 80
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  backend_uploads:

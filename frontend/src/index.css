@@ -7,65 +7,65 @@
 @layer base {
   html, body, #root { height: 100%; }
   body { 
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: #f8fafc;
     color: #0f172a; 
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   .dark body {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: #0f172a;
     color: #f8fafc;
   }
 }
 
 @layer components {
-  /* Glassmorphism card */
+  /* Glassmorphism card - High Contrast Minimalist */
   .glass-card {
-    @apply bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50;
+    @apply bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800;
   }
   
-  /* Gradient backgrounds */
+  /* Gradient backgrounds - Grayscale / Monochrome */
   .gradient-primary {
-    @apply bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600;
+    @apply bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 text-white;
   }
   
   .gradient-success {
-    @apply bg-gradient-to-r from-emerald-500 to-teal-500;
+    @apply bg-slate-800 text-white;
   }
   
   .gradient-danger {
-    @apply bg-gradient-to-r from-rose-500 to-pink-500;
+    @apply bg-slate-800 text-white;
   }
   
   .gradient-warning {
-    @apply bg-gradient-to-r from-amber-500 to-orange-500;
+    @apply bg-slate-800 text-white;
   }
   
-  /* Animated gradient border */
+  /* Minimalist border */
   .gradient-border {
     position: relative;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
-    padding: 2px;
+    background: linear-gradient(135deg, #cbd5e1, #94a3b8, #64748b);
+    padding: 1px;
     border-radius: 12px;
   }
   
   .gradient-border > * {
     background: white;
-    border-radius: 10px;
+    border-radius: 11px;
   }
   
   .dark .gradient-border > * {
-    background: #1e293b;
+    background: #0f172a;
   }
   
-  /* Glow effects */
+  /* Glow effects - subtle */
   .glow-indigo {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 15px rgba(100, 116, 139, 0.2), 0 0 30px rgba(100, 116, 139, 0.1);
   }
   
   .glow-emerald {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3), 0 0 40px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.2), 0 0 30px rgba(148, 163, 184, 0.1);
   }
   
   /* Smooth animations */
@@ -93,38 +93,34 @@
   }
   
   .dark .shimmer {
-    background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
     background-size: 200% 100%;
   }
   
-  /* Status indicators */
+  /* Status indicators - Keep structural but monochrome theming if wanted, we'll keep semantic colors just barely for statuses to make them readable. */
   .status-dot {
     @apply w-2 h-2 rounded-full;
   }
   
   .status-dot-success {
-    @apply bg-emerald-500;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    @apply bg-slate-400;
   }
   
   .status-dot-warning {
-    @apply bg-amber-500;
-    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    @apply bg-slate-300;
   }
   
   .status-dot-danger {
-    @apply bg-rose-500;
-    box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+    @apply bg-slate-600;
   }
   
   /* Table improvements */
   .table-row-hover {
-    @apply transition-all duration-200;
+    @apply transition-none;
   }
   
   .table-row-hover:hover {
-    @apply bg-indigo-50/50 dark:bg-indigo-900/20;
-    transform: scale(1.001);
+    @apply bg-slate-50 dark:bg-slate-800/50;
   }
   
   /* Button ripple effect */
@@ -137,7 +133,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
     transform: scale(0);
     opacity: 0;
     transition: transform 0.5s, opacity 0.3s;
@@ -151,26 +147,26 @@
   
   /* Input focus ring */
   .input-glow:focus {
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 0 20px rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.2);
   }
   
   /* Scrollbar styling */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-slate-100 dark:bg-slate-800 rounded-full;
+    @apply bg-transparent;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
     transition: background 0.2s;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-500;
+    @apply bg-slate-400 dark:bg-slate-600;
   }
 }
 
@@ -203,7 +199,7 @@
 
 @keyframes pulseSoft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.8; }
 }
 
 @keyframes shimmer {
@@ -214,9 +210,9 @@
 /* Floating animation for cards */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  50% { transform: translateY(-3px); }
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }

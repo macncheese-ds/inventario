@@ -633,7 +633,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
           value={filtroUsuario}
           onChange={e => setFiltroUsuario(e.target.value)}
           placeholder="Buscar por nombre, número de empleado, rol o área..."
-          className="w-full text-sm p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400"
+          className="w-full text-sm p-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all placeholder:text-slate-400"
         />
       </div>
 
@@ -658,8 +658,8 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{user.nombre}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      canAdministerUsers(user.rol, user.area) ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
-                      canEditInventory(user.rol, user.area) ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                      canAdministerUsers(user.rol, user.area) ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300' :
+                      canEditInventory(user.rol, user.area) ? 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300' :
                       'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
                     }`}>
                       {user.rol}
@@ -667,7 +667,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden md:table-cell">
                     {user.area ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-300">
                         {user.area}
                       </span>
                     ) : (
@@ -678,7 +678,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                     <div className="flex flex-col sm:flex-row justify-end gap-2">
                       <button
                         onClick={() => handleEditUser(user)}
-                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium"
+                        className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300 text-sm font-medium"
                       >
                         {trLocal('edit')}
                       </button>
@@ -747,7 +747,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   value={formData.rol}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-500 focus:border-slate-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
                 >
                   <option value="Administrador">Administrador</option>
                   <option value="Ingeniero">Ingeniero</option>
@@ -775,7 +775,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   name="area"
                   value={formData.area}
                   onChange={handleChange}
-                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-500 focus:border-slate-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
                 >
                   <option value="">Sin área</option>
                   <option value="SMT">SMT</option>
@@ -832,7 +832,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   value={editingUser.rol}
                   onChange={handleEditChange}
                   required
-                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-500 focus:border-slate-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
                 >
                   <option value="Administrador">Administrador</option>
                   <option value="Ingeniero">Ingeniero</option>
@@ -860,7 +860,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   name="area"
                   value={editingUser.area}
                   onChange={handleEditChange}
-                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-500 focus:border-slate-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
                 >
                   <option value="">Sin área</option>
                   <option value="SMT">SMT</option>
@@ -889,15 +889,15 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
 function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
   return (
-    <div className="bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-900/30">
+    <div className="bg-slate-50 dark:bg-slate-900/20 border-b border-slate-100 dark:border-slate-900/30">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-indigo-900 dark:text-indigo-200">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">
             {trLocal('loans_active')} ({prestamos.length})
           </h3>
           <button
             onClick={onClose}
-            className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 transition-colors"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -910,23 +910,23 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
         ) : prestamos.length === 0 ? (
           <div className="text-center text-slate-500 text-sm py-8">{trLocal('no_active_loans')}</div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-indigo-100 dark:border-indigo-900/30 bg-white dark:bg-slate-800">
+          <div className="overflow-x-auto rounded-lg border border-slate-100 dark:border-slate-900/30 bg-white dark:bg-slate-800">
             <table className="w-full text-left text-sm">
-              <thead className="bg-indigo-50 dark:bg-indigo-900/40 border-b border-indigo-100 dark:border-indigo-900/30">
+              <thead className="bg-slate-50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-900/30">
                 <tr>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200">Empleado</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden sm:table-cell">N° Empleado</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200">Artículo</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden md:table-cell">NDP</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden md:table-cell">Gaveta</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden lg:table-cell">Prestado por</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 hidden xl:table-cell">Fecha</th>
-                  <th className="px-4 py-3 font-semibold text-indigo-900 dark:text-indigo-200 text-right">Acción</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200">Empleado</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200 hidden sm:table-cell">N° Empleado</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200">Artículo</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200 hidden md:table-cell">NDP</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200 hidden md:table-cell">Gaveta</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200 hidden lg:table-cell">Prestado por</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200 hidden xl:table-cell">Fecha</th>
+                  <th className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-200 text-right">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-indigo-50 dark:divide-indigo-900/20">
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-900/20">
                 {prestamos.map((p) => (
-                  <tr key={p.id} className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors">
+                  <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{p.empleado}</td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{p.num_empleado}</td>
                     <td className="px-4 py-3 text-slate-900 dark:text-white">{p.articulo}</td>
@@ -976,7 +976,7 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
   return (
     <tr 
       onDoubleClick={() => onDoubleClick && onDoubleClick(item)} 
-      className="group border-b border-slate-100 dark:border-slate-700/50 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-purple-50/30 dark:hover:from-indigo-900/10 dark:hover:to-purple-900/10 transition-all duration-200 cursor-pointer"
+      className="group border-b border-slate-100 dark:border-slate-700/50 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-gray-50/30 dark:hover:from-slate-900/10 dark:hover:to-gray-900/10 transition-all duration-200 cursor-pointer"
     >
       <td className="px-4 py-3.5">
         <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 font-mono">{item.ndp || '-'}</span>
@@ -1030,7 +1030,7 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button
               onClick={(e) => { e.stopPropagation(); onShowQR(item); }}
-              className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg dark:text-slate-400 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30 transition-all duration-200 hover:scale-110"
+              className="p-2 text-slate-500 hover:text-slate-600 hover:bg-slate-50 rounded-lg dark:text-slate-400 dark:hover:text-slate-400 dark:hover:bg-slate-900/30 transition-all duration-200 hover:scale-110"
               title="Generar QR"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1040,7 +1040,7 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
             {canLendItems(role, area) && (
               <button
                 onClick={(e) => { e.stopPropagation(); onPrestar(item); }}
-                className="p-2 text-slate-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg dark:text-slate-400 dark:hover:text-purple-400 dark:hover:bg-purple-900/30 transition-all duration-200 hover:scale-110"
+                className="p-2 text-slate-500 hover:text-gray-600 hover:bg-gray-50 rounded-lg dark:text-slate-400 dark:hover:text-gray-400 dark:hover:bg-gray-900/30 transition-all duration-200 hover:scale-110"
                 title="Prestar"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1050,7 +1050,7 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-900/30 transition-all duration-200 hover:scale-110"
+              className="p-2 text-slate-500 hover:text-slate-600 hover:bg-slate-50 rounded-lg dark:text-slate-400 dark:hover:text-slate-400 dark:hover:bg-slate-900/30 transition-all duration-200 hover:scale-110"
               title="Editar"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1343,7 +1343,7 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
                 {error}
                 <button
                   onClick={() => { setShowScanner(true); setError(''); }}
-                  className="block w-full mt-2 text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  className="block w-full mt-2 text-slate-600 dark:text-slate-400 hover:underline font-medium"
                 >
                   Intentar de nuevo
                 </button>
@@ -1901,8 +1901,8 @@ export default function Inventory() {
                   onClick={() => setActiveGaveta(g)}
                   className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex-grow sm:flex-grow-0 ${
                     g === activeGaveta
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 scale-105'
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200/60 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md'
+                      ? 'bg-gradient-to-r from-slate-600 to-gray-600 text-white shadow-lg shadow-slate-500/30 scale-105'
+                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200/60 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md'
                   }`}
                 >
                   {g}
@@ -1924,7 +1924,7 @@ export default function Inventory() {
                 placeholder={trLocal('search_placeholder')}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200"
+                className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-500/20 focus:border-slate-500 transition-all duration-200"
               />
             </div>
              
@@ -1994,9 +1994,9 @@ export default function Inventory() {
         <Card hover className="p-5 flex items-center justify-between group">
           <div>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('turno_prefix')}</p>
-            <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{turno}</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-zinc-600 bg-clip-text text-transparent">{turno}</p>
           </div>
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform duration-300">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-slate-500 to-zinc-500 flex items-center justify-center text-white shadow-lg shadow-slate-500/30 group-hover:scale-110 transition-transform duration-300">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -2025,9 +2025,9 @@ export default function Inventory() {
         <Card hover className="p-5 flex items-center justify-between group">
           <div>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('showing_label')}</p>
-            <p className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{itemsFiltrados.length} / {total}</p>
+            <p className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">{itemsFiltrados.length} / {total}</p>
           </div>
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform duration-300">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-slate-500 to-gray-500 flex items-center justify-center text-white shadow-lg shadow-slate-500/30 group-hover:scale-110 transition-transform duration-300">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
@@ -2062,12 +2062,12 @@ export default function Inventory() {
                 {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">Acciones</th>}
               </tr>
               <tr className="bg-white/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-700/50">
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtrar..." /></th>
-                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder="Filtrar..." /></th>}
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtrar..." /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtrar..." /></th>
+                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder="Filtrar..." /></th>}
                 <th colSpan={4}></th>
               </tr>
             </thead>
@@ -2091,7 +2091,7 @@ export default function Inventory() {
           {loading && (
             <div className="p-12 text-center">
               <div className="inline-flex items-center gap-3">
-                <svg className="animate-spin h-6 w-6 text-indigo-600" viewBox="0 0 24 24">
+                <svg className="animate-spin h-6 w-6 text-slate-600" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -2199,10 +2199,10 @@ export default function Inventory() {
               </button>
             </div>
             <div className="space-y-4">
-              <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
-                <p className="text-xs font-semibold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mb-1">No. de Control</p>
-                <p className="text-lg font-bold text-indigo-900 dark:text-indigo-200">F-OP-SMT-008</p>
-                <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1">Matriz de Refacciones</p>
+              <div className="bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">No. de Control</p>
+                <p className="text-lg font-bold text-slate-900 dark:text-slate-200">F-OP-SMT-008</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">Matriz de Refacciones</p>
               </div>
               <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4 space-y-3">
                 <div>

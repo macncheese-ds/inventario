@@ -42,14 +42,14 @@ export default function Input({
           step={step}
           name={name}
           className={`
-            w-full rounded-xl border-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm
+            w-full rounded-xl border-2 bg-white/10 dark:bg-slate-900/50 backdrop-blur-sm
             text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
             px-4 py-2.5 shadow-sm
             transition-all duration-200
             ${icon ? 'pl-11' : ''}
             ${error 
               ? 'border-rose-300 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500' 
-              : 'border-slate-200 dark:border-slate-600 focus:ring-indigo-500/20 focus:border-indigo-500 hover:border-slate-300 dark:hover:border-slate-500'
+              : 'border-slate-200 dark:border-slate-700 focus:ring-slate-400/20 focus:border-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
             }
             focus:ring-4 focus:outline-none
           `}
