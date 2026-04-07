@@ -1889,103 +1889,118 @@ export default function Inventory() {
 
   return (
     <Layout fullWidth>
-      {/* Header Section */}
-      <div className="mb-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          {/* Gaveta Pills */}
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-            <div className="flex flex-wrap gap-2 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-2 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+      {/* Main Control Header */}
+      <div className="mb-6 flex flex-col gap-4">
+        {/* Top Control Bar: App Settings & Quick Actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-sm">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            {/* Quick Actions / Modes */}
+            {canEditInventory(user?.rol, user?.area) && (
+              <Button variant="primary" onClick={() => setModal({ mode: 'add' })} className="whitespace-nowrap">
+                <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                {trLocal('agregar')}
+              </Button>
+            )}
+            {canLendItems(user?.rol, user?.area) && (
+              <Button variant="secondary" onClick={() => setShowPrestamos(true)}>
+                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                {trLocal('prestamos')}
+              </Button>
+            )}
+            {canViewHistory(user?.rol, user?.area) && (
+              <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
+                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {trLocal('ver_historial')}
+              </Button>
+            )}
+            {canAdministerUsers(user?.rol, user?.area) && (
+              <Button variant="secondary" onClick={() => setModal({ mode: 'usuarios' })}>
+                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                {trLocal('administrar_usuarios')}
+              </Button>
+            )}
+            {canViewHistory(user?.rol, user?.area) && (
+              <Button variant="secondary" onClick={() => setShowNotifModal(true)} className="relative">
+                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Notificaciones
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+            {canEditInventory(user?.rol, user?.area) && (
+              <Button variant="outline" onClick={() => setQrBulkModal(true)} title="Generar QR en lote">
+                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                QR Lote
+              </Button>
+            )}
+            {canViewHistory(user?.rol, user?.area) && (
+              <Button variant="outline" onClick={handleExportExcel} title="Exportar a Excel">
+                <svg className="w-4 h-4 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Excel
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => setShowInfoModal(true)} title="Información del sistema">
+              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </Button>
+            <Button variant="ghost" onClick={() => { loadGavetas(); loadItems(); loadTotals(); }} title={trLocal('refresh')}>
+              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+
+        {/* Filters and Search Bar */}
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 bg-white/50 dark:bg-slate-900/50 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
+          {/* Segmented Control for Gavetas */}
+          <div className="flex w-full lg:w-auto overflow-x-auto custom-scrollbar pb-1 lg:pb-0 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
               {gavetas.map((g) => (
                 <button
                   key={g}
                   onClick={() => setActiveGaveta(g)}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex-grow sm:flex-grow-0 ${
+                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap flex-grow sm:flex-grow-0 ${
                     g === activeGaveta
-                      ? 'bg-gradient-to-r from-slate-600 to-gray-600 text-white shadow-lg shadow-slate-500/30 scale-105'
-                      : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200/60 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md'
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'
                   }`}
                 >
-                  {g}
+                  {g === 'Todas' ? 'Todas las Gavetas' : `Gaveta ${g}`}
                 </button>
               ))}
-            </div>
           </div>
 
-          {/* Search and Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <div className="relative w-full sm:w-72">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder={trLocal('search_placeholder')}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-500/20 focus:border-slate-500 transition-all duration-200"
-              />
+          {/* Search Input */}
+          <div className="relative w-full lg:w-96">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
-             
-            <div className="flex flex-wrap gap-2 justify-end">
-              <Button 
-                variant="secondary" 
-                onClick={() => { loadGavetas(); loadItems(); loadTotals(); }} 
-                title={trLocal('refresh')}
-                icon={
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                }
-              />
-              <Button
-                variant="secondary"
-                onClick={() => setShowInfoModal(true)}
-                title="Información del sistema"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </Button>
-              {canViewHistory(user?.rol, user?.area) && (
-                <>
-                  <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
-                    {trLocal('ver_historial')}
-                  </Button>
-                  <Button variant="secondary" onClick={handleExportExcel}>
-                    {trLocal('export_excel')}
-                  </Button>
-                  <Button variant="secondary" onClick={() => setShowNotifModal(true)}>
-                    Notificaciones
-                  </Button>
-                </>
-              )}
-             {canEditInventory(user?.rol, user?.area) && (
-               <Button variant="secondary" onClick={() => setQrBulkModal(true)} title="Generar QR en lote">
-                 <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                 </svg>
-                 QR Lote
-               </Button>
-             )}
-             {canLendItems(user?.rol, user?.area) && (
-               <Button variant="secondary" onClick={() => setShowPrestamos(true)}>
-                 {trLocal('prestamos')}
-               </Button>
-             )}
-             {canAdministerUsers(user?.rol, user?.area) && (
-               <Button variant="secondary" onClick={() => setModal({ mode: 'usuarios' })}>
-                 {trLocal('administrar_usuarios')}
-               </Button>
-             )}
-             {canEditInventory(user?.rol, user?.area) && (
-               <Button variant="primary" onClick={() => setModal({ mode: 'add' })}>
-                 {trLocal('agregar')}
-               </Button>
-             )}
-           </div>
-        </div>
+            <input
+              type="text"
+              placeholder={trLocal('search_placeholder')}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-slate-500/20 focus:border-slate-400 transition-all font-medium placeholder:font-normal"
+            />
+          </div>
         </div>
       </div>
 
