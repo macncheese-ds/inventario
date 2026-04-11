@@ -1969,21 +1969,31 @@ export default function Inventory() {
 
         {/* Filters and Search Bar */}
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4 bg-white/50 dark:bg-slate-900/50 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
-          {/* Segmented Control for Gavetas */}
-          <div className="flex w-full lg:w-auto overflow-x-auto custom-scrollbar pb-1 lg:pb-0 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl">
-              {gavetas.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setActiveGaveta(g)}
-                  className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap flex-grow sm:flex-grow-0 ${
-                    g === activeGaveta
-                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                  }`}
-                >
-                  {g === 'Todas' ? 'Todas las Gavetas' : `Gaveta ${g}`}
-                </button>
-              ))}
+          {/* Dropdown Control for Gavetas */}
+          <div className="flex w-full lg:w-auto items-center bg-white dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm">
+            <div className="relative w-full lg:w-64">
+              <select
+                value={activeGaveta || ''}
+                onChange={(e) => setActiveGaveta(e.target.value)}
+                className="appearance-none w-full py-2 pl-10 pr-10 rounded-lg text-sm font-semibold bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500/30 cursor-pointer transition-all border-none"
+              >
+                {gavetas.map((g) => (
+                  <option key={g} value={g} className="font-medium bg-white dark:bg-slate-800">
+                    {g === 'Todas' ? 'Todas' : g}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </div>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Search Input */}
