@@ -69,15 +69,16 @@ router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => 
   try {
     const conn = await createCredConnection();
     let rows;
-    // Administrador: solo ve usuarios de su misma área
-    // Ingeniero: ve todos los usuarios
-    if (req.user?.rol === 'Administrador' && req.user?.area) {
+    // Siempre filtrar por área si el usuario tiene una asignada
+    // Esto aplica para Administrador, Ingeniero, y cualquier otro rol admin con área
+    if (req.user?.area) {
       const userArea = req.user.area;
       [rows] = await conn.execute(
         'SELECT num_empleado AS username, nombre, rol, area FROM users WHERE LOWER(area) = LOWER(?) ORDER BY nombre ASC',
         [userArea]
       );
     } else {
+      // Sin área asignada: devolver todos (caso edge)
       [rows] = await conn.execute('SELECT num_empleado AS username, nombre, rol, area FROM users ORDER BY nombre ASC');
     }
     await conn.end();
@@ -103,9 +104,9 @@ router.get('/info', authenticateToken, (req, res) => {
 router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     let { nombre, num_empleado, password, rol, area } = req.body;
-    // Administrador solo puede crear usuarios en su propia área
-    if (req.user?.rol === 'Administrador') {
-      area = req.user.area || area;
+    // Cualquier rol con área asignada solo puede crear usuarios en su propia área
+    if (req.user?.area) {
+      area = req.user.area;
     }
     
     // Validar campos requeridos
@@ -147,9 +148,9 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
   try {
     const { username } = req.params;
     let { nombre, num_empleado, password, rol, area } = req.body;
-    // Administrador solo puede editar usuarios de su área
-    if (req.user?.rol === 'Administrador') {
-      // Verificar que el usuario a editar pertenece al área del admin
+    // Cualquier rol con área asignada solo puede editar usuarios de su área
+    if (req.user?.area) {
+      // Verificar que el usuario a editar pertenece al área del solicitante
       const checkConn = await createCredConnection();
       const [checkRows] = await checkConn.execute(
         'SELECT area FROM users WHERE num_empleado = ? LIMIT 1',
@@ -157,10 +158,10 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
       );
       await checkConn.end();
       const targetArea = checkRows[0]?.area;
-      if (targetArea && req.user.area && targetArea.toLowerCase() !== req.user.area.toLowerCase()) {
-        return res.status(403).json({ message: 'No puedes editar usuarios de otro área' });
+      if (targetArea && targetArea.toLowerCase() !== req.user.area.toLowerCase()) {
+        return res.status(403).json({ message: 'No puedes editar usuarios de otra área' });
       }
-      area = req.user.area || area;
+      area = req.user.area;
     }
     
     // Validar campos requeridos
@@ -219,8 +220,8 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
 router.delete('/:username', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const { username } = req.params;
-    // Administrador solo puede eliminar usuarios de su área
-    if (req.user?.rol === 'Administrador') {
+    // Cualquier rol con área asignada solo puede eliminar usuarios de su área
+    if (req.user?.area) {
       const checkConn = await createCredConnection();
       const [checkRows] = await checkConn.execute(
         'SELECT area FROM users WHERE num_empleado = ? LIMIT 1',
@@ -228,8 +229,8 @@ router.delete('/:username', authenticateToken, authorizeRoles('admin'), async (r
       );
       await checkConn.end();
       const targetArea = checkRows[0]?.area;
-      if (targetArea && req.user.area && targetArea.toLowerCase() !== req.user.area.toLowerCase()) {
-        return res.status(403).json({ message: 'No puedes eliminar usuarios de otro área' });
+      if (targetArea && targetArea.toLowerCase() !== req.user.area.toLowerCase()) {
+        return res.status(403).json({ message: 'No puedes eliminar usuarios de otra área' });
       }
     }
     const { adminPassword } = req.body;
