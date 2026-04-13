@@ -18,42 +18,65 @@ async function createCredConnection() {
   return await mysql.createConnection(config);
 }
 
-// Validar contraseña desde credenciales
-async function validatePassword(username, password) {
-  try {
-    const conn = await createCredConnection();
-    const [rows] = await conn.execute(
-      'SELECT pass_hash FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
-      [username, username]
-    );
-    await conn.end();
-
-    if (!rows || rows.length === 0) return false;
-
-    const bcrypt = (await import('bcryptjs')).default;
-    const hash = Buffer.isBuffer(rows[0].pass_hash) ? rows[0].pass_hash.toString() : rows[0].pass_hash;
-    return await bcrypt.compare(password, hash);
-  } catch (e) {
-    console.error('Error validando contraseña:', e);
-    return false;
+// Normalizar entrada de empleado (igual que en auth.js)
+function normalizeEmployeeInput(input) {
+  let normalized = String(input).trim();
+  const match = normalized.match(/^0*(\d+)([A-Za-z])?$/);
+  if (match) {
+    const number = match[1];
+    const letter = match[2] || 'A';
+    normalized = `${number}${letter}`;
+  } else {
+    normalized = normalized.replace(/^0+/, '') + 'A';
   }
+  return normalized;
 }
 
 // Obtener información de usuario desde credenciales
 async function getUserInfo(employeeInput) {
   try {
+    const normalized = normalizeEmployeeInput(employeeInput);
     const conn = await createCredConnection();
     const [rows] = await conn.execute(
-      'SELECT nombre, num_empleado, usuario FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
-      [employeeInput, employeeInput]
+      'SELECT nombre, num_empleado, usuario, rol, area FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [normalized, normalized]
     );
     await conn.end();
-
     if (!rows || rows.length === 0) return null;
     return rows[0];
   } catch (e) {
     console.error('Error obteniendo info de usuario:', e);
     return null;
+  }
+}
+
+// Validar autorizador (debe ser Administrador o Ingeniero)
+async function validateAuthorizer(num_empleado, password) {
+  try {
+    const normalized = normalizeEmployeeInput(num_empleado);
+    const conn = await createCredConnection();
+    const [rows] = await conn.execute(
+      'SELECT nombre, num_empleado, pass_hash, rol, area FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [normalized, normalized]
+    );
+    await conn.end();
+
+    if (!rows || rows.length === 0) return { ok: false, message: 'Autorizador no encontrado' };
+
+    const user = rows[0];
+    if (!['Administrador', 'Ingeniero'].includes(user.rol)) {
+      return { ok: false, message: 'Solo un Administrador o Ingeniero puede autorizar préstamos' };
+    }
+
+    const bcrypt = (await import('bcryptjs')).default;
+    const hash = Buffer.isBuffer(user.pass_hash) ? user.pass_hash.toString('utf8') : user.pass_hash;
+    const valid = await bcrypt.compare(password, hash);
+    if (!valid) return { ok: false, message: 'Contraseña del autorizador incorrecta' };
+
+    return { ok: true, user };
+  } catch (e) {
+    console.error('Error validando autorizador:', e);
+    return { ok: false, message: 'Error validando autorizador' };
   }
 }
 
@@ -77,143 +100,183 @@ async function logCambio(username, accion, detalle, turno = 'N/A', adetalle = nu
   }
 }
 
-// Listar préstamos activos (filtrados por área del usuario)
+// ─── GET: Listar préstamos activos (filtrados por área del usuario) ───────────
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const userArea = req.user?.area || null;
-    const params = {};
-    let whereClause = '';
     
-    // Filtrar por área: solo mostrar préstamos de items del área del usuario
+    let rows;
     if (userArea) {
-      whereClause = ` WHERE (LOWER(p.area) = LOWER(:userArea) OR p.area IS NULL)`;
-      params.userArea = userArea;
-    }
-    
-    try {
-      const [rows] = await pool.query(
-        `SELECT p.* FROM prestamos p ${whereClause}`,
-        params
+      // Estrictamente filtrar por área
+      const [result] = await pool.query(
+        `SELECT p.* FROM prestamos p WHERE LOWER(p.area) = LOWER(:userArea)`,
+        { userArea }
       );
-      res.json(rows);
-    } catch (err) {
-      // Si falla porque la columna area no existe, hacer la query sin filtro
-      if (err.message.includes('Unknown column')) {
-        console.warn('Columna area no existe en tabla prestamos, devolviendo todos los préstamos');
-        const [rows] = await pool.query(
-          `SELECT p.* FROM prestamos p`
-        );
-        res.json(rows);
-      } else {
-        throw err;
-      }
+      rows = result;
+    } else {
+      // Sin área asignada: devolver todos (caso Ingeniero sin área asignada)
+      const [result] = await pool.query(`SELECT p.* FROM prestamos p`);
+      rows = result;
     }
+
+    res.json(rows);
   } catch (e) {
     console.error('Error listando préstamos:', e);
+    // Fallback: si columna area no existe, devolver todos
+    if (e.message && e.message.includes('Unknown column')) {
+      try {
+        const [rows] = await pool.query(`SELECT p.* FROM prestamos p`);
+        return res.json(rows);
+      } catch (e2) {
+        return res.status(500).json({ message: 'Error listando préstamos' });
+      }
+    }
     res.status(500).json({ message: 'Error listando préstamos' });
   }
 });
 
-// Crear préstamo (prestar artículo)
-// Nuevo flujo: solo requiere gafete y cantidad, sin admin ni contraseña
+// ─── POST: Crear préstamo(s) — soporta múltiples ítems en un solo lote ────────
+// Body: {
+//   employee_input: string,          // num_empleado del que recibe el préstamo
+//   items: [{ item_id, cantidad }],  // lista de ítems a prestar
+//   authorizer_num_empleado: string, // quien autoriza (Administrador/Ingeniero)
+//   authorizer_password: string
+// }
 router.post('/', authenticateToken, async (req, res) => {
   const {
-    employee_input, // gafete del empleado
-    articulo,       // nombre del artículo
-    cantidad = 1,   // cantidad a prestar
-    item_id         // id del artículo (opcional, preferido)
+    employee_input,
+    items,
+    authorizer_num_empleado,
+    authorizer_password
   } = req.body;
 
+  if (!employee_input) {
+    return res.status(400).json({ message: 'Se requiere el número de empleado del prestatario' });
+  }
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ message: 'Se requiere al menos un artículo para prestar' });
+  }
+  if (!authorizer_num_empleado || !authorizer_password) {
+    return res.status(400).json({ message: 'Se requieren credenciales del autorizador' });
+  }
+
   try {
-    // 1. Obtener info del empleado
+    // 1. Validar autorizador
+    const authResult = await validateAuthorizer(authorizer_num_empleado, authorizer_password);
+    if (!authResult.ok) {
+      return res.status(401).json({ message: authResult.message });
+    }
+    const authUser = authResult.user;
+
+    // 2. Obtener info del empleado que recibe el préstamo
     const employeeInfo = await getUserInfo(employee_input);
     if (!employeeInfo) {
-      return res.status(404).json({ message: 'Empleado no encontrado' });
+      return res.status(404).json({ message: 'Empleado prestatario no encontrado' });
     }
 
-    // 2. Obtener info del artículo
-    let item;
-    if (item_id) {
-      const [itemRows] = await pool.query(
-        `SELECT * FROM gavetas WHERE id = :id`,
-        { id: item_id }
-      );
-      if (!itemRows || itemRows.length === 0) {
-        return res.status(404).json({ message: 'Artículo no encontrado' });
+    const results = [];
+    const errors = [];
+
+    // 3. Procesar cada ítem
+    for (const itemReq of items) {
+      const { item_id, cantidad } = itemReq;
+      const qty = parseInt(cantidad, 10);
+
+      if (!item_id || !qty || qty < 1) {
+        errors.push({ item_id, error: 'ID o cantidad inválidos' });
+        continue;
       }
-      item = itemRows[0];
-    } else if (articulo) {
-      const [itemRows] = await pool.query(
-        `SELECT * FROM gavetas WHERE articulo = :articulo LIMIT 1`,
-        { articulo }
-      );
-      if (!itemRows || itemRows.length === 0) {
-        return res.status(404).json({ message: 'Artículo no encontrado' });
+
+      try {
+        // Obtener artículo
+        const [itemRows] = await pool.query(
+          `SELECT * FROM gavetas WHERE id = :id`,
+          { id: item_id }
+        );
+
+        if (!itemRows || itemRows.length === 0) {
+          errors.push({ item_id, error: 'Artículo no encontrado' });
+          continue;
+        }
+
+        const item = itemRows[0];
+
+        if (item.cantidad < qty) {
+          errors.push({ item_id, articulo: item.articulo, error: `No hay suficientes unidades (disponibles: ${item.cantidad})` });
+          continue;
+        }
+
+        const itemArea = req.user?.area || item.area || null;
+
+        // Crear registro de préstamo
+        await pool.query(
+          `INSERT INTO prestamos (empleado, num_empleado, articulo, ndp, gaveta, cantidad, empleado1, area)
+           VALUES (:empleado, :num_empleado, :articulo, :ndp, :gaveta, :cantidad, :empleado1, :area)`,
+          {
+            empleado: employeeInfo.nombre,
+            num_empleado: employeeInfo.num_empleado,
+            articulo: item.articulo,
+            ndp: item.ndp || null,
+            gaveta: item.gaveta || null,
+            cantidad: qty,
+            empleado1: authUser.nombre || authUser.num_empleado,
+            area: itemArea
+          }
+        );
+
+        // Decrementar inventario
+        const prevQty = item.cantidad;
+        const newQty = prevQty - qty;
+        await pool.query(
+          `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
+          { newQty, id: item.id }
+        );
+
+        // Log
+        await logCambio(
+          authUser.nombre || authUser.num_empleado,
+          'PRESTAMO',
+          {
+            empleado: employeeInfo.nombre,
+            num_empleado: employeeInfo.num_empleado,
+            articulo: item.articulo,
+            ndp: item.ndp,
+            cantidad_prestada: qty,
+            cantidad_anterior: prevQty,
+            cantidad_nueva: newQty,
+            autorizado_por: authUser.nombre
+          },
+          'N/A',
+          item,
+          itemArea
+        );
+
+        results.push({
+          item_id: item.id,
+          articulo: item.articulo,
+          cantidad_prestada: qty,
+          cantidad_restante: newQty
+        });
+      } catch (itemErr) {
+        console.error(`Error procesando ítem ${item_id}:`, itemErr);
+        errors.push({ item_id, error: 'Error interno al procesar ítem' });
       }
-      item = itemRows[0];
-    } else {
-      return res.status(400).json({ message: 'Falta el artículo a prestar' });
     }
 
-    // 3. Validar cantidad
-    const qty = parseInt(cantidad, 10);
-    if (!qty || qty < 1) {
-      return res.status(400).json({ message: 'Cantidad inválida' });
+    if (results.length === 0) {
+      return res.status(400).json({
+        message: 'No se procesó ningún préstamo',
+        errors
+      });
     }
-    if (item.cantidad < qty) {
-      return res.status(400).json({ message: 'No hay suficientes unidades disponibles para prestar' });
-    }
-
-    // 4. Crear registro de préstamo (una fila por préstamo, con cantidad y área)
-    const itemArea = req.user?.area || item.area || null;
-    const lenderName = req.user?.nombre || req.user?.username || 'Sistema';
-    await pool.query(
-      `INSERT INTO prestamos (empleado, num_empleado, articulo, ndp, gaveta, cantidad, empleado1, area)
-       VALUES (:empleado, :num_empleado, :articulo, :ndp, :gaveta, :cantidad, :empleado1, :area)`,
-      {
-        empleado: employeeInfo.nombre,
-        num_empleado: employeeInfo.num_empleado,
-        articulo: item.articulo,
-        ndp: item.ndp || null,
-        gaveta: item.gaveta || null,
-        cantidad: qty,
-        empleado1: lenderName,
-        area: itemArea
-      }
-    );
-
-    // 5. Decrementar cantidad del artículo
-    const prevQty = item.cantidad;
-    const newQty = prevQty - qty;
-    await pool.query(
-      `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
-      { newQty, id: item.id }
-    );
-
-    // 6. Log del cambio
-    await logCambio(
-      employeeInfo.nombre || employeeInfo.num_empleado,
-      'PRESTAMO',
-      {
-        empleado: employeeInfo.nombre,
-        num_empleado: employeeInfo.num_empleado,
-        articulo: item.articulo,
-        ndp: item.ndp,
-        cantidad_prestada: qty,
-        cantidad_anterior: prevQty,
-        cantidad_nueva: newQty
-      },
-      'N/A',
-      item,
-      req.user?.area || item.area
-    );
 
     res.status(201).json({
-      message: 'Préstamo registrado exitosamente',
+      message: `Préstamo registrado: ${results.length} artículo(s) prestado(s) a ${employeeInfo.nombre}`,
       empleado: employeeInfo.nombre,
-      articulo: item.articulo,
-      cantidad_prestada: qty,
-      cantidad_restante: newQty
+      num_empleado: employeeInfo.num_empleado,
+      autorizado_por: authUser.nombre,
+      items: results,
+      errors: errors.length > 0 ? errors : undefined
     });
   } catch (e) {
     console.error('Error creando préstamo:', e);
@@ -221,14 +284,13 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// Devolver préstamo
-// Nuevo flujo: devolución sin admin, acepta cantidad
+// ─── POST: Devolver préstamo ──────────────────────────────────────────────────
 router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
   const { num_empleado } = req.params;
   const { id, articulo, cantidad = 1 } = req.body;
 
   try {
-    // 1. Buscar préstamo activo por id si está presente, si no por combinación
+    // 1. Buscar préstamo
     let prestamo;
     if (id) {
       const [rows] = await pool.query(
@@ -250,10 +312,10 @@ router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
       prestamo = rows[0];
     }
 
-    // 2. Buscar el artículo
+    // 2. Buscar artículo
     const [itemRows] = await pool.query(
       `SELECT * FROM gavetas WHERE articulo = :articulo LIMIT 1`,
-      { articulo }
+      { articulo: prestamo.articulo }
     );
     if (!itemRows || itemRows.length === 0) {
       return res.status(404).json({ message: 'Artículo asociado al préstamo no encontrado' });
@@ -277,22 +339,17 @@ router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
       { newQty, id: item.id }
     );
 
-    // 5. Actualizar/eliminar préstamo usando id
+    // 5. Actualizar/eliminar préstamo
     if (qty === prestamo.cantidad) {
-      // Devolver todo: eliminar préstamo por id
-      await pool.query(
-        `DELETE FROM prestamos WHERE id = :id`,
-        { id: prestamo.id }
-      );
+      await pool.query(`DELETE FROM prestamos WHERE id = :id`, { id: prestamo.id });
     } else {
-      // Devolver parcial: restar cantidad por id
       await pool.query(
         `UPDATE prestamos SET cantidad = cantidad - :qty WHERE id = :id`,
         { qty, id: prestamo.id }
       );
     }
 
-    // 6. Log del cambio
+    // 6. Log
     await logCambio(
       prestamo.empleado || prestamo.num_empleado,
       'DEVOLUCION',

@@ -1,4 +1,4 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
 import mysql from 'mysql2/promise';
 import { authenticateToken } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
@@ -67,13 +67,28 @@ router.post('/change-password', authenticateToken, async (req, res) => {
 
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
-      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
-    }
     const conn = await createCredConnection();
-    const [rows] = await conn.execute('SELECT num_empleado AS username, nombre, rol, area FROM users ORDER BY nombre ASC');
+    let rows;
+    // Administrador: solo ve usuarios de su misma área
+    // Ingeniero: ve todos los usuarios
+    if (req.user?.rol === 'Administrador' && req.user?.area) {
+      const userArea = req.user.area;
+      [rows] = await conn.execute(
+        'SELECT num_empleado AS username, nombre, rol, area FROM users WHERE LOWER(area) = LOWER(?) ORDER BY nombre ASC',
+        [userArea]
+      );
+    } else {
+      [rows] = await conn.execute('SELECT num_empleado AS username, nombre, rol, area FROM users ORDER BY nombre ASC');
+    }
     await conn.end();
-    const users = rows.map(u => ({ username: u.username, nombre: u.nombre, rol: u.rol, area: u.area || '', inventarioRol: ['Ingeniero', 'Administrador'].includes(u.rol) ? 'admin' : ['Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'].includes(u.rol) ? 'operador' : 'guest' }));
+    const users = rows.map(u => ({
+      username: u.username,
+      nombre: u.nombre,
+      rol: u.rol,
+      area: u.area || '',
+      inventarioRol: ['Ingeniero', 'Administrador'].includes(u.rol) ? 'admin' :
+        ['Calidad', 'Soporte', 'Lider', 'Operador', 'Recursos Humanos', 'Tool Room'].includes(u.rol) ? 'operador' : 'guest'
+    }));
     res.json(users);
   } catch (e) {
     console.error(e);
@@ -87,10 +102,11 @@ router.get('/info', authenticateToken, (req, res) => {
 
 router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
-      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
+    let { nombre, num_empleado, password, rol, area } = req.body;
+    // Administrador solo puede crear usuarios en su propia área
+    if (req.user?.rol === 'Administrador') {
+      area = req.user.area || area;
     }
-    const { nombre, num_empleado, password, rol, area } = req.body;
     
     // Validar campos requeridos
     if (!nombre || !num_empleado || !password || !rol) {
@@ -129,11 +145,23 @@ router.post('/', authenticateToken, authorizeRoles('admin'), async (req, res) =>
 
 router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
-      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
-    }
     const { username } = req.params;
-    const { nombre, num_empleado, password, rol, area } = req.body;
+    let { nombre, num_empleado, password, rol, area } = req.body;
+    // Administrador solo puede editar usuarios de su área
+    if (req.user?.rol === 'Administrador') {
+      // Verificar que el usuario a editar pertenece al área del admin
+      const checkConn = await createCredConnection();
+      const [checkRows] = await checkConn.execute(
+        'SELECT area FROM users WHERE num_empleado = ? LIMIT 1',
+        [username]
+      );
+      await checkConn.end();
+      const targetArea = checkRows[0]?.area;
+      if (targetArea && req.user.area && targetArea.toLowerCase() !== req.user.area.toLowerCase()) {
+        return res.status(403).json({ message: 'No puedes editar usuarios de otro área' });
+      }
+      area = req.user.area || area;
+    }
     
     // Validar campos requeridos
     if (!nombre || !num_empleado || !rol) {
@@ -190,10 +218,20 @@ router.put('/:username', authenticateToken, authorizeRoles('admin'), async (req,
 
 router.delete('/:username', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
-    if (req.user?.area && req.user.area.toLowerCase() === 'ensamble') {
-      return res.status(403).json({ message: 'No tienes permiso para administrar usuarios' });
-    }
     const { username } = req.params;
+    // Administrador solo puede eliminar usuarios de su área
+    if (req.user?.rol === 'Administrador') {
+      const checkConn = await createCredConnection();
+      const [checkRows] = await checkConn.execute(
+        'SELECT area FROM users WHERE num_empleado = ? LIMIT 1',
+        [username]
+      );
+      await checkConn.end();
+      const targetArea = checkRows[0]?.area;
+      if (targetArea && req.user.area && targetArea.toLowerCase() !== req.user.area.toLowerCase()) {
+        return res.status(403).json({ message: 'No puedes eliminar usuarios de otro área' });
+      }
+    }
     const { adminPassword } = req.body;
     
     if (!adminPassword) {

@@ -188,4 +188,61 @@ router.post('/change-password', async (req, res) => {
   }
 });
 
+// Validate credentials for authorizing prestamos (Administrador or Ingeniero only)
+router.post('/validate', async (req, res) => {
+  const { num_empleado, password } = req.body;
+  if (!num_empleado || !password) {
+    return res.status(400).json({ message: 'Se requiere num_empleado y contraseña' });
+  }
+  try {
+    const normalized = normalizeEmployeeInput(num_empleado);
+    const conn = await createCredConnection();
+    const [rows] = await conn.execute(
+      'SELECT nombre, num_empleado, rol, area FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [normalized, normalized]
+    );
+    await conn.end();
+
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ message: 'Usuario no encontrado' });
+    }
+
+    const user = rows[0];
+    // Only Administrador or Ingeniero can authorize prestamos
+    if (!['Administrador', 'Ingeniero'].includes(user.rol)) {
+      return res.status(403).json({ message: 'Solo un Administrador o Ingeniero puede autorizar préstamos' });
+    }
+
+    // Validate password
+    const conn2 = await createCredConnection();
+    const [hashRows] = await conn2.execute(
+      'SELECT pass_hash FROM users WHERE num_empleado = ? OR usuario = ? LIMIT 1',
+      [normalized, normalized]
+    );
+    await conn2.end();
+
+    if (!hashRows || hashRows.length === 0) {
+      return res.status(401).json({ message: 'Usuario no encontrado' });
+    }
+
+    const bcrypt = (await import('bcryptjs')).default;
+    const hash = Buffer.isBuffer(hashRows[0].pass_hash) ? hashRows[0].pass_hash.toString('utf8') : hashRows[0].pass_hash;
+    const ok = await bcrypt.compare(password, hash);
+    if (!ok) {
+      return res.status(401).json({ message: 'Contraseña incorrecta' });
+    }
+
+    res.json({
+      valid: true,
+      nombre: user.nombre,
+      num_empleado: user.num_empleado,
+      rol: user.rol,
+      area: user.area || null
+    });
+  } catch (e) {
+    console.error('Error validando autorizador:', e);
+    res.status(500).json({ message: 'Error de servidor' });
+  }
+});
+
 export default router;

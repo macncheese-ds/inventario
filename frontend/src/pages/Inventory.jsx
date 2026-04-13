@@ -453,6 +453,17 @@ function Historial() {
 }
 
 function UsuariosAdmin({ onClose, onPasswordPrompt }) {
+  // Obtener usuario actual del token para saber si es Administrador
+  const currentAdminUser = (() => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      return jwtDecode(token);
+    } catch { return null; }
+  })();
+  const isAdministrador = currentAdminUser?.rol === 'Administrador';
+  const adminArea = currentAdminUser?.area || '';
+
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -465,7 +476,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
     num_empleado: '',
     password: '',
     rol: 'Operador',
-    area: ''
+    area: isAdministrador ? adminArea : ''
   });
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState('');
@@ -771,16 +782,23 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                   Área
                 </label>
-                <select
-                  name="area"
-                  value={formData.area}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-500 focus:border-slate-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
-                >
-                  <option value="">Sin área</option>
-                  <option value="SMT">SMT</option>
-                  <option value="Ensamble">Ensamble</option>
-                </select>
+                {isAdministrador ? (
+                  <div className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-sm flex items-center gap-2">
+                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    {adminArea || 'Sin área'}
+                  </div>
+                ) : (
+                  <select
+                    name="area"
+                    value={formData.area}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-slate-500 focus:border-slate-500 px-4 py-2.5 shadow-sm transition-colors duration-200"
+                  >
+                    <option value="">Sin área</option>
+                    <option value="SMT">SMT</option>
+                    <option value="Ensamble">Ensamble</option>
+                  </select>
+                )}
               </div>
 
               <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
@@ -892,9 +910,15 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
     <div className="bg-slate-50 dark:bg-slate-900/20 border-b border-slate-100 dark:border-slate-900/30">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">
-            {trLocal('loans_active')} ({prestamos.length})
-          </h3>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">
+              {trLocal('loans_active')} ({prestamos.length})
+            </h3>
+            {/* Area badge */}
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              Mostrando préstamos del área actual
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
@@ -1215,65 +1239,160 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   );
 }
 
-// Modal para préstamo
-function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
-  const [showScanner, setShowScanner] = useState(false);
+// Modal para préstamo — flujo multi-ítem en 3 pasos
+// Paso 1: Número de empleado (tipear)
+// Paso 2: Selección de ítems (carrito)
+// Paso 3: Autorización (Administrador o Ingeniero)
+function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, currentUser, allItems }) {
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [employeeInfo, setEmployeeInfo] = useState(null);
-  const [cantidad, setCantidad] = useState(1);
 
+  // Paso 1
+  const [numEmpleado, setNumEmpleado] = useState('');
+  const [empleadoInfo, setEmpleadoInfo] = useState(null);
+
+  // Paso 2 — carrito
+  const [cart, setCart] = useState([]); // [{ item, cantidad }]
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Paso 3 — autorización
+  const [authNumEmpleado, setAuthNumEmpleado] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authInfo, setAuthInfo] = useState(null); // confirmed authorizer info
+
+  const inputRef = useRef(null);
+  const authRef = useRef(null);
+
+  // Reset al abrir/cerrar
   useEffect(() => {
-    if (!open) {
-      setShowScanner(false);
+    if (open) {
+      setStep(1);
+      setNumEmpleado('');
+      setEmpleadoInfo(null);
+      setCart(initialItem ? [{ item: initialItem, cantidad: 1 }] : []);
+      setSearchQuery('');
+      setSearchResults([]);
+      setAuthNumEmpleado('');
+      setAuthPassword('');
+      setAuthInfo(null);
       setError('');
-      setEmployeeInfo(null);
       setLoading(false);
-      setCantidad(1);
-    } else {
-      setShowScanner(true);
+      setTimeout(() => inputRef.current?.focus(), 120);
     }
   }, [open]);
 
-  async function handleEmployeeScan(credentials) {
+  // Si se abre con un ítem inicial y el empleado ya está confirmado (viene de clic directo)
+  // Se mantiene step 1 siempre para ser consistente
+
+  // Buscar empleado (paso 1)
+  async function handleLookupEmployee(e) {
+    e.preventDefault();
+    if (!numEmpleado.trim()) return;
     setLoading(true);
     setError('');
     try {
-      // If user info is passed directly (requirePassword=false mode), use it
-      if (credentials.user) {
-        setEmployeeInfo(credentials.user);
-        setShowScanner(false);
-        return;
-      }
-      // Otherwise lookup employee info using the scanned badge
-      const info = await api.lookupUser(credentials.employee_input);
-      setEmployeeInfo(info);
-      setShowScanner(false);
+      const info = await api.lookupUser(numEmpleado.trim());
+      setEmpleadoInfo(info);
+      setStep(2);
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || trLocal('employee_not_found'));
-      // keep scanner visible to let user retry
-      setShowScanner(true);
+      setError(err?.message || 'Empleado no encontrado. Verifica el número.');
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleConfirm(e) {
+  // Agregar ítem al carrito (desde ítem pasado como prop o búsqueda)
+  function addToCart(item) {
+    setCart(prev => {
+      const existing = prev.find(c => c.item.id === item.id);
+      if (existing) {
+        // Incrementar cantidad si hay stock
+        const nuevaCant = Math.min(existing.cantidad + 1, item.cantidad);
+        return prev.map(c => c.item.id === item.id ? { ...c, cantidad: nuevaCant } : c);
+      }
+      if (item.cantidad <= 0) return prev; // sin stock
+      return [...prev, { item, cantidad: 1 }];
+    });
+  }
+
+  function removeFromCart(itemId) {
+    setCart(prev => prev.filter(c => c.item.id !== itemId));
+  }
+
+  function updateCartQty(itemId, cantidad) {
+    setCart(prev => prev.map(c => {
+      if (c.item.id !== itemId) return c;
+      const max = c.item.cantidad;
+      const qty = Math.max(1, Math.min(Number(cantidad) || 1, max));
+      return { ...c, cantidad: qty };
+    }));
+  }
+
+  // Buscar ítems del inventario
+  async function handleSearch(q) {
+    setSearchQuery(q);
+    if (!q.trim()) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const { data } = await api.get('/items', { params: { q } });
+      setSearchResults((data.data || []).filter(it => it.cantidad > 0));
+    } catch (e) {
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
+  // Paso 2 → 3
+  function handleProceedToAuth() {
+    if (cart.length === 0) {
+      setError('Agrega al menos un artículo al carrito');
+      return;
+    }
+    setError('');
+    setStep(3);
+    setTimeout(() => authRef.current?.focus(), 120);
+  }
+
+  // Verificar autorizador y obtener su info
+  async function handleVerifyAuthorizer(e) {
     e.preventDefault();
+    if (!authNumEmpleado.trim() || !authPassword.trim()) return;
     setLoading(true);
     setError('');
     try {
-      if (!employeeInfo) throw new Error('Empleado no seleccionado');
-      if (!cantidad || cantidad < 1 || cantidad > (item?.cantidad || 1)) throw new Error('Cantidad inválida');
+      const { data } = await api.post('/auth/validate', {
+        num_empleado: authNumEmpleado.trim(),
+        password: authPassword
+      });
+      setAuthInfo(data);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err.message || 'Credenciales incorrectas';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Enviar préstamo final
+  async function handleSubmitPrestamo() {
+    if (!authInfo) { setError('Autoriza el préstamo primero'); return; }
+    setLoading(true);
+    setError('');
+    try {
       await onSubmit({
-        employee_input: employeeInfo.num_empleado,
-        articulo: item.articulo,
-        cantidad,
-        item_id: item.id
+        employee_input: empleadoInfo.num_empleado,
+        items: cart.map(c => ({ item_id: c.item.id, cantidad: c.cantidad })),
+        authorizer_num_empleado: authInfo.num_empleado,
+        authorizer_password: authPassword
       });
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || 'Error al procesar préstamo');
+      const msg = err?.response?.data?.message || err.message || 'Error al registrar préstamo';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -1281,78 +1400,301 @@ function PrestarModal({ open, item, onClose, onSubmit, turno, currentUser }) {
 
   if (!open) return null;
 
+  const totalItems = cart.reduce((s, c) => s + c.cantidad, 0);
+
   return (
-    <>
-      {showScanner && (
-        <LoginModal
-          visible={true}
-          onClose={() => { setShowScanner(false); onClose(); }}
-          onConfirm={handleEmployeeScan}
-          busy={loading}
-          requirePassword={false} // Only scan badge, no password needed
-        />
-      )}
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
 
-      {!showScanner && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('confirm_lend')}</h3>
-            <div className="mb-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm space-y-1">
-              <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('item_label')}:</span> {item?.articulo}</p>
-              <p><span className="font-semibold text-slate-700 dark:text-slate-300">NDP:</span> {item?.ndp}</p>
-              <p><span className="font-semibold text-slate-700 dark:text-slate-300">{trLocal('quantity_label')} disponible:</span> {item?.cantidad}</p>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Nuevo Préstamo</h3>
+            <div className="flex items-center gap-2 mt-1">
+              {[1, 2, 3].map(s => (
+                <div key={s} className="flex items-center gap-1">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    step === s ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' :
+                    step > s ? 'bg-emerald-500 text-white' :
+                    'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                  }`}>{step > s ? '✓' : s}</div>
+                  {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'}`} />}
+                </div>
+              ))}
+              <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
+                {step === 1 ? 'Empleado' : step === 2 ? 'Artículos' : 'Autorización'}
+              </span>
             </div>
-
-            {employeeInfo ? (
-              <form onSubmit={handleConfirm} className="space-y-4">
-                <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-lg text-sm space-y-1">
-                  <p><span className="font-semibold text-emerald-800 dark:text-emerald-300">{trLocal('usuario_label')}:</span> {employeeInfo.nombre}</p>
-                  <p><span className="font-semibold text-emerald-800 dark:text-emerald-300">N° {trLocal('usuario_label')}:</span> {employeeInfo.num_empleado}</p>
-                </div>
-                
-                <Input 
-                  label="Cantidad a prestar" 
-                  type="number" 
-                  min={1} 
-                  max={item?.cantidad || 1} 
-                  value={cantidad} 
-                  onChange={e => setCantidad(Number(e.target.value))} 
-                  required 
-                />
-                <div className="text-xs text-slate-500 mt-1">Máximo: {item?.cantidad || 1}</div>
-                
-                {error && <div className="text-rose-600 text-sm bg-rose-50 dark:bg-rose-900/20 p-2 rounded">{error}</div>}
-                
-                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                  <Button variant="secondary" onClick={() => { setShowScanner(true); setEmployeeInfo(null); setCantidad(1); setError(''); }}>
-                    {trLocal('scan_another')}
-                  </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? trLocal('processing') : trLocal('confirm_lend')}
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="text-center text-slate-500 dark:text-slate-400 py-4">
-                {loading ? trLocal('processing') : trLocal('scan_badge')}
-              </div>
-            )}
-
-            {error && !employeeInfo && (
-              <div className="mt-4 text-rose-600 text-sm bg-rose-50 dark:bg-rose-900/20 p-3 rounded text-center">
-                {error}
-                <button
-                  onClick={() => { setShowScanner(true); setError(''); }}
-                  className="block w-full mt-2 text-slate-600 dark:text-slate-400 hover:underline font-medium"
-                >
-                  Intentar de nuevo
-                </button>
-              </div>
-            )}
-          </Card>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-all">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-      )}
-    </>
+
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
+
+          {/* ─── PASO 1: Número de empleado ─── */}
+          {step === 1 && (
+            <form onSubmit={handleLookupEmployee} className="space-y-5">
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                  Ingresa el número de empleado de la persona que recibirá el préstamo.
+                </p>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Número de Empleado
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={numEmpleado}
+                    onChange={e => setNumEmpleado(e.target.value)}
+                    placeholder="Ej: 1234A"
+                    required
+                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-all duration-200 text-base"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="secondary" onClick={onClose} type="button">Cancelar</Button>
+                <Button type="submit" disabled={loading || !numEmpleado.trim()}>
+                  {loading ? 'Buscando...' : 'Continuar →'}
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* ─── PASO 2: Carrito de artículos ─── */}
+          {step === 2 && (
+            <div className="space-y-4">
+              {/* Info empleado */}
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {(empleadoInfo?.nombre || '?').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold text-emerald-800 dark:text-emerald-300">{empleadoInfo?.nombre}</p>
+                  <p className="text-emerald-600 dark:text-emerald-400 text-xs">N° {empleadoInfo?.num_empleado}</p>
+                </div>
+                <button onClick={() => setStep(1)} className="ml-auto text-xs text-emerald-600 dark:text-emerald-400 hover:underline">Cambiar</button>
+              </div>
+
+              {/* Ítem inicial en carrito si lo hay + carrito actual */}
+              <div>
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  Carrito ({totalItems} unidad{totalItems !== 1 ? 'es' : ''})
+                </p>
+                {cart.length === 0 ? (
+                  <div className="py-4 text-center text-sm text-slate-400 dark:text-slate-500 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                    Busca y agrega artículos abajo
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {cart.map(({ item, cantidad }) => (
+                      <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.articulo}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{item.ndp || ''} · Gav. {item.gaveta} · Disp: {item.cantidad}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button onClick={() => updateCartQty(item.id, cantidad - 1)} disabled={cantidad <= 1}
+                            className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-sm font-bold hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-40 transition-all">−</button>
+                          <input
+                            type="number" min={1} max={item.cantidad} value={cantidad}
+                            onChange={e => updateCartQty(item.id, e.target.value)}
+                            className="w-12 text-center text-sm font-bold rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white py-0.5"
+                          />
+                          <button onClick={() => updateCartQty(item.id, cantidad + 1)} disabled={cantidad >= item.cantidad}
+                            className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center text-sm font-bold hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-40 transition-all">+</button>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)}
+                          className="w-7 h-7 rounded-lg text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center transition-all text-lg">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Búsqueda de artículos */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Buscar artículos del inventario</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => handleSearch(e.target.value)}
+                    placeholder="N° parte, artículo, equipo..."
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700 focus:border-slate-400 dark:focus:border-slate-500 text-sm transition-all"
+                  />
+                </div>
+                {searchLoading && <p className="text-xs text-slate-400 mt-1">Buscando...</p>}
+                {searchResults.length > 0 && (
+                  <div className="mt-2 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden max-h-40 overflow-y-auto">
+                    {searchResults.map(it => {
+                      const inCart = cart.some(c => c.item.id === it.id);
+                      return (
+                        <div key={it.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700/50 last:border-0 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{it.articulo}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{it.ndp || ''} · Gav. {it.gaveta} · {it.cantidad} disp.</p>
+                          </div>
+                          <button
+                            onClick={() => { addToCart(it); setSearchQuery(''); setSearchResults([]); }}
+                            className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                              inCart
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200'
+                                : it.cantidad <= 0
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-200'
+                            }`}
+                            disabled={it.cantidad <= 0}
+                          >
+                            {inCart ? '+ Más' : 'Agregar'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between gap-3 pt-2">
+                <Button variant="secondary" onClick={() => { setStep(1); setError(''); }} type="button">← Atrás</Button>
+                <Button onClick={handleProceedToAuth} disabled={cart.length === 0}>
+                  Autorizar ({cart.length} artículo{cart.length !== 1 ? 's' : ''}) →
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ─── PASO 3: Autorización ─── */}
+          {step === 3 && (
+            <div className="space-y-5">
+              {/* Resumen */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm space-y-1">
+                <p><span className="font-semibold text-slate-700 dark:text-slate-300">Empleado:</span>{' '}{empleadoInfo?.nombre} ({empleadoInfo?.num_empleado})</p>
+                <p><span className="font-semibold text-slate-700 dark:text-slate-300">Artículos:</span>{' '}{cart.length} ítem{cart.length !== 1 ? 's' : ''} · {totalItems} unidad{totalItems !== 1 ? 'es' : ''}</p>
+                <div className="pt-1 space-y-0.5">
+                  {cart.map(({ item, cantidad }) => (
+                    <p key={item.id} className="text-slate-500 dark:text-slate-400 text-xs">
+                      · {item.articulo} ×{cantidad}
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                  Ingresa las credenciales de un <strong className="text-slate-700 dark:text-slate-300">Administrador</strong> o <strong className="text-slate-700 dark:text-slate-300">Ingeniero</strong> para autorizar este préstamo.
+                </p>
+
+                {authInfo ? (
+                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">✓</div>
+                    <div>
+                      <p className="font-semibold text-emerald-800 dark:text-emerald-300">Autorizado por {authInfo.nombre}</p>
+                      <p className="text-emerald-600 dark:text-emerald-400 text-xs">{authInfo.rol} · N° {authInfo.num_empleado}</p>
+                    </div>
+                    <button onClick={() => { setAuthInfo(null); setAuthNumEmpleado(''); setAuthPassword(''); }} className="ml-auto text-xs text-emerald-600 dark:text-emerald-400 hover:underline">Cambiar</button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleVerifyAuthorizer} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Número de Empleado del Autorizador</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                        </div>
+                        <input
+                          ref={authRef}
+                          type="text"
+                          value={authNumEmpleado}
+                          onChange={e => setAuthNumEmpleado(e.target.value)}
+                          placeholder="Número de empleado"
+                          required
+                          className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-all text-base"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Contraseña</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="password"
+                          value={authPassword}
+                          onChange={e => setAuthPassword(e.target.value)}
+                          placeholder="············"
+                          required
+                          className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-all text-base"
+                        />
+                      </div>
+                    </div>
+                    {error && (
+                      <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm">
+                        {error}
+                      </div>
+                    )}
+                    <Button type="submit" disabled={loading} className="w-full">
+                      {loading ? 'Verificando...' : 'Verificar autorización'}
+                    </Button>
+                  </form>
+                )}
+              </div>
+
+              {authInfo && error && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
+                <Button variant="secondary" onClick={() => { setStep(2); setAuthInfo(null); setError(''); }} type="button">← Atrás</Button>
+                <Button
+                  onClick={handleSubmitPrestamo}
+                  disabled={!authInfo || loading}
+                  className={authInfo ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
+                >
+                  {loading ? 'Registrando...' : '✓ Confirmar Préstamo'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1715,7 +2057,6 @@ export default function Inventory() {
       await api.post('/prestamos', data);
       await loadItems();
       await loadPrestamos();
-      setPrestarModal({ open: false, item: null });
     } catch (e) {
       throw e;
     }
@@ -2188,7 +2529,7 @@ export default function Inventory() {
       {showPasswordModal && <PasswordModal onClose={() => setShowPasswordModal(false)} />}
       <QuantityPromptModal open={qtyPrompt.open} max={qtyPrompt.item?.cantidad || 1} onClose={() => setQtyPrompt({ open: false, item: null })} onSubmit={handleQtySubmit} />
       <PasswordPromptModal open={pwPrompt.open} onClose={() => { setPwPrompt({ open: false, action: null, context: null }); setPwError(''); setPwLoading(false); }} onSubmit={handlePwSubmit} label={pwPrompt.action === 'edit-item' ? trLocal('confirm_password_edit') : pwPrompt.action === 'delete-item' ? trLocal('confirm_password_delete') : pwPrompt.action === 'decrement-item' ? 'Confirmar uso' : pwPrompt.action === 'delete-user' ? trLocal('confirm_password_admin_delete') : 'Confirmar'} loading={pwLoading} error={pwError} />
-      <PrestarModal open={prestarModal.open} item={prestarModal.item} onClose={() => setPrestarModal({ open: false, item: null })} onSubmit={handlePrestarSubmit} turno={turno} currentUser={user} />
+      <PrestarModal open={prestarModal.open} item={prestarModal.item} onClose={() => setPrestarModal({ open: false, item: null })} onSubmit={handlePrestarSubmit} turno={turno} currentUser={user} allItems={items} />
       <DevolverModal open={devolverModal.open} prestamo={devolverModal.prestamo} onClose={() => setDevolverModal({ open: false, prestamo: null })} onSubmit={handleDevolverSubmit} turno={turno} currentUser={user} />
       <QRModal open={qrModal.open} item={qrModal.item} onClose={() => setQrModal({ open: false, item: null })} />
       
