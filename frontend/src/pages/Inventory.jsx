@@ -1048,6 +1048,9 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
           )}
         </div>
       </td>
+      <td className="px-4 py-3.5">
+        <span className="text-sm text-slate-600 dark:text-slate-400">{item.tde || '-'}</span>
+      </td>
       <td className="px-4 py-3.5 text-right">
         <span className="text-sm text-slate-600 dark:text-slate-400 font-mono">{formatCurrency(item.precio)}</span>
       </td>
@@ -1427,7 +1430,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                     step === s ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' :
                     step > s ? 'bg-emerald-500 text-white' :
                     'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                  }`}>{step > s ? '✓' : s}</div>
+                  }`}>{step > s ? <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> : s}</div>
                   {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'}`} />}
                 </div>
               ))}
@@ -1628,7 +1631,11 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
 
                 {authInfo ? (
                   <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">✓</div>
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                     <div>
                       <p className="font-semibold text-emerald-800 dark:text-emerald-300">Autorizado por {authInfo.nombre}</p>
                       <p className="text-emerald-600 dark:text-emerald-400 text-xs">{authInfo.rol} · N° {authInfo.num_empleado}</p>
@@ -1699,7 +1706,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                   disabled={!authInfo || loading}
                   className={authInfo ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}
                 >
-                  {loading ? 'Registrando...' : '✓ Confirmar Préstamo'}
+                  {loading ? 'Registrando...' : 'Confirmar Préstamo'}
                 </Button>
               </div>
             </div>
@@ -1850,6 +1857,7 @@ export default function Inventory() {
   const [filtroGaveta, setFiltroGaveta] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
   const [filtroLinea, setFiltroLinea] = useState('');
+  const [showZeroQuantity, setShowZeroQuantity] = useState(false);
 
   // Estados para préstamos
   const [showPrestamos, setShowPrestamos] = useState(false);
@@ -2211,8 +2219,25 @@ export default function Inventory() {
     const matchNivel = !filtroNivel || (item.nivel && item.nivel.toString().includes(filtroNivel));
     const matchLinea = !filtroLinea || (item.linea && item.linea.toLowerCase().includes(filtroLinea.toLowerCase()));
     
+    // Para usuarios del área SMT: ocultar items con cantidad 0
+    if (user?.area === 'SMT' && item.cantidad === 0) {
+      return false;
+    }
+    
     return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea;
   });
+  
+  // Items con cantidad 0 para SMT users (para mostrar en sección separada)
+  const itemsZeroQuantity = user?.area === 'SMT' ? itemsOrdenados.filter(item => {
+    const matchNdp = !filtroNdp || (item.ndp && item.ndp.toLowerCase().includes(filtroNdp.toLowerCase()));
+    const matchArticulo = !filtroArticulo || (item.articulo && item.articulo.toLowerCase().includes(filtroArticulo.toLowerCase()));
+    const matchEquipo = !filtroEquipo || (item.equipo && item.equipo.toLowerCase().includes(filtroEquipo.toLowerCase()));
+    const matchGaveta = !filtroGaveta || (item.gaveta && item.gaveta.toString().includes(filtroGaveta));
+    const matchNivel = !filtroNivel || (item.nivel && item.nivel.toString().includes(filtroNivel));
+    const matchLinea = !filtroLinea || (item.linea && item.linea.toLowerCase().includes(filtroLinea.toLowerCase()));
+    
+    return item.cantidad === 0 && matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea;
+  }) : [];
 
   // Totales por gaveta (traídos desde el backend) y totales generales
   const gavetaTotals = (serverGavetaTotals || []).slice().sort((a, b) => {
@@ -2428,6 +2453,7 @@ export default function Inventory() {
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('level_label')}</th>
                 {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">Linea</th>}
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('quantity_label')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('tde_label')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('price_label')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('total_label')}</th>
                 {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">Acciones</th>}
@@ -2439,7 +2465,7 @@ export default function Inventory() {
                 <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtrar..." /></th>
                 <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtrar..." /></th>
                 {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder="Filtrar..." /></th>}
-                <th colSpan={4}></th>
+                <th colSpan={5}></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -2484,6 +2510,72 @@ export default function Inventory() {
         </div>
       </Card>
 
+      {/* Zero Quantity Items Section (SMT Users Only) */}
+      {user?.area === 'SMT' && itemsZeroQuantity.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowZeroQuantity(!showZeroQuantity)}
+            className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-amber-300 dark:hover:border-amber-700"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m0-6v-2m0 0V7a2 2 0 012-2h2.586a1 1 0 00.707-.293l3.414-3.414A1 1 0 0022 4.586V9m-9 0a9 9 0 00-9 9v3.586a1 1 0 001 1h.173l.86 2.581A2 2 0 004.5 22h15a2 2 0 001.967-1.656l.86-2.581h.173a1 1 0 001-1v-3.586a9 9 0 00-9-9z" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <h4 className="text-lg font-bold text-slate-900 dark:text-white">Artículos sin stock</h4>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{itemsZeroQuantity.length} artículos con cantidad 0</p>
+              </div>
+            </div>
+            <svg className={`w-6 h-6 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${showZeroQuantity ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+
+          {/* Zero Quantity Items Table */}
+          {showZeroQuantity && (
+            <Card className="overflow-hidden p-0 mt-4">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-slate-800 dark:to-slate-700 border-b border-amber-200 dark:border-slate-600">
+                    <tr>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('part_number')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('item_label')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 hidden md:table-cell">{trLocal('equipment')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('drawer_label')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('level_label')}</th>
+                      {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">Linea</th>}
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('quantity_label')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('tde_label')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">{trLocal('price_label')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">{trLocal('total_label')}</th>
+                      {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">Acciones</th>}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-100 dark:divide-slate-700/50">
+                    {itemsZeroQuantity.map((it) => (
+                      <ItemRow
+                        key={it.id}
+                        item={it}
+                        role={user?.rol}
+                        area={user?.area}
+                        onEdit={canEditInventory(user?.rol, user?.area) ? (item) => setModal({ mode: 'edit', item }) : undefined}
+                        onDelete={canEditInventory(user?.rol, user?.area) ? handleDelete : undefined}
+                        onDecrement={canEditInventory(user?.rol, user?.area) ? handleDecrement : undefined}
+                        onPrestar={canEditInventory(user?.rol, user?.area) ? handlePrestar : undefined}
+                        onShowQR={(item) => setQrModal({ open: true, item })}
+                        onDoubleClick={(item) => { setModal({ mode: 'detail', item }); }}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
+
       {modal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
           <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in shadow-2xl">
@@ -2510,6 +2602,7 @@ export default function Inventory() {
                       <p><b>Ubicación:</b> Gaveta {modal.item.gaveta}, Nivel {modal.item.nivel}</p>
                       <p><b>Stock:</b> {modal.item.cantidad} (Min: {modal.item.min}, Max: {modal.item.max})</p>
                       <p><b>Precio:</b> {formatCurrency(modal.item.precio)}</p>
+                      <p><b>TDE:</b> {modal.item.tde || '-'}</p>
                       {/* Mostrar línea solo si el usuario es del área Ensamble y existe el valor */}
                       {user?.area === 'Ensamble' && modal.item.linea && (
                         <p><b>Línea:</b> {modal.item.linea}</p>

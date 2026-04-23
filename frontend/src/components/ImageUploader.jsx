@@ -120,10 +120,12 @@ const ImageUploader = ({ currentImage, onImageChange }) => {
               <button 
                 type="button" 
                 onClick={removeImage} 
-                className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md transition-colors"
+                className="absolute -top-2 -right-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
                 title="Eliminar imagen"
               >
-                ✕
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
               <div 
                 className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
@@ -137,7 +139,9 @@ const ImageUploader = ({ currentImage, onImageChange }) => {
               className="w-32 h-32 rounded-lg bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 flex flex-col items-center justify-center shadow-sm cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
-              <span className="text-2xl mb-1">📷</span>
+              <svg className="w-8 h-8 text-slate-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0l5.172 5.172m0 0l1.414-1.414a2 2 0 012.828 0l2.83 2.83M9 12l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
               <span className="text-slate-400 text-xs">Sin imagen</span>
             </div>
           )}
