@@ -1,16 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Button from './ui/Button';
-import Input from './ui/Input';
 
 export default function DevolverModal({ open, prestamo, onClose, onSubmit }) {
-    const [password, setPassword] = useState('');
-
     if (!open || !prestamo) return null;
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        onSubmit({ prestamo_id: prestamo.id, password });
+        onSubmit({ prestamo_id: prestamo.id });
         onClose();
     };
 
@@ -25,13 +21,9 @@ export default function DevolverModal({ open, prestamo, onClose, onSubmit }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <Input
-                        type="password"
-                        label="Contraseña (Opcional / Admin)"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Si se requiere autorización..."
-                    />
+                    <div className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300">
+                        ¿Confirmas la devolución de {prestamo.cantidad} unidad{prestamo.cantidad !== 1 ? 'es' : ''} de {prestamo.articulo}?
+                    </div>
 
                     <div className="flex justify-end gap-3 pt-2">
                         <Button variant="secondary" onClick={onClose} type="button">

@@ -162,7 +162,7 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
 router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload.single('image'), async (req, res) => {
   const { id } = req.params;
   // si viene multipart, los campos estarán en req.body; si json, también
-  let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, password, linea } = req.body;
+  let { ndp, articulo, gaveta, nivel, cantidad, precio, min, max, equipo, tde, link, turno, linea } = req.body;
   // Permitir nivel como valor alfanumérico (varchar) - puede ser vacío, número o texto
   if (nivel === '' || nivel === undefined || nivel === null) {
     nivel = null;
@@ -176,10 +176,6 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;
   try {
-    // Validar contraseña del usuario actual desde credenciales
-    const ok = await validatePassword(req.user.username, password);
-    if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
-
     // Obtener detalle anterior
     const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
       // si no se proporcionó nuevo link ni archivo, conservar el existente
@@ -209,14 +205,10 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
 // Decrementar cantidad de ítem en 1 (operador/admin)
 router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
-  const { password, turno } = req.body;
+  const { turno } = req.body;
   let cantidad = parseInt(req.body.cantidad, 10);
   if (!cantidad || isNaN(cantidad) || cantidad < 1) cantidad = 1;
   try {
-    // Validar contraseña del usuario actual desde credenciales
-    const ok = await validatePassword(req.user.username, password);
-    if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
-
     // Obtener item actual
     const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
     if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
@@ -331,21 +323,9 @@ router.patch('/:id/ordered', authenticateToken, authorizeRoles('admin','toolroom
 // Eliminar ítem (admin u operador)
 router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
-  const { password } = req.body;
   try {
-    // Validar contraseña del usuario actual desde credenciales
-    const ok = await validatePassword(req.user.username, password);
-    if (!ok) return res.status(401).json({ message: 'Contraseña incorrecta' });
-
     const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
     if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
-
-    // Mostrar mensaje de confirmación con nombre o descripción del ítem
-    if (!password) {
-      // Si no se envió contraseña, informar qué ítem se va a eliminar
-      const nombre = prev[0].nombre || prev[0].descripcion || prev[0].id;
-      return res.status(200).json({ message: `Vas a eliminar el artículo: ${nombre}. Ingresa tu contraseña para confirmar.` });
-    }
 
     // eliminar registro
     await pool.query(`DELETE FROM \`gavetas\` WHERE id=:id`, { id });

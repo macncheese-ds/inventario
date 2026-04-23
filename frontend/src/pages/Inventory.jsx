@@ -331,8 +331,11 @@ function canViewHistory(rol, area) {
   return ROLE_GROUPS.FULL_ACCESS.includes(rol);
 }
 
-// Puede administrar usuarios (FULL_ACCESS pero NO ensamble)
+// Puede administrar usuarios (Administrador/Ingeniero siempre, otros solo si no es ensamble)
 function canAdministerUsers(rol, area) {
+  // Administrador e Ingeniero pueden usar esta función sin restricción de área
+  if (ROLE_GROUPS.FULL_ACCESS.includes(rol)) return true;
+  // Para otros roles, bloquear si área es ensamble
   if (area && area.toLowerCase() === 'ensamble') return false;
   return ROLE_GROUPS.FULL_ACCESS.includes(rol);
 }
@@ -343,8 +346,11 @@ function canEditInventory(rol, area) {
   return [...ROLE_GROUPS.FULL_ACCESS, ...ROLE_GROUPS.TOOL_ACCESS].includes(rol);
 }
 
-// Puede hacer préstamos (NO ensamble)
+// Puede hacer préstamos (Administrador/Ingeniero siempre, otros solo si no es ensamble)
 function canLendItems(rol, area) {
+  // Administrador e Ingeniero pueden hacer préstamos sin restricción de área
+  if (ROLE_GROUPS.FULL_ACCESS.includes(rol)) return true;
+  // Para otros roles, bloquear si área es ensamble
   if (area && area.toLowerCase() === 'ensamble') return false;
   return [...ROLE_GROUPS.FULL_ACCESS, ...ROLE_GROUPS.TOOL_ACCESS].includes(rol);
 }
@@ -1699,9 +1705,8 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
             </div>
           )}
         </div>
-        </div>{/* max-w-2xl */}
-      </div>{/* flex-1 overflow-auto */}
-    </div>{/* fixed inset-0 */}
+      </div>
+    </div>
   );
 }
 
@@ -2011,18 +2016,27 @@ export default function Inventory() {
 
   // item: either plain object or FormData; isForm indicates FormData
   async function handleSave(item, isForm = false, initial = null) {
-    if (initial && initial.id) {
-      // edición: pedir contraseña
-      // guardamos también el link anterior para poder eliminar el archivo si se reemplaza
-      setPwPrompt({ open: true, action: 'edit-item', context: { payload: item, id: initial.id, prevLink: initial.link } });
-      return;
-    }
     try {
-      if (isForm) {
-        // axios in api supports form data automatically
-        await api.post('/items', item);
+      if (initial && initial.id) {
+        // edición: sin contraseña requerida
+        await api.put(`/items/${initial.id}`, item);
+        // si existía una imagen anterior y ahora hay una nueva distinta, eliminar la anterior
+        try {
+          const newLink = item.link || '';
+          if (initial.link && newLink && initial.link !== newLink) {
+            const prevFilename = initial.link.split('/').pop();
+            await api.delete(`/upload/delete/${prevFilename}`);
+          }
+        } catch (err) {
+          console.warn('No se pudo eliminar archivo anterior:', err);
+        }
       } else {
-        await api.post('/items', item);
+        // nuevo item
+        if (isForm) {
+          await api.post('/items', item);
+        } else {
+          await api.post('/items', item);
+        }
       }
       setModal(null);
       loadItems();
@@ -2031,19 +2045,27 @@ export default function Inventory() {
     }
   }
   
-  function handleDelete(item) {
-    setPwPrompt({ open: true, action: 'delete-item', context: item });
+  async function handleDelete(item) {
+    try {
+      await api.delete(`/items/${item.id}`);
+      loadItems();
+    } catch (e) {
+      console.error('Error deleting item:', e);
+    }
   }
 
   function handleDecrement(item) {
     setQtyPrompt({ open: true, item });
   }
 
-  function handleQtySubmit(cantidad) {
+  async function handleQtySubmit(cantidad) {
     setQtyPrompt({ open: false, item: null });
-    setPendingQty(cantidad);
-    // Después de cantidad, pedir contraseña
-    setPwPrompt({ open: true, action: 'decrement-item', context: { ...qtyPrompt.item, cantidad: cantidad } });
+    try {
+      await api.patch(`/items/${qtyPrompt.item.id}/decrement`, { turno, cantidad: cantidad || 1 });
+      loadItems();
+    } catch (e) {
+      console.error('Error decrementing item:', e);
+    }
   }
 
   // Si se cierra el modal de contraseña, limpiar pendingQty
@@ -2111,32 +2133,8 @@ export default function Inventory() {
     setPwLoading(true);
     setPwError('');
     try {
-      if (pwPrompt.action === 'edit-item') {
-        const { payload, id, prevLink } = pwPrompt.context;
-        const obj = { ...payload, password };
-        await api.put(`/items/${id}`, obj);
-        // si existía una imagen anterior y ahora hay una nueva distinta, eliminar la anterior
-        try {
-          const newLink = payload.link || '';
-          if (prevLink && newLink && prevLink !== newLink) {
-            // extraer filename
-            const prevFilename = prevLink.split('/').pop();
-            await api.delete(`/upload/delete/${prevFilename}`);
-          }
-        } catch (err) {
-          console.warn('No se pudo eliminar archivo anterior:', err);
-        }
-        setModal(null);
-        loadItems();
-      } else if (pwPrompt.action === 'delete-item') {
-        const { id } = pwPrompt.context;
-        await api.delete(`/items/${id}`, { data: { password } });
-        loadItems();
-      } else if (pwPrompt.action === 'decrement-item') {
-        const { id, cantidad } = pwPrompt.context;
-        await api.patch(`/items/${id}/decrement`, { password, turno, cantidad: cantidad || 1 });
-        loadItems();
-      } else if (pwPrompt.action === 'edit-user') {
+      // Password prompts now only used for user management operations
+      if (pwPrompt.action === 'edit-user') {
         const { username, rol, onSuccess } = pwPrompt.context;
         await api.put(`/users/${username}`, { rol, adminPassword: password });
         if (onSuccess) onSuccess();
