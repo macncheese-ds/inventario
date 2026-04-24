@@ -2611,9 +2611,22 @@ export default function Inventory() {
                   </div>
                   <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg p-4">
                     {modal.item.link ? (
-                      <img src={resolveImageUrl(modal.item.link)} alt={modal.item.articulo} className="max-h-64 object-contain" />
-                    ) : (
+                      <img 
+                        src={resolveImageUrl(modal.item.link)} 
+                        alt={modal.item.articulo} 
+                        className="max-h-64 object-contain" 
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    {!modal.item.link ? (
                       <span className="text-slate-400">Sin imagen</span>
+                    ) : (
+                      <div className="items-center justify-center text-slate-400 text-sm hidden">
+                        <span>Error cargando imagen</span>
+                      </div>
                     )}
                   </div>
                 </div>

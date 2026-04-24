@@ -3,6 +3,20 @@ import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 import api from '../api.js';
 
+function resolveNotifImageUrl(link) {
+  if (!link) return null;
+  if (link.startsWith('http://') || link.startsWith('https://')) return link;
+  // Extract just the /uploads/... portion
+  let cleanPath = link;
+  if (link.includes('/uploads/')) {
+    cleanPath = link.substring(link.indexOf('/uploads/'));
+  }
+  if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+  const base = apiUrl ? apiUrl.replace(/\/api\/?$/, '') : '';
+  return base + cleanPath;
+}
+
 export default function NotificationsPanel({ notifications = [], fetchNotifications, toggleOrdered, onOpenItem, pollInterval = 30000 }) {
   const [open, setOpen] = useState(false);
   const [local, setLocal] = useState(notifications || []);
@@ -88,7 +102,7 @@ export default function NotificationsPanel({ notifications = [], fetchNotificati
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-lg p-4">
                 {selectedItem.link ? (
-                  <img src={selectedItem.link} alt={selectedItem.articulo} className="max-h-64 object-contain" />
+                  <img src={resolveNotifImageUrl(selectedItem.link)} alt={selectedItem.articulo} className="max-h-64 object-contain" />
                 ) : (
                   <div className="text-slate-400">No image</div>
                 )}
