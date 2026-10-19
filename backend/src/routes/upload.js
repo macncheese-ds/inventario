@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { authenticateToken } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,7 +43,7 @@ router.post('/upload', upload.single('image'), (req, res) => {
   }
 });
 
-router.delete('/delete/:filename', (req, res) => {
+router.delete('/delete/:filename', authenticateToken, (req, res) => {
   try {
     const filename = req.params.filename;
     const filepath = path.join(__dirname, '../../uploads', filename);

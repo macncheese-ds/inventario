@@ -1,23 +1,11 @@
 import { Router } from 'express';
-import mysql from 'mysql2/promise';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { body, validationResult } from 'express-validator';
+import { createCredConnection } from '../utils/credenciales.js';
 dotenv.config();
 
 const router = Router();
-
-// Helper para conectar a credenciales DB
-async function createCredConnection() {
-  const config = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.CRED_DB_NAME || 'credenciales'
-  };
-  return await mysql.createConnection(config);
-}
 
 // Normalizar entrada de empleado
 function normalizeEmployeeInput(input) {

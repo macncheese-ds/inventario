@@ -50,25 +50,6 @@ app.use('/api/historial', historialRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/prestamos', prestamosRoutes);
 
-// Crea admin por única vez: username=admin, pass=admin123
-app.post('/api/dev/seed-admin', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT username FROM users WHERE username="admin"');
-    if (rows.length) return res.json({ message: 'Admin ya existe' });
-
-    const bcrypt = (await import('bcryptjs')).default;
-    const hash = await bcrypt.hash('admin123', 10);
-    await pool.query(
-      'INSERT INTO users (username, pass_hash, rol, nombre) VALUES ("admin", :p, "admin", "Administrador")',
-      { p: hash }
-    );
-    res.json({ message: 'Admin creado', username: 'admin', password: 'admin123' });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Error creando admin' });
-  }
-});
-
 const PORT = process.env.PORT || 101;
 app.listen(PORT, '0.0.0.0', () => console.log(`API on ${PORT}`));
 

@@ -14,289 +14,15 @@ import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
 
-// Translations for UI labels (expanded)
-const TRANSLATIONS = {
-  es: {
-    inventory: 'Inventario',
-    turno: 'Turno',
-    total_general: 'Total general',
-    prestamos: 'Préstamos',
-    loading_history: 'Cargando historial...',
-    error_loading_history: 'Error cargando historial',
-  loading_users: 'Cargando usuarios...',
-  error_loading_users: 'Error cargando usuarios',
-  part_number: 'N° Parte',
-  item_label: 'Artículo',
-  equipment: 'Equipo',
-  drawer_label: 'Gaveta',
-  level_label: 'Nivel',
-  quantity_label: 'Cantidad',
-  price_label: 'Precio',
-  min_label: 'Mín',
-  max_label: 'Máx',
-  tde_label: 'TDE',
-  upload_image: 'Subir imagen',
-  fecha_hora: 'Fecha/Hora',
-  usuario_label: 'Usuario',
-  accion_label: 'Acción',
-  detalle_anterior: 'Detalle anterior',
-  detalle_nuevo: 'Detalle nuevo',
-  turno_label: 'Turno',
-    manage_users: 'Administrar Usuarios',
-    add_user: '+ Agregar Usuario',
-    refresh: 'Actualizar',
-    add_new_user: 'Agregar Nuevo Usuario',
-    create_user: 'Crear Usuario',
-    cancel: 'Cancelar',
-    delete_confirm: 'Confirmar eliminación',
-    delete_user_text: '¿Estás seguro de que deseas eliminar el usuario',
-    no_users: 'No hay usuarios registrados',
-  irreversible_action: 'Esta acción no se puede deshacer.',
-    loans_active: 'Préstamos Activos',
-    loading: 'Cargando...',
-    no_results: 'Sin resultados',
-    totals_by_gaveta: 'Totales por gaveta:',
-    select_gaveta: 'Selecciona una gaveta',
-    no_data: 'Sin datos',
-    ver_historial: 'Ver historial',
-    administrar_usuarios: 'Administrar usuarios',
-    export_excel: 'Exportar Excel',
-    agregar: '+ Agregar',
-    search_placeholder: 'Buscar (N° parte, artículo, equipo)',
-    clear_filters: 'Limpiar filtros',
-    total_label: 'Total',
-    showing_label: 'Mostrando',
-    change_password: 'Cambiar contraseña',
-    save: 'Guardar',
-    save_changes: 'Guardar Cambios',
-    create: 'Crear',
-    edit: 'Editar',
-    delete: 'Eliminar',
-    return_item: 'Devolver',
-    lend_item: 'Prestar',
-    no_image: 'Sin imagen disponible',
-    error_loading_image: 'Error cargando imagen',
-    add_item: 'Agregar ítem',
-    edit_item: 'Editar',
-    item_detail: 'Detalle de ítem',
-    confirm_password_edit: 'Confirma tu contraseña para editar',
-    confirm_password_delete: 'Confirma tu contraseña para eliminar',
-    confirm_password_decrement: 'Confirma tu contraseña para usar 1 unidad',
-    confirm_password_admin_edit: 'Contraseña de administrador para editar usuario',
-    confirm_password_admin_delete: 'Contraseña de administrador para eliminar usuario',
-    employee_not_found: 'Empleado no encontrado',
-    processing: 'Procesando...',
-    no_active_loans: 'No hay préstamos activos',
-    scan_another: '← Escanear Otro',
-    confirm_lend: 'Confirmar Préstamo',
-    confirm_return: 'Confirmar Devolución',
-    enter_password_confirm: 'Ingresa tu contraseña para confirmar',
-  scan_badge: 'Escanea el gafete del empleado',
-  try_again: 'Intentar de nuevo',
-  no_units_to_lend: 'No hay unidades disponibles para prestar',
-    turno_prefix: 'Turno:'
-    ,current_password: 'Contraseña actual',
-    new_password: 'Nueva contraseña',
-    repeat_new_password: 'Repetir nueva contraseña',
-    fill_all_fields: 'Completa todos los campos',
-    passwords_no_match: 'Las contraseñas nuevas no coinciden',
-    password_changed_success: 'Contraseña cambiada correctamente',
-    error_changing_password: 'Error al cambiar contraseña'
-  },
-  en: {
-    inventory: 'Inventory',
-    turno: 'Shift',
-    total_general: 'Grand total',
-    prestamos: 'Loans',
-    loading_history: 'Loading history...',
-    error_loading_history: 'Error loading history',
-  loading_users: 'Loading users...',
-  error_loading_users: 'Error loading users',
-  part_number: 'Part #',
-  item_label: 'Item',
-  equipment: 'Equipment',
-  drawer_label: 'Drawer',
-  level_label: 'Level',
-  quantity_label: 'Qty',
-  price_label: 'Price',
-  min_label: 'Min',
-  max_label: 'Max',
-  tde_label: 'TDE',
-  upload_image: 'Upload image',
-  fecha_hora: 'Date/Time',
-  usuario_label: 'User',
-  accion_label: 'Action',
-  detalle_anterior: 'Previous detail',
-  detalle_nuevo: 'New detail',
-  turno_label: 'Shift',
-    manage_users: 'Manage Users',
-    add_user: '+ Add User',
-    refresh: 'Refresh',
-    add_new_user: 'Add New User',
-    create_user: 'Create User',
-    cancel: 'Cancel',
-    delete_confirm: 'Confirm deletion',
-    delete_user_text: 'Are you sure you want to delete user',
-    no_users: 'No users registered',
-  irreversible_action: 'This action cannot be undone.',
-    loans_active: 'Active Loans',
-    loading: 'Loading...',
-    no_results: 'No results',
-    totals_by_gaveta: 'Totals by drawer:',
-    select_gaveta: 'Select a drawer',
-    no_data: 'No data',
-    ver_historial: 'View history',
-    administrar_usuarios: 'Manage users',
-    export_excel: 'Export Excel',
-    agregar: '+ Add',
-    search_placeholder: 'Search (Part #, item, equipment)',
-    clear_filters: 'Clear filters',
-    total_label: 'Total',
-    showing_label: 'Showing',
-    change_password: 'Change password',
-    save: 'Save',
-    save_changes: 'Save Changes',
-    create: 'Create',
-    edit: 'Edit',
-    delete: 'Delete',
-    return_item: 'Return',
-    lend_item: 'Lend',
-    no_image: 'No image available',
-    error_loading_image: 'Error loading image',
-    add_item: 'Add item',
-    edit_item: 'Edit',
-    item_detail: 'Item detail',
-    confirm_password_edit: 'Confirm your password to edit',
-    confirm_password_delete: 'Confirm your password to delete',
-    confirm_password_decrement: 'Confirm your password to use 1 unit',
-    confirm_password_admin_edit: 'Admin password to edit user',
-    confirm_password_admin_delete: 'Admin password to delete user',
-    employee_not_found: 'Employee not found',
-    processing: 'Processing...',
-    no_active_loans: 'No active loans',
-    scan_another: '← Scan another',
-    confirm_lend: 'Confirm Lend',
-    confirm_return: 'Confirm Return',
-    enter_password_confirm: 'Enter your password to confirm',
-  scan_badge: 'Scan the employee badge',
-  try_again: 'Try again',
-  no_units_to_lend: 'No units available to lend',
-    turno_prefix: 'Shift:'
-    ,current_password: 'Current password',
-    new_password: 'New password',
-    repeat_new_password: 'Repeat new password',
-    fill_all_fields: 'Complete all fields',
-    passwords_no_match: 'New passwords do not match',
-    password_changed_success: 'Password changed successfully',
-    error_changing_password: 'Error changing password'
-  },
-  ko: {
-    inventory: '재고',
-    turno: '근무조',
-    total_general: '총 합계',
-    prestamos: '대출',
-    loading_history: '기록 로드 중...',
-    error_loading_history: '기록을 로드하는 중 오류 발생',
-  loading_users: '사용자 로드 중...',
-  error_loading_users: '사용자를 로드하는 중 오류 발생',
-  part_number: '부품 번호',
-  item_label: '항목',
-  equipment: '장비',
-  drawer_label: '서랍',
-  level_label: '레벨',
-  quantity_label: '수량',
-  price_label: '가격',
-  min_label: '최소',
-  max_label: '최대',
-  tde_label: 'TDE',
-  upload_image: '이미지 업로드',
-  fecha_hora: '날짜/시간',
-  usuario_label: '사용자',
-  accion_label: '동작',
-  detalle_anterior: '이전 세부정보',
-  detalle_nuevo: '새 세부정보',
-  turno_label: '근무조',
-    manage_users: '사용자 관리',
-    add_user: '+ 사용자 추가',
-    refresh: '새로고침',
-    add_new_user: '새 사용자 추가',
-    create_user: '사용자 생성',
-    cancel: '취소',
-    delete_confirm: '삭제 확인',
-    delete_user_text: '사용자를 삭제하시겠습니까',
-    no_users: '등록된 사용자가 없습니다',
-  irreversible_action: '이 작업은 취소할 수 없습니다.',
-    loans_active: '대출 중',
-    loading: '로딩 중...',
-    no_results: '결과가 없습니다',
-    totals_by_gaveta: '서랍별 합계:',
-    select_gaveta: '서랍을 선택하세요',
-    no_data: '데이터 없음',
-    ver_historial: '기록 보기',
-    administrar_usuarios: '사용자 관리',
-    export_excel: '엑셀 내보내기',
-    agregar: '+ 추가',
-    search_placeholder: '검색 (부품 번호, 항목, 장비)',
-    clear_filters: '필터 지우기',
-    total_label: '합계',
-    showing_label: '표시 중',
-    change_password: '비밀번호 변경',
-    save: '저장',
-    save_changes: '변경 사항 저장',
-    create: '생성',
-    edit: '편집',
-    delete: '삭제',
-    return_item: '반납',
-    lend_item: '대출',
-    no_image: '이미지 없음',
-    error_loading_image: '이미지를 불러오는 중 오류 발생',
-    add_item: '항목 추가',
-    edit_item: '편집',
-    item_detail: '항목 상세',
-    confirm_password_edit: '편집을 위해 비밀번호를 확인하세요',
-    confirm_password_delete: '삭제를 위해 비밀번호를 확인하세요',
-    confirm_password_decrement: '1개 사용을 위해 비밀번호를 확인하세요',
-    confirm_password_admin_edit: '사용자 편집용 관리자 비밀번호',
-    confirm_password_admin_delete: '사용자 삭제용 관리자 비밀번호',
-    employee_not_found: '직원을 찾을 수 없음',
-    processing: '처리 중...',
-    no_active_loans: '활성 대출 없음',
-    scan_another: '← 다른 것 스캔',
-    confirm_lend: '대출 확인',
-    confirm_return: '반납 확인',
-    enter_password_confirm: '확인을 위해 비밀번호를 입력하세요',
-  scan_badge: '직원 배지를 스캔하세요',
-  try_again: '다시 시도',
-  no_units_to_lend: '대출 가능한 항목이 없습니다',
-    turno_prefix: '근무:'
-    ,current_password: '현재 비밀번호',
-    new_password: '새 비밀번호',
-    repeat_new_password: '새 비밀번호 확인',
-    fill_all_fields: '모든 필드를 입력하세요',
-    passwords_no_match: '새 비밀번호가 일치하지 않습니다',
-    password_changed_success: '비밀번호가 변경되었습니다',
-    error_changing_password: '비밀번호 변경 중 오류'
-  }
-};
-
-const DEFAULT_LANG = 'es';
-
-// Helper translation that reads current language from localStorage when used
-function trLocal(key) {
-  try {
-    const l = (typeof window !== 'undefined') ? (localStorage.getItem('inv_lang') || DEFAULT_LANG) : DEFAULT_LANG;
-    return (TRANSLATIONS[l] && TRANSLATIONS[l][key]) ? TRANSLATIONS[l][key] : TRANSLATIONS[DEFAULT_LANG][key];
-  } catch (e) {
-    return TRANSLATIONS[DEFAULT_LANG][key] || key;
-  }
-}
+import { trLocal, localeFor, getLang } from '../i18n/index.js';
+import { traducirArticulo, articuloOriginal } from '../i18n/articulo.js';
 
 // Formatos comunes
 function formatCurrency(value) {
   try {
     const n = Number(value || 0);
     // Formatear en Pesos Mexicanos (MXN)
-    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(n);
+    return new Intl.NumberFormat(localeFor(), { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 }).format(n);
   } catch {
     return String(value);
   }
@@ -988,7 +714,53 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
 
 
 
-function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar, onShowQR }) {
+function ConsumoCell({ consumo }) {
+  if (!consumo) return <span className="text-sm text-slate-400 dark:text-slate-500">-</span>;
+  if (consumo.estado !== 'ok') {
+    return <span className="text-xs text-slate-500 dark:text-slate-400">{trLocal(`consumo_estado_${consumo.estado}`)}</span>;
+  }
+  return (
+    <span
+      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+      title={`${trLocal('consumo_estimated_end')}: ${consumo.fecha_agotamiento}`}
+    >
+      ~{consumo.dias_restantes} {trLocal('days_short')}
+    </span>
+  );
+}
+
+function ConsumoDetail({ consumo }) {
+  if (consumo.estado !== 'ok') {
+    return <p className="text-sm text-slate-600 dark:text-slate-300">{trLocal(`consumo_estado_${consumo.estado}`)}</p>;
+  }
+  return (
+    <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
+      <p>{trLocal('consumo_note')}</p>
+      <p><b>{trLocal('consumo_period')}:</b> {consumo.periodo_dias} {trLocal('days_short')}</p>
+      <p><b>{trLocal('consumo_daily_avg')}:</b> {consumo.promedio_diario}</p>
+      <p><b>{trLocal('consumo_observed_days')}:</b> {consumo.dias_observados}</p>
+      <p><b>{trLocal('consumo_since')}:</b> {consumo.seguimiento_desde}</p>
+      <p><b>{trLocal('consumo_remaining')}:</b> {consumo.dias_restantes} {trLocal('days_short')}</p>
+      <p><b>{trLocal('consumo_estimated_end')}:</b> {consumo.fecha_agotamiento}</p>
+      {consumo.historial_parcial && <p>{trLocal('consumo_partial')}</p>}
+      <p>{trLocal('consumo_units_note')}</p>
+    </div>
+  );
+}
+
+function TableSkeleton({ columns, rows = 6 }) {
+  return Array.from({ length: rows }, (_, r) => (
+    <tr key={r} className="border-b border-slate-100 dark:border-slate-700/50" aria-hidden="true">
+      {Array.from({ length: columns }, (_, c) => (
+        <td key={c} className="px-4 py-3.5 h-[52px]">
+          <div className="h-4 rounded bg-slate-200 dark:bg-slate-700 motion-safe:animate-pulse" />
+        </td>
+      ))}
+    </tr>
+  ));
+}
+
+function ItemRow({ item, role, area, consumo, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar, onShowQR }) {
   // Determine stock status
   const stockStatus = item.cantidad < item.min ? 'low' : item.cantidad > item.max ? 'high' : 'normal';
   const statusStyles = {
@@ -1012,7 +784,12 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
         <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 font-mono">{item.ndp || '-'}</span>
       </td>
       <td className="px-4 py-3.5">
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.articulo}</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300" title={articuloOriginal(item.articulo)}>{traducirArticulo(item.articulo)}</span>
+        {Number(item.critico) === 1 && (
+          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+            {trLocal('critical_part')}
+          </span>
+        )}
       </td>
       <td className="px-4 py-3.5 hidden md:table-cell">
         <span className="text-sm text-slate-500 dark:text-slate-400">{item.equipo || '-'}</span>
@@ -1047,6 +824,9 @@ function ItemRow({ item, role, area, onEdit, onDelete, onDoubleClick, onDecremen
             </button>
           )}
         </div>
+      </td>
+      <td className="px-4 py-3.5">
+        <ConsumoCell consumo={consumo} />
       </td>
       <td className="px-4 py-3.5">
         <span className="text-sm text-slate-600 dark:text-slate-400">{item.tde || '-'}</span>
@@ -1110,7 +890,7 @@ function ItemForm({ initial, onCancel, onSave, gavetas, user }) {
   const isMantenimiento = user?.area === 'Ensamble';
   const [form, setForm] = useState(
     initial || {
-      ndp: '', articulo: '', equipo: '', gaveta: gavetas[0] || '', nivel: '', cantidad: 0, precio: 0, min: 0, max: 0, tde: 0, link: '', linea: ''
+      ndp: '', articulo: '', equipo: '', gaveta: gavetas[0] || '', nivel: '', cantidad: 0, precio: 0, min: 0, max: 0, tde: 0, link: '', linea: '', critico: 0
     }
   );
   
@@ -1154,8 +934,18 @@ function ItemForm({ initial, onCancel, onSave, gavetas, user }) {
         
         {/* Campo Linea - solo visible para Mantenimiento */}
         {isMantenimiento && (
-          <Input label="Línea" value={form.linea || ''} onChange={e => upd('linea', e.target.value)} placeholder="Ej: L1, L2, L3" />
+          <Input label={trLocal('col_line')} value={form.linea || ''} onChange={e => upd('linea', e.target.value)} placeholder="Ej: L1, L2, L3" />
         )}
+
+        <label className="sm:col-span-2 lg:col-span-3 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={Number(form.critico) === 1}
+            onChange={e => upd('critico', e.target.checked ? 1 : 0)}
+            className="h-4 w-4 rounded border-slate-300 dark:border-slate-600"
+          />
+          {trLocal('critical_label')}
+        </label>
         
         <div className="sm:col-span-2 lg:col-span-3">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">{trLocal('upload_image')}</label>
@@ -1523,7 +1313,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                     {cart.map(({ item, cantidad }) => (
                       <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{item.articulo}</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate" title={articuloOriginal(item.articulo)}>{traducirArticulo(item.articulo)}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">{item.ndp || ''} · Gav. {item.gaveta} · Disp: {item.cantidad}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -1570,7 +1360,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                       return (
                         <div key={it.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700/50 last:border-0 transition-colors">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{it.articulo}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate" title={articuloOriginal(it.articulo)}>{traducirArticulo(it.articulo)}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">{it.ndp || ''} · Gav. {it.gaveta} · {it.cantidad} disp.</p>
                           </div>
                           <button
@@ -1796,7 +1586,7 @@ export default function Inventory() {
   const [pendingQty, setPendingQty] = useState(null);
   const [token] = useState(localStorage.getItem('token'));
   const [user] = useState(() => (token ? jwtDecode(token) : null));
-  const [lang, setLang] = useState(() => localStorage.getItem('inv_lang') || DEFAULT_LANG);
+  const [lang, setLang] = useState(() => getLang());
   const activityTimer = useRef(null);
   const TIMEOUT = 5 * 60 * 1000; // 5 minutos
   const resetTimer = () => {
@@ -1836,6 +1626,7 @@ export default function Inventory() {
   const [notifError, setNotifError] = useState('');
   const [activeGaveta, setActiveGaveta] = useState(null);
   const [serverGavetaTotals, setServerGavetaTotals] = useState([]);
+  const [consumoMap, setConsumoMap] = useState({});
   const [grandTotalAllState, setGrandTotalAllState] = useState(0);
   const [q, setQ] = useState('');
   const [items, setItems] = useState([]);
@@ -1858,6 +1649,7 @@ export default function Inventory() {
   const [filtroNivel, setFiltroNivel] = useState('');
   const [filtroLinea, setFiltroLinea] = useState('');
   const [showZeroQuantity, setShowZeroQuantity] = useState(false);
+  const [soloCriticos, setSoloCriticos] = useState(false);
 
   // Estados para préstamos
   const [showPrestamos, setShowPrestamos] = useState(false);
@@ -1962,6 +1754,16 @@ export default function Inventory() {
     }
   }
   
+  async function loadConsumo() {
+    try {
+      const { data } = await api.get('/items/consumo');
+      setConsumoMap(data.data || {});
+    } catch (e) {
+      console.error('Error loading consumption estimates:', e);
+      setConsumoMap({});
+    }
+  }
+  
   async function loadItems() {
     if (activeGaveta === null && !q) {
       setItems([]);
@@ -1988,6 +1790,7 @@ export default function Inventory() {
     setLoading(false);
     // refresh totals after loading items (keeps header and gaveta totals up-to-date)
     try { loadTotals(); } catch (e) { /* non-blocking */ }
+    try { loadConsumo(); } catch (e) { /* non-blocking */ }
   }
   
   useEffect(() => { loadGavetas(); }, []);
@@ -2218,13 +2021,14 @@ export default function Inventory() {
     const matchGaveta = !filtroGaveta || (item.gaveta && item.gaveta.toString().includes(filtroGaveta));
     const matchNivel = !filtroNivel || (item.nivel && item.nivel.toString().includes(filtroNivel));
     const matchLinea = !filtroLinea || (item.linea && item.linea.toLowerCase().includes(filtroLinea.toLowerCase()));
+    const matchCritico = !soloCriticos || Number(item.critico) === 1;
     
     // Para usuarios del área SMT: ocultar items con cantidad 0
     if (user?.area === 'SMT' && item.cantidad === 0) {
       return false;
     }
     
-    return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea;
+    return matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea && matchCritico;
   });
   
   // Items con cantidad 0 para SMT users (para mostrar en sección separada)
@@ -2236,7 +2040,9 @@ export default function Inventory() {
     const matchNivel = !filtroNivel || (item.nivel && item.nivel.toString().includes(filtroNivel));
     const matchLinea = !filtroLinea || (item.linea && item.linea.toLowerCase().includes(filtroLinea.toLowerCase()));
     
-    return item.cantidad === 0 && matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea;
+    const matchCritico = !soloCriticos || Number(item.critico) === 1;
+
+    return item.cantidad === 0 && matchNdp && matchArticulo && matchEquipo && matchGaveta && matchNivel && matchLinea && matchCritico;
   }) : [];
 
   // Totales por gaveta (traídos desde el backend) y totales generales
@@ -2256,6 +2062,7 @@ export default function Inventory() {
     setFiltroGaveta('');
     setFiltroNivel('');
     setFiltroLinea('');
+    setSoloCriticos(false);
   };
 
   return (
@@ -2325,6 +2132,17 @@ export default function Inventory() {
                 Excel
               </Button>
             )}
+            <select
+              value={lang}
+              aria-label={trLocal('idioma')}
+              title={trLocal('idioma')}
+              onChange={e => { localStorage.setItem('inv_lang', e.target.value); setLang(e.target.value); }}
+              className="h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 px-2"
+            >
+              <option value="es">ES</option>
+              <option value="en">EN</option>
+              <option value="ko">한국어</option>
+            </select>
             <Button variant="ghost" onClick={() => setShowInfoModal(true)} title="Información del sistema">
               <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2441,6 +2259,17 @@ export default function Inventory() {
       />
 
       {/* Data Table */}
+      <div className="flex justify-end">
+        <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            checked={soloCriticos}
+            onChange={e => setSoloCriticos(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 dark:border-slate-600"
+          />
+          {trLocal('critical_only')}
+        </label>
+      </div>
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-sm">
@@ -2451,30 +2280,35 @@ export default function Inventory() {
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 hidden md:table-cell">{trLocal('equipment')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('drawer_label')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('level_label')}</th>
-                {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">Linea</th>}
+                {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('col_line')}</th>}
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('quantity_label')}</th>
+                <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('consumption_label')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('tde_label')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('price_label')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('total_label')}</th>
-                {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">Acciones</th>}
+                {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('col_actions')}</th>}
               </tr>
               <tr className="bg-white/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-700/50">
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder="Filtrar..." /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder="Filtrar..." /></th>
-                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder="Filtrar..." /></th>}
-                <th colSpan={5}></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>}
+                <th colSpan={canEditInventory(user?.rol, user?.area) ? 6 : 5}></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+              {loading && (
+                <TableSkeleton columns={10 + (user?.area === 'Ensamble' ? 1 : 0) + (canEditInventory(user?.rol, user?.area) ? 1 : 0)} />
+              )}
               {!loading && itemsFiltrados.map((it) => (
                 <ItemRow
                   key={it.id}
                   item={it}
                   role={user?.rol}
                   area={user?.area}
+                  consumo={consumoMap[String(it.id)]}
                   onEdit={canEditInventory(user?.rol, user?.area) ? (item) => setModal({ mode: 'edit', item }) : undefined}
                   onDelete={canEditInventory(user?.rol, user?.area) ? handleDelete : undefined}
                   onDecrement={canEditInventory(user?.rol, user?.area) ? handleDecrement : undefined}
@@ -2485,17 +2319,6 @@ export default function Inventory() {
               ))}
             </tbody>
           </table>
-          {loading && (
-            <div className="p-12 text-center">
-              <div className="inline-flex items-center gap-3">
-                <svg className="animate-spin h-6 w-6 text-slate-600" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span className="text-slate-500 dark:text-slate-400 font-medium">Cargando inventario...</span>
-              </div>
-            </div>
-          )}
           {!loading && itemsFiltrados.length === 0 && (
             <div className="p-16 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
@@ -2524,7 +2347,7 @@ export default function Inventory() {
                 </svg>
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-bold text-slate-900 dark:text-white">Artículos sin stock</h4>
+                <h4 className="text-lg font-bold text-slate-900 dark:text-white">{trLocal('zero_stock_title')}</h4>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{itemsZeroQuantity.length} artículos con cantidad 0</p>
               </div>
             </div>
@@ -2545,12 +2368,13 @@ export default function Inventory() {
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 hidden md:table-cell">{trLocal('equipment')}</th>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('drawer_label')}</th>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('level_label')}</th>
-                      {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">Linea</th>}
+                      {user?.area === 'Ensamble' && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('col_line')}</th>}
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('quantity_label')}</th>
+                      <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('consumption_label')}</th>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('tde_label')}</th>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">{trLocal('price_label')}</th>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">{trLocal('total_label')}</th>
-                      {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">Acciones</th>}
+                      {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300 text-right">{trLocal('col_actions')}</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amber-100 dark:divide-slate-700/50">
@@ -2560,6 +2384,7 @@ export default function Inventory() {
                         item={it}
                         role={user?.rol}
                         area={user?.area}
+                        consumo={consumoMap[String(it.id)]}
                         onEdit={canEditInventory(user?.rol, user?.area) ? (item) => setModal({ mode: 'edit', item }) : undefined}
                         onDelete={canEditInventory(user?.rol, user?.area) ? handleDelete : undefined}
                         onDecrement={canEditInventory(user?.rol, user?.area) ? handleDecrement : undefined}
@@ -2595,7 +2420,7 @@ export default function Inventory() {
               modal.mode === 'detail' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="text-lg font-semibold mb-2">{modal.item.articulo}</h4>
+                    <h4 className="text-lg font-semibold mb-2" title={articuloOriginal(modal.item.articulo)}>{traducirArticulo(modal.item.articulo)}</h4>
                     <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                       <p><b>N° Parte:</b> {modal.item.ndp}</p>
                       <p><b>Equipo:</b> {modal.item.equipo}</p>
@@ -2606,6 +2431,12 @@ export default function Inventory() {
                       {/* Mostrar línea solo si el usuario es del área Ensamble y existe el valor */}
                       {user?.area === 'Ensamble' && modal.item.linea && (
                         <p><b>Línea:</b> {modal.item.linea}</p>
+                      )}
+                      {consumoMap[String(modal.item.id)] && (
+                        <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-700">
+                          <h5 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">{trLocal('consumption_label')}</h5>
+                          <ConsumoDetail consumo={consumoMap[String(modal.item.id)]} />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -2622,7 +2453,7 @@ export default function Inventory() {
                       />
                     ) : null}
                     {!modal.item.link ? (
-                      <span className="text-slate-400">Sin imagen</span>
+                      <span className="text-slate-400">{trLocal('no_image')}</span>
                     ) : (
                       <div className="items-center justify-center text-slate-400 text-sm hidden">
                         <span>Error cargando imagen</span>
@@ -2727,7 +2558,7 @@ export default function Inventory() {
                         </td>
                         <td className="px-5 py-4 text-slate-500 dark:text-slate-400 text-sm hidden lg:table-cell">{p.empleado1 || '—'}</td>
                         <td className="px-5 py-4 text-slate-400 dark:text-slate-500 text-xs hidden xl:table-cell">
-                          {p.fecha_prestamo ? new Date(p.fecha_prestamo).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                          {p.fecha_prestamo ? new Date(p.fecha_prestamo).toLocaleDateString(localeFor(), { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                         </td>
                         <td className="px-5 py-4 text-right">
                           <button

@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import pool from '../db.js';
-import mysql from 'mysql2/promise';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -8,19 +7,16 @@ import ExcelJS from 'exceljs';
 import { authenticateToken } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { buildSearchClause } from '../utils/search.js';
+import { createCredConnection } from '../utils/credenciales.js';
+import { normalizeName, esEnsamble, areaVisibleSql, ensureAreaId, ensureUbicacionId } from '../utils/areas.js';
+import { lockItem, recordMovement, applyStockDelta, StockError } from '../services/stock.js';
+import { getConsumptionEstimates } from '../services/consumption.js';
 
 const router = Router();
 
-// Helper para conectar a credenciales DB
-async function createCredConnection() {
-  const config = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.CRED_DB_NAME || 'credenciales'
-  };
-  return await mysql.createConnection(config);
+// Convierte el valor de formulario/JSON a 0 o 1 para gavetas.critico.
+function parseCritico(value) {
+  return value === true || value === 1 || value === '1' || value === 'true' || value === 'on' ? 1 : 0;
 }
 
 // Validar contraseña desde credenciales
@@ -87,11 +83,12 @@ router.get('/', authenticateToken, async (req, res) => {
   // También mostrar items sin área asignada (para compatibilidad con datos antiguos)
   const userArea = req.user?.area || null;
   if (userArea) {
-    where.push('(LOWER(g.area) = LOWER(:userArea) OR g.area IS NULL OR g.area = "")');
-    params.userArea = userArea;
+    where.push(areaVisibleSql('g', ':userArea'));
+    params.userArea = normalizeName(userArea);
   }
 
   if (gaveta) { where.push('g.gaveta = :gaveta'); params.gaveta = gaveta; }
+  if (req.query.critico === '1' || req.query.critico === 'true') where.push('g.critico = 1');
 
   const search = buildSearchClause(q, 'g');
   const whereSql = ` WHERE ${where.join(' AND ')} ${search.clause}`;
@@ -100,7 +97,7 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
       const [rows] = await pool.query(
           `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
-                  g.equipo, g.tde, g.link, g.linea,
+                  g.equipo, g.tde, g.link, g.linea, g.critico,
                   IFNULL(o.ordered, 0) AS ordered, o.ordered_by, o.ordered_at
            FROM \`gavetas\` g
            LEFT JOIN \`orders\` o ON o.gaveta_id = g.id
@@ -136,25 +133,46 @@ router.post('/', authenticateToken, authorizeRoles('admin','toolroom'), upload.s
   // Obtener el área del usuario autenticado
   const area = req.user?.area || null;
   // Solo guardar linea si el usuario es del área Ensamble
-  const isMantenimiento = req.user?.area === 'Ensamble';
+  const isMantenimiento = esEnsamble(req.user?.area);
   const finalLinea = isMantenimiento ? (linea || null) : null;
+  const critico = parseCritico(req.body.critico);
+  // Sin cantidad se crea en 0; la columna no admite NULL ni valores negativos.
+  const cantidadInicial = cantidad === undefined || cantidad === '' || cantidad === null ? 0 : Number(cantidad);
+  if (!Number.isInteger(cantidadInicial) || cantidadInicial < 0) {
+    return res.status(400).json({ message: 'Cantidad inválida' });
+  }
   let publicLink = link || null;
   if (req.file) {
     // ruta pública relativa al servidor
     publicLink = `/uploads/${req.file.filename}`;
   }
-    try {
-    const [result] = await pool.query(
-      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link, area, linea)
-       VALUES (:ndp,:articulo,:gaveta,:nivel,:cantidad,:precio,:min,:max,:equipo,:tde,:link,:area,:linea)`,
-      { ndp, articulo, gaveta, nivel, cantidad, precio: Number(req.body.precio || 0), min, max, equipo, tde, link: publicLink, area, linea: finalLinea }
+  const actor = req.user.nombre || req.user.username;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const areaId = await ensureAreaId(conn, area);
+    const ubicacionId = await ensureUbicacionId(conn, areaId, gaveta);
+    const [result] = await conn.query(
+      `INSERT INTO \`gavetas\` (ndp, articulo, gaveta, nivel, cantidad, precio, \`min\`, \`max\`, equipo, tde, link, area, linea, critico, area_id, ubicacion_id)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [ndp, articulo, gaveta, nivel, cantidadInicial, Number(req.body.precio || 0), min, max, equipo, tde, publicLink, area, finalLinea, critico, areaId, ubicacionId]
     );
-    const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id: result.insertId });
-    await logCambio(req.user.nombre || req.user.username, 'INSERT', rows[0], turno, null, req.user.area);
+    const [rows] = await conn.query(`SELECT * FROM \`gavetas\` WHERE id=?`, [result.insertId]);
+    const inicial = Number(rows[0].cantidad || 0);
+    if (inicial !== 0) {
+      await recordMovement(conn, {
+        item: rows[0], tipo: 'ALTA', delta: inicial, antes: 0, despues: inicial, actor
+      });
+    }
+    await conn.commit();
+    await logCambio(actor, 'INSERT', rows[0], turno, null, req.user.area);
     res.status(201).json(rows[0]);
   } catch (e) {
+    await conn.rollback();
     console.error(e);
     res.status(500).json({ message: 'Error creando ítem' });
+  } finally {
+    conn.release();
   }
 });
 
@@ -171,34 +189,60 @@ router.put('/:id', authenticateToken, authorizeRoles('admin','toolroom'), upload
     nivel = String(nivel).trim();
   }
   // Solo guardar linea si el usuario es del área Ensamble
-  const isMantenimiento = req.user?.area === 'Ensamble';
+  const isMantenimiento = esEnsamble(req.user?.area);
   const finalLinea = isMantenimiento ? (linea || null) : null;
   let publicLink = link || null;
   if (req.file) publicLink = `/uploads/${req.file.filename}`;
+  const actor = req.user.nombre || req.user.username;
+  const nuevaCantidad = Number(cantidad);
+  if (!Number.isInteger(nuevaCantidad) || nuevaCantidad < 0) {
+    return res.status(400).json({ message: 'Cantidad inválida' });
+  }
+  const conn = await pool.getConnection();
   try {
-    // Obtener detalle anterior
-    const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-      // si no se proporcionó nuevo link ni archivo, conservar el existente
-      let finalLink = publicLink;
-      if (!finalLink) {
-        finalLink = prev[0] ? prev[0].link : null;
-      }
-      // Si no es Mantenimiento, conservar el valor anterior de linea
-      const lineaToSave = isMantenimiento ? finalLinea : (prev[0]?.linea || null);
+    await conn.beginTransaction();
+    // Bloquea la fila para que el saldo no cambie entre la lectura y la escritura
+    const prev = await lockItem(conn, id);
+    if (!prev) {
+      await conn.rollback();
+      return res.status(404).json({ message: 'Ítem no encontrado' });
+    }
+    // si no se proporcionó nuevo link ni archivo, conservar el existente
+    const finalLink = publicLink || prev.link || null;
+    // Si no es Mantenimiento, conservar el valor anterior de linea
+    const lineaToSave = isMantenimiento ? finalLinea : (prev.linea || null);
+    // Si el cliente no envía critico, conservar el valor actual
+    const criticoToSave = req.body.critico === undefined ? prev.critico : parseCritico(req.body.critico);
+    // El área no cambia en la edición; la ubicación se recalcula con la gaveta nueva.
+    const ubicacionId = await ensureUbicacionId(conn, prev.area_id, gaveta);
 
-    await pool.query(
-    `UPDATE \`gavetas\`
-      SET ndp=:ndp, articulo=:articulo, gaveta=:gaveta, nivel=:nivel,
-        cantidad=:cantidad, precio=:precio, \`min\`=:min, \`max\`=:max, equipo=:equipo, tde=:tde, link=:link, linea=:linea
-    WHERE id=:id`,
-    { ndp, articulo, gaveta, nivel, cantidad, precio: Number(precio || 0), min, max, equipo, tde, link: finalLink, linea: lineaToSave, id }
-  );
+    await conn.query(
+      `UPDATE \`gavetas\`
+        SET ndp=?, articulo=?, gaveta=?, nivel=?,
+          cantidad=?, precio=?, \`min\`=?, \`max\`=?, equipo=?, tde=?, link=?, linea=?, critico=?, ubicacion_id=?
+      WHERE id=?`,
+      [ndp, articulo, gaveta, nivel, nuevaCantidad, Number(precio || 0), min, max, equipo, tde, finalLink, lineaToSave, criticoToSave, ubicacionId, id]
+    );
+
+    // Cambio de saldo por edición manual: delta firmado (negativo = salida manual, cuenta como consumo)
+    const antes = Number(prev.cantidad || 0);
+    const delta = nuevaCantidad - antes;
+    if (delta !== 0) {
+      await recordMovement(conn, {
+        item: prev, tipo: 'UPDATE', delta, antes, despues: nuevaCantidad, actor
+      });
+    }
+    await conn.commit();
+
     const [rows] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-    await logCambio(req.user.nombre || req.user.username, 'UPDATE', rows[0], turno, prev[0] || null, req.user.area);
+    await logCambio(actor, 'UPDATE', rows[0], turno, prev, req.user.area);
     res.json(rows[0]);
   } catch (e) {
+    await conn.rollback();
     console.error(e);
     res.status(500).json({ message: 'Error actualizando ítem' });
+  } finally {
+    conn.release();
   }
 });
 
@@ -208,74 +252,81 @@ router.patch('/:id/decrement', authenticateToken, authorizeRoles('admin', 'toolr
   const { turno } = req.body;
   let cantidad = parseInt(req.body.cantidad, 10);
   if (!cantidad || isNaN(cantidad) || cantidad < 1) cantidad = 1;
+  const actor = req.user.nombre || req.user.username;
+  const conn = await pool.getConnection();
   try {
-    // Obtener item actual
-    const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-    if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
+    await conn.beginTransaction();
+    const prev = await lockItem(conn, id);
+    if (!prev) {
+      await conn.rollback();
+      return res.status(404).json({ message: 'Ítem no encontrado' });
+    }
 
-    const currentQty = prev[0].cantidad;
+    const currentQty = Number(prev.cantidad);
     if (currentQty <= 0) {
+      await conn.rollback();
       return res.status(400).json({ message: 'La cantidad ya está en 0, no se puede decrementar más' });
     }
     if (cantidad > currentQty) {
+      await conn.rollback();
       return res.status(400).json({ message: `Solo hay ${currentQty} unidades disponibles` });
     }
 
-    const newQty = currentQty - cantidad;
-
-    // Actualizar cantidad
-    await pool.query(
-      `UPDATE \`gavetas\` SET cantidad = :newQty WHERE id = :id`,
-      { newQty, id }
-    );
+    const { despues: newQty } = await applyStockDelta(conn, id, {
+      delta: -cantidad, tipo: 'DECREMENT', actor, allowNegative: false
+    });
+    await conn.commit();
 
     const [updated] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
 
-    // Log del cambio
     await logCambio(
-      req.user.nombre || req.user.username, 
-      'DECREMENT', 
-      { 
-        id, 
-        ndp: prev[0].ndp, 
-        articulo: prev[0].articulo, 
-        cantidad_anterior: currentQty, 
-        cantidad_nueva: newQty, 
+      actor,
+      'DECREMENT',
+      {
+        id,
+        ndp: prev.ndp,
+        articulo: prev.articulo,
+        cantidad_anterior: currentQty,
+        cantidad_nueva: newQty,
         cantidad_retirada: cantidad
-      }, 
+      },
       turno || 'N/A',
-      prev[0],
+      prev,
       req.user.area
     );
 
-    res.json({ 
-      message: 'Cantidad decrementada exitosamente', 
+    res.json({
+      message: 'Cantidad decrementada exitosamente',
       item: updated[0],
       cantidad_anterior: currentQty,
       cantidad_nueva: newQty,
       cantidad_retirada: cantidad
     });
   } catch (e) {
+    await conn.rollback();
+    if (e instanceof StockError) return res.status(e.status).json({ message: e.message });
     console.error('Error decrementando cantidad:', e);
     res.status(500).json({ message: 'Error decrementando cantidad del ítem' });
+  } finally {
+    conn.release();
   }
 });
 
-// Obtener notificaciones: items con cantidad <= min o sin stock
+// Obtener notificaciones: items con cantidad <= min o sin stock (críticos primero)
 router.get('/notifications', authenticateToken, async (req, res) => {
   const userArea = req.user?.area || null;
   const params = {};
   const where = ['(g.cantidad <= g.`min` OR g.cantidad = 0)'];
-  if (userArea) { where.push('(LOWER(g.area) = LOWER(:userArea) OR g.area IS NULL OR g.area = "")'); params.userArea = userArea; }
+  if (userArea) { where.push(areaVisibleSql('g', ':userArea')); params.userArea = normalizeName(userArea); }
   const whereSql = ` WHERE ${where.join(' AND ')}`;
   try {
     const [rows] = await pool.query(
       `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.\`min\` AS min, g.\`max\` AS max,
-              g.equipo, g.tde, g.area, IFNULL(o.ordered,0) AS ordered, o.ordered_by, o.ordered_at
+              g.equipo, g.tde, g.area, g.critico, IFNULL(o.ordered,0) AS ordered, o.ordered_by, o.ordered_at
          FROM \`gavetas\` g
          LEFT JOIN \`orders\` o ON o.gaveta_id = g.id
         ${whereSql}
-        ORDER BY g.gaveta ASC, g.nivel ASC`,
+        ORDER BY g.critico DESC, g.gaveta ASC, g.nivel ASC`,
       params
     );
     res.json({ data: rows, total: rows.length });
@@ -284,6 +335,21 @@ router.get('/notifications', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Error obteniendo notificaciones' });
   }
 });
+
+// Estimación de agotamiento por ítem (ver docs/stock-depletion-estimate.md)
+router.get('/consumo', authenticateToken, async (req, res) => {
+  try {
+    const estimates = await getConsumptionEstimates({
+      userArea: req.user?.area || null,
+      days: req.query.dias
+    });
+    res.json({ data: Object.fromEntries(estimates), periodo_dias: Math.min(Math.max(parseInt(req.query.dias, 10) || 30, 1), 365) });
+  } catch (e) {
+    console.error('Error calculando consumo:', e);
+    res.status(500).json({ message: 'Error calculando estimación de consumo' });
+  }
+});
+
 
 // Marcar/Desmarcar ítem como ordenado
 router.patch('/:id/ordered', authenticateToken, authorizeRoles('admin','toolroom'), async (req, res) => {
@@ -323,15 +389,27 @@ router.patch('/:id/ordered', authenticateToken, authorizeRoles('admin','toolroom
 // Eliminar ítem (admin u operador)
 router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), async (req, res) => {
   const { id } = req.params;
+  const actor = req.user.nombre || req.user.username;
+  const conn = await pool.getConnection();
+  let prev = null;
   try {
-    const [prev] = await pool.query(`SELECT * FROM \`gavetas\` WHERE id=:id`, { id });
-    if (!prev.length) return res.status(404).json({ message: 'Ítem no encontrado' });
+    await conn.beginTransaction();
+    prev = await lockItem(conn, id);
+    if (!prev) {
+      await conn.rollback();
+      return res.status(404).json({ message: 'Ítem no encontrado' });
+    }
+    // Registrar la baja con el saldo que tenía, para que el historial conserve las unidades retiradas
+    const antes = Number(prev.cantidad || 0);
+    await recordMovement(conn, {
+      item: prev, tipo: 'BAJA', delta: -antes, antes, despues: 0, actor
+    });
+    await conn.query(`DELETE FROM \`gavetas\` WHERE id=?`, [id]);
+    await conn.commit();
 
-    // eliminar registro
-    await pool.query(`DELETE FROM \`gavetas\` WHERE id=:id`, { id });
     // si tenía imagen subida, intentar eliminar archivo del sistema
     try {
-      const link = prev[0] && prev[0].link ? prev[0].link : null;
+      const link = prev.link ? prev.link : null;
       if (link && link.startsWith('/uploads/')) {
         const filename = link.split('/').pop();
         const filePath = path.join(UPLOAD_DIR, filename);
@@ -342,11 +420,14 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), as
     } catch (e) {
       console.warn('Error eliminando archivo asociado al ítem:', e.message);
     }
-    await logCambio(req.user.nombre || req.user.username, 'DELETE', { id }, 'N/A', prev[0] || null, req.user.area);
+    await logCambio(actor, 'DELETE', { id }, 'N/A', prev, req.user.area);
     res.json({ message: 'Ítem eliminado' });
   } catch (e) {
+    await conn.rollback();
     console.error(e);
     res.status(500).json({ message: 'Error eliminando ítem' });
+  } finally {
+    conn.release();
   }
 });
 
@@ -366,8 +447,8 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
     // Filtrar por área del usuario si tiene una asignada
     // También mostrar items sin área asignada (para compatibilidad con datos antiguos)
     if (userArea) {
-      where.push('(LOWER(g.area) = LOWER(:userArea) OR g.area IS NULL OR g.area = "")');
-      params.userArea = userArea;
+      where.push(areaVisibleSql('g', ':userArea'));
+      params.userArea = normalizeName(userArea);
     }
 
     if (gaveta) { 
@@ -383,8 +464,8 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
 
     // Obtener datos filtrados por área del usuario
     const [rows] = await pool.query(
-   `SELECT g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
-        g.equipo, g.tde, g.area,
+   `SELECT g.id, g.ndp, g.articulo, g.gaveta, g.nivel, g.cantidad, g.precio, g.\`min\` AS min, g.\`max\` AS max,
+        g.equipo, g.tde, g.area, g.critico,
         IFNULL(o.ordered, 0) AS ordered, o.ordered_by, o.ordered_at
       FROM \`gavetas\` g
       LEFT JOIN \`orders\` o ON o.gaveta_id = g.id
@@ -392,6 +473,8 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
       ORDER BY g.gaveta ASC, g.nivel ASC`,
       params
     );
+
+    const estimates = await getConsumptionEstimates({ userArea, days: 30 });
 
     console.log('🔍 Export Excel - Found rows:', rows.length);
 
@@ -439,6 +522,11 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
         { header: 'Máximo', key: 'max', width: 10 },
         { header: 'Equipo', key: 'equipo', width: 20 },
         { header: 'TDE', key: 'tde', width: 15 },
+        { header: 'Crítico', key: 'critico', width: 10 },
+        { header: 'Consumo prom./día (aprox.)', key: 'promedio_diario', width: 24 },
+        { header: 'Días restantes (aprox.)', key: 'dias_restantes', width: 22 },
+        { header: 'Agotamiento estimado (aprox.)', key: 'fecha_agotamiento', width: 26 },
+        { header: 'Periodo observado (días)', key: 'periodo_dias', width: 22 },
         { header: 'Ordered', key: 'ordered', width: 10 },
         { header: 'Ordered By', key: 'ordered_by', width: 20 },
         { header: 'Ordered At', key: 'ordered_at', width: 20 }
@@ -459,6 +547,11 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
           max: row.max,
           equipo: row.equipo || '',
           tde: row.tde || '',
+          critico: row.critico ? 'Sí' : 'No',
+          promedio_diario: estimates.get(row.id)?.promedio_diario ?? '',
+          dias_restantes: estimates.get(row.id)?.dias_restantes ?? '',
+          fecha_agotamiento: estimates.get(row.id)?.fecha_agotamiento ?? '',
+          periodo_dias: estimates.get(row.id)?.periodo_dias ?? '',
           ordered: row.ordered ? 'Yes' : 'No',
           ordered_by: row.ordered_by || '',
           ordered_at: row.ordered_at ? new Date(row.ordered_at).toLocaleString() : ''

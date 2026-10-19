@@ -1,22 +1,10 @@
 import { Router } from 'express';
 import pool from '../db.js';
-import mysql from 'mysql2/promise';
 import { authenticateToken } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
+import { createCredConnection } from '../utils/credenciales.js';
 
 const router = Router();
-
-// Helper para conectar a credenciales DB
-async function createCredConnection() {
-  const config = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.CRED_DB_NAME || 'credenciales'
-  };
-  return await mysql.createConnection(config);
-}
 
 // Obtener historial global de cambios (solo admin)
 router.get('/', authenticateToken, authorizeRoles('admin'), async (req, res) => {

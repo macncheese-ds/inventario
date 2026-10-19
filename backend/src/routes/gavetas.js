@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import pool from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { normalizeName, areaVisibleSql } from '../utils/areas.js';
 
 const router = Router();
 
 // Devuelve la lista de números de gaveta existentes (distinct)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const area = req.user?.area || null;
+    const area = normalizeName(req.user?.area);
 
-    const whereClause = area ? 'WHERE LOWER(gavetas.area) = LOWER(?)' : '';
+    const whereClause = area ? `WHERE ${areaVisibleSql('gavetas', '?', { includeUnassigned: false })}` : '';
     const params = area ? [area] : [];
 
     // Return distinct gaveta values as strings. Try to sort numerically when possible
@@ -29,9 +30,9 @@ router.get('/', authenticateToken, async (req, res) => {
 // Devuelve totales por gaveta y total general (precio * cantidad)
 router.get('/totales', authenticateToken, async (req, res) => {
   try {
-    const area = req.user?.area || null;
+    const area = normalizeName(req.user?.area);
 
-    const whereClause = area ? 'WHERE LOWER(gavetas.area) = LOWER(?)' : '';
+    const whereClause = area ? `WHERE ${areaVisibleSql('gavetas', '?', { includeUnassigned: false })}` : '';
     const params = area ? [area] : [];
 
     const [rows] = await pool.query(

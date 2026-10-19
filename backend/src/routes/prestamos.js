@@ -1,22 +1,11 @@
 import { Router } from 'express';
 import pool from '../db.js';
-import mysql from 'mysql2/promise';
 import { authenticateToken } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
+import { createCredConnection } from '../utils/credenciales.js';
+import { lockItem, applyStockDelta, StockError } from '../services/stock.js';
 
 const router = Router();
-
-// Helper para conectar a credenciales DB
-async function createCredConnection() {
-  const config = {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.CRED_DB_NAME || 'credenciales'
-  };
-  return await mysql.createConnection(config);
-}
 
 // Normalizar entrada de empleado (igual que en auth.js)
 function normalizeEmployeeInput(input) {
@@ -187,54 +176,58 @@ router.post('/', authenticateToken, async (req, res) => {
         continue;
       }
 
+      const conn = await pool.getConnection();
       try {
-        // Obtener artículo
-        const [itemRows] = await pool.query(
-          `SELECT * FROM gavetas WHERE id = :id`,
-          { id: item_id }
-        );
+        await conn.beginTransaction();
+        // Bloquea el ítem hasta confirmar, para evitar sobre-préstamos en peticiones simultáneas
+        const item = await lockItem(conn, item_id);
 
-        if (!itemRows || itemRows.length === 0) {
+        if (!item) {
+          await conn.rollback();
           errors.push({ item_id, error: 'Artículo no encontrado' });
           continue;
         }
 
-        const item = itemRows[0];
-
         if (item.cantidad < qty) {
+          await conn.rollback();
           errors.push({ item_id, articulo: item.articulo, error: `No hay suficientes unidades (disponibles: ${item.cantidad})` });
           continue;
         }
 
         const itemArea = req.user?.area || item.area || null;
+        const actor = authUser.nombre || authUser.num_empleado;
 
-        // Crear registro de préstamo
-        await pool.query(
-          `INSERT INTO prestamos (empleado, num_empleado, articulo, ndp, gaveta, cantidad, empleado1, area)
-           VALUES (:empleado, :num_empleado, :articulo, :ndp, :gaveta, :cantidad, :empleado1, :area)`,
-          {
-            empleado: employeeInfo.nombre,
-            num_empleado: employeeInfo.num_empleado,
-            articulo: item.articulo,
-            ndp: item.ndp || null,
-            gaveta: item.gaveta || null,
-            cantidad: qty,
-            empleado1: authUser.nombre || authUser.num_empleado,
-            area: itemArea
-          }
+        // Crear registro de préstamo (con gaveta_id para poder devolver el ítem exacto)
+        const [insertResult] = await conn.query(
+          `INSERT INTO prestamos (empleado, num_empleado, articulo, ndp, gaveta, gaveta_id, cantidad, empleado1, area)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            employeeInfo.nombre,
+            employeeInfo.num_empleado,
+            item.articulo,
+            item.ndp || null,
+            item.gaveta || null,
+            item.id,
+            qty,
+            actor,
+            itemArea
+          ]
         );
 
-        // Decrementar inventario
-        const prevQty = item.cantidad;
-        const newQty = prevQty - qty;
-        await pool.query(
-          `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
-          { newQty, id: item.id }
-        );
+        // Descontar inventario y registrar el movimiento en la misma transacción
+        const { antes: prevQty, despues: newQty } = await applyStockDelta(conn, item.id, {
+          delta: -qty,
+          tipo: 'PRESTAMO',
+          actor,
+          referenciaId: insertResult.insertId,
+          allowNegative: false
+        });
+
+        await conn.commit();
 
         // Log
         await logCambio(
-          authUser.nombre || authUser.num_empleado,
+          actor,
           'PRESTAMO',
           {
             empleado: employeeInfo.nombre,
@@ -258,8 +251,15 @@ router.post('/', authenticateToken, async (req, res) => {
           cantidad_restante: newQty
         });
       } catch (itemErr) {
-        console.error(`Error procesando ítem ${item_id}:`, itemErr);
-        errors.push({ item_id, error: 'Error interno al procesar ítem' });
+        await conn.rollback();
+        if (itemErr instanceof StockError) {
+          errors.push({ item_id, error: itemErr.message });
+        } else {
+          console.error(`Error procesando ítem ${item_id}:`, itemErr);
+          errors.push({ item_id, error: 'Error interno al procesar ítem' });
+        }
+      } finally {
+        conn.release();
       }
     }
 
@@ -289,69 +289,87 @@ router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
   const { num_empleado } = req.params;
   const { id, articulo, cantidad = 1 } = req.body;
 
+  const conn = await pool.getConnection();
   try {
-    // 1. Buscar préstamo
+    await conn.beginTransaction();
+
+    // 1. Buscar préstamo (bloqueado para la transacción)
     let prestamo;
     if (id) {
-      const [rows] = await pool.query(
-        `SELECT * FROM prestamos WHERE id = :id LIMIT 1`,
-        { id }
+      const [rows] = await conn.query(
+        `SELECT * FROM prestamos WHERE id = ? LIMIT 1 FOR UPDATE`,
+        [id]
       );
       if (!rows || rows.length === 0) {
+        await conn.rollback();
         return res.status(404).json({ message: 'No se encontró préstamo con ese id' });
       }
       prestamo = rows[0];
     } else {
-      const [rows] = await pool.query(
-        `SELECT * FROM prestamos WHERE num_empleado = :num_empleado AND articulo = :articulo LIMIT 1`,
-        { num_empleado, articulo }
+      const [rows] = await conn.query(
+        `SELECT * FROM prestamos WHERE num_empleado = ? AND articulo = ? LIMIT 1 FOR UPDATE`,
+        [num_empleado, articulo]
       );
       if (!rows || rows.length === 0) {
+        await conn.rollback();
         return res.status(404).json({ message: 'No se encontró préstamo activo para este empleado y artículo' });
       }
       prestamo = rows[0];
     }
 
-    // 2. Buscar artículo
-    const [itemRows] = await pool.query(
-      `SELECT * FROM gavetas WHERE articulo = :articulo LIMIT 1`,
-      { articulo: prestamo.articulo }
-    );
-    if (!itemRows || itemRows.length === 0) {
+    // 2. Buscar artículo: por gaveta_id cuando existe; por nombre solo para préstamos anteriores a la migración
+    let item;
+    if (prestamo.gaveta_id) {
+      item = await lockItem(conn, prestamo.gaveta_id);
+    } else {
+      const [itemRows] = await conn.query(
+        `SELECT * FROM gavetas WHERE articulo = ? LIMIT 1 FOR UPDATE`,
+        [prestamo.articulo]
+      );
+      item = itemRows[0] || null;
+    }
+    if (!item) {
+      await conn.rollback();
       return res.status(404).json({ message: 'Artículo asociado al préstamo no encontrado' });
     }
-    const item = itemRows[0];
 
     // 3. Validar cantidad
     const qty = parseInt(cantidad, 10);
     if (!qty || qty < 1) {
+      await conn.rollback();
       return res.status(400).json({ message: 'Cantidad inválida' });
     }
     if (qty > prestamo.cantidad) {
+      await conn.rollback();
       return res.status(400).json({ message: 'No puedes devolver más de lo prestado' });
     }
 
-    // 4. Sumar cantidad al inventario
-    const prevQty = item.cantidad || 0;
-    const newQty = prevQty + qty;
-    await pool.query(
-      `UPDATE gavetas SET cantidad = :newQty WHERE id = :id`,
-      { newQty, id: item.id }
-    );
+    const actor = prestamo.empleado || prestamo.num_empleado;
+
+    // 4. Sumar cantidad al inventario y registrar el movimiento
+    const { antes: prevQty, despues: newQty } = await applyStockDelta(conn, item.id, {
+      delta: qty,
+      tipo: 'DEVOLUCION',
+      actor,
+      referenciaId: prestamo.id,
+      allowNegative: false
+    });
 
     // 5. Actualizar/eliminar préstamo
     if (qty === prestamo.cantidad) {
-      await pool.query(`DELETE FROM prestamos WHERE id = :id`, { id: prestamo.id });
+      await conn.query(`DELETE FROM prestamos WHERE id = ?`, [prestamo.id]);
     } else {
-      await pool.query(
-        `UPDATE prestamos SET cantidad = cantidad - :qty WHERE id = :id`,
-        { qty, id: prestamo.id }
+      await conn.query(
+        `UPDATE prestamos SET cantidad = cantidad - ? WHERE id = ?`,
+        [qty, prestamo.id]
       );
     }
 
+    await conn.commit();
+
     // 6. Log
     await logCambio(
-      prestamo.empleado || prestamo.num_empleado,
+      actor,
       'DEVOLUCION',
       {
         empleado: prestamo.empleado,
@@ -374,8 +392,12 @@ router.post('/:num_empleado/devolver', authenticateToken, async (req, res) => {
       cantidad_actual: newQty
     });
   } catch (e) {
+    await conn.rollback();
+    if (e instanceof StockError) return res.status(e.status).json({ message: e.message });
     console.error('Error devolviendo artículo:', e);
     res.status(500).json({ message: 'Error devolviendo artículo' });
+  } finally {
+    conn.release();
   }
 });
 

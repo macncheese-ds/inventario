@@ -1,0 +1,418 @@
+You are updating an existing inventory management web application. Work directly in the existing repository and implement the requested changes in the actual application—not in a standalone mockup.
+
+The application uses JavaScript, Node.js, and MySQL. It is deployed on a separate server behind Nginx. Inspect the repository to identify the actual frontend framework, backend architecture, database access patterns, styling system, and deployment assumptions. Do not assume technologies, versions, or project structures that have not been verified.
+
+Your priorities, in order, are:
+1. Preserve all existing data.
+2. Preserve existing functionality and business workflows.
+3. Make the database structure reliable and maintainable.
+4. Implement the requested features consistently across the application.
+5. Improve usability, presentation, and perceived performance.
+
+## NON-NEGOTIABLE EXECUTION RESTRICTIONS
+
+- Do not run npm install, npm ci, yarn, pnpm, npx, or any equivalent dependency installation command.
+- Do not install, remove, or upgrade dependencies.
+- Do not run builds, development servers, production servers, tests, linters, formatters, database migrations, seed scripts, or application scripts.
+- Do not execute SQL against any database.
+- Do not connect to, modify, or deploy to the remote server.
+- Do not change Nginx configuration or deployment settings unless a requested feature demonstrably requires it. If necessary, explain the proposed change and wait for approval.
+- Do not modify lockfiles or generated build assets.
+- Read-only repository inspection and static code analysis are allowed.
+- I will handle all installations, builds, tests, migrations, deployments, and runtime verification myself.
+- You may create migration files, SQL scripts, documentation, and manual verification instructions, but you must not execute them.
+- Never claim that something was tested, builds successfully, works in production, or is error-free when you have not verified it.
+- Avoid new dependencies. If a requirement genuinely cannot be implemented reasonably with the existing stack, explain why and ask before introducing any dependency or external service.
+
+## 1. ANALYZE THE REPOSITORY BEFORE EDITING
+
+Review the entire relevant application, not just the first files that appear related to a request.
+
+Inspect:
+- Frontend routes, pages, layouts, shared components, forms, tables, dialogs, and state management.
+- Backend routes, controllers, services, middleware, validation, authentication, and authorization.
+- Database schema definitions, migrations, SQL queries, models, and existing relationships.
+- Inventory workflows, stock movements, item creation and editing, categories, locations, suppliers, and any other existing entities.
+- Search, filters, sorting, pagination, imports, exports, reports, and audit/history features wherever present.
+- Existing localization, translation files, language selection, and language persistence.
+- Configuration examples and deployment documentation relevant to the changes.
+- How stock decreases are recorded, including movement types, quantities, timestamps, units, locations, returns, reversals, transfers, and adjustments wherever these exist.
+- Whether existing movement history can support reliable material-consumption and stock-depletion estimates.
+
+Trace important workflows end to end: UI → API → business logic → database → response → UI.
+
+Exclude irrelevant generated directories, build artifacts, dependencies, and binary files. Do not expose secrets or copy credentials into your response.
+
+Before making changes, provide:
+- A concise architecture summary.
+- The main data flows and affected modules.
+- Problems supported by actual repository evidence.
+- Missing information and assumptions that require confirmation.
+- A phased implementation plan and the main compatibility risks.
+
+Reference actual file paths when describing findings. Do not invent files, tables, relationships, or existing features.
+
+Do not begin with broad rewrites or cosmetic changes before understanding how the application works.
+
+## 2. DATABASE REDESIGN: ZERO DATA LOSS
+
+The current MySQL database has grown incrementally, with tables added over time and inadequate relationships. I want a properly structured database and a safe way to migrate all existing information into it.
+
+I will provide screenshots of all current database tables. Wait for those screenshots and any necessary schema information before finalizing the database design.
+
+Screenshots alone may not reveal column types, indexes, constraints, triggers, views, or all relationships. Identify exactly what is missing and request the relevant schema definitions or metadata. Do not infer an authoritative schema from screenshots alone.
+
+Database work must follow an approval gate:
+
+A. Inspect and document the existing database usage in the repository.  
+B. Review the screenshots and schema information I provide.  
+C. Propose the new schema, relationship mapping, migration approach, and validation plan.  
+D. Wait for my explicit approval before finalizing the new database structure, producing implementation-specific migration scripts, or changing application code to depend on that new structure.
+
+Do not let missing database information prevent the initial repository analysis. Clearly distinguish independent work from changes blocked by the database decision.
+
+Database requirements:
+- Preserve every existing record and all meaningful field values.
+- Do not silently delete, merge, deduplicate, truncate, overwrite, or discard data.
+- Preserve primary keys where practical. If IDs must change, provide explicit old-to-new mapping and update every dependent reference.
+- Identify duplicate records, orphaned references, invalid values, and inconsistent data without silently “fixing” them.
+- If data cannot fit a new constraint, propose a preservation strategy and request a decision. Do not drop it.
+- Propose appropriate primary keys, foreign keys, indexes, unique constraints, nullability rules, and data types based on verified business rules.
+- Do not add cascading deletes or other destructive relationship behavior without explicit justification and approval.
+- Preserve inventory quantities, movement history, timestamps, ownership, and audit information where these exist.
+- Preserve character encoding and multilingual text, including Spanish and Korean.
+- Explain how existing tables and columns map to the proposed schema.
+- Identify every application query, endpoint, report, import, and export affected by schema changes.
+- Account for the movement-history information needed by the stock-depletion estimation feature without fabricating historical data or treating unknown movement reasons as confirmed consumption.
+
+Prefer a staged migration into a separate target schema or database, keeping the original intact until migration validation and explicit cutover approval.
+
+The migration plan must include:
+- A verified backup and restore rehearsal performed by me before migration.
+- Preconditions, compatibility requirements, and required MySQL version information.
+- Table-by-table mapping and dependency order.
+- Handling of duplicates, orphans, invalid values, and unmapped fields.
+- A strategy to prevent writes from being lost during migration, such as an agreed maintenance window or another explicitly designed synchronization approach.
+- Read-only validation queries for record counts, relationship integrity, stock totals, movement history, and field-level reconciliation as appropriate.
+- Explicit reporting of any differences that cannot be reconciled automatically.
+- A rollback and cutover plan, including how to handle new writes after cutover.
+- Clear notes on transactional limitations for the actual MySQL statements used.
+- Clear separation between script preparation and execution.
+
+Do not include DROP, TRUNCATE, or irreversible cleanup steps in the normal migration path. Any later cleanup must be separate, clearly labeled, and explicitly approved.
+
+## 3. MARK SPARE PARTS AS CRITICAL
+
+Add a way to identify certain spare parts as critical.
+
+First determine how spare parts are represented in the current application. Then propose the smallest appropriate schema and application changes consistent with the approved database design.
+
+Requirements:
+- Allow authorized users to mark and unmark a spare part as critical.
+- Persist this property in the database.
+- Preserve compatibility with existing records using an explicitly documented default.
+- Follow the application's existing authentication, authorization, validation, and audit patterns.
+- Include the field in the relevant create/edit forms and API responses.
+- Display criticality clearly in inventory lists and item details.
+- Use a restrained text label or badge; do not rely on color alone.
+- Allow users to filter critical spare parts using the existing filtering architecture.
+- Keep criticality separate from stock status: a critical part is not necessarily low stock or out of stock.
+- Translate all related labels and messages into Spanish, English, and Korean.
+- Review existing imports and exports and explain whether and how this field should be included.
+
+Do not invent a complex criticality scoring system, multiple severity levels, or unrelated workflows unless the existing requirements support them.
+
+## 4. ESTIMATE MATERIAL CONSUMPTION AND TIME UNTIL STOCK DEPLETION
+
+Add a function that estimates approximately how long each material or applicable inventory item will last, based on its current available stock and the frequency and quantities of historical stock decreases.
+
+The purpose is to answer: “At the current historical consumption rate, approximately how many days will this material remain available, and when might it run out?”
+
+This is an **estimate**, not a guaranteed depletion date.
+
+### Inspect the existing data before designing the calculation
+
+- Determine how materials, spare parts, stock balances, and inventory movements are represented.
+- Identify which movement types represent actual consumption.
+- Distinguish consumption from receipts, replenishments, transfers, corrections, write-offs, returns, canceled transactions, and reversals according to the application's verified business rules.
+- Do not count every negative stock movement as consumption without verifying its meaning.
+- Determine whether stock is managed globally, by warehouse, by location, or through another existing scope. Keep the stock balance and consumption history within the same scope.
+- Determine what “available stock” means in the current application. If reservations or committed quantities exist, follow the verified availability rules rather than inventing a new definition.
+- Check timestamp precision, timezone conventions, quantity precision, and units of measure.
+- Identify whether historical data is complete enough to support the estimate.
+- If consumption cannot be reliably distinguished using existing records, explain the limitation and propose the smallest appropriate change through the database approval process.
+- Do not reconstruct missing history from the current stock balance or present invented movement dates as real data.
+
+### Calculation requirements
+
+Use a transparent, explainable calculation rather than an unnecessarily complex forecasting system.
+
+Propose the observation period, minimum history requirements, and treatment of incomplete history for my approval before implementation. Do not silently choose business-sensitive defaults.
+
+The baseline approach should be:
+
+- Calculate total qualifying consumption within the agreed observation period.
+- Divide that consumption by the number of calendar days in the valid observation period to obtain average daily consumption.
+- Include days with no consumption. Do not calculate the average using only days on which a withdrawal occurred.
+- For newly created items or incomplete history, use only a defensible observation period supported by the data and disclose its limitations.
+- Estimate days remaining by dividing current available stock by average daily consumption.
+- Derive the approximate depletion date from the estimate using the application's established date and timezone conventions.
+- Account for both withdrawal frequency and withdrawal quantities through the historical consumption rate. Do not estimate depletion from transaction counts alone.
+- Keep units consistent between current stock and historical consumption. Do not combine incompatible units or introduce unverified conversions.
+- Define how returns, reversals, and corrected consumption affect the calculation, based on verified workflows.
+- Document rounding rules. Do not round intermediate values in ways that materially distort the result.
+- Recalculate or invalidate cached results when relevant stock balances or qualifying historical movements change, including edits, cancellations, and backdated entries.
+- Do not include future replenishments or pending purchases in the baseline estimate unless a separate, explicitly approved requirement calls for them.
+
+Do not introduce machine learning, external forecasting services, complex statistical models, or new dependencies for this feature.
+
+### Display and behavior
+
+Show the following where appropriate in the existing inventory interface:
+- Average daily consumption, including the item's unit.
+- Estimated days of remaining availability.
+- Approximate depletion date.
+- Observation period used.
+- A concise explanation that the estimate assumes a similar future consumption rate.
+
+Prioritize concise information in inventory lists and provide calculation details in the existing item-detail view or another suitable existing interaction. Avoid overcrowding tables or adding decorative dashboards.
+
+Handle these cases explicitly:
+- No movement history.
+- Insufficient valid history.
+- No qualifying consumption during the observation period.
+- Zero available stock.
+- Negative available stock, if the application permits it.
+- Ambiguous movement classifications.
+- Invalid or incompatible units.
+- Incomplete history that materially limits the estimate.
+
+Do not display a fabricated depletion date, divide by zero, present “infinite days” as a useful forecast, or interpret no recorded consumption as proof that an item will never run out.
+
+Keep these concepts separate:
+- Criticality.
+- Current stock status.
+- Estimated remaining availability.
+
+Do not automatically change criticality, reorder thresholds, or inventory quantities based on the estimate. Do not introduce notifications, purchasing workflows, or automatic replenishment unless separately approved.
+
+Translate all related labels, explanations, loading states, empty states, and error messages into Spanish, English, and Korean. Format dates and numbers using the selected locale and existing business settings.
+
+### Backend, data integrity, and performance
+
+- Put the authoritative calculation in the appropriate existing backend or shared business-logic layer, rather than duplicating conflicting formulas across frontend screens.
+- Reuse existing authentication, authorization, validation, and database-access patterns.
+- Preserve existing API contracts where possible. Document any added response fields or necessary endpoint changes.
+- Avoid retrieving the entire movement history into the browser solely to calculate estimates.
+- Avoid one additional database query per displayed inventory row. Use aggregation or another approach appropriate to the verified architecture.
+- Propose indexes only after inspecting the actual schema and query patterns, and include schema changes in the database approval process.
+- Prefer derived calculations over storing forecasts as authoritative inventory data. If caching is justified, explain the cache scope, invalidation behavior, and freshness.
+- Do not alter stock balances or historical movements to make an estimate possible.
+- Review existing reports and exports and explain whether and how estimates should be included, clearly labeled as approximate and tied to an observation period.
+
+### Required analysis and manual verification coverage
+
+At the analysis checkpoint, include:
+- The actual movement fields and workflows available for the calculation.
+- Whether existing history supports the feature.
+- The proposed formula, observation-period policy, minimum history requirements, and rounding rules.
+- Any business decisions or schema changes requiring approval.
+- The affected frontend, backend, API, database, and localization modules.
+
+Include manual verification scenarios for:
+- Regular consumption.
+- Irregular consumption.
+- Multiple withdrawals on the same day.
+- Days without withdrawals.
+- Replenishments that must not be counted as consumption.
+- Transfers and adjustments.
+- Returns and reversals.
+- New items and insufficient history.
+- No consumption in the observation period.
+- Zero or negative available stock.
+- Different inventory locations or scopes where applicable.
+- Historical movement edits and backdated entries.
+- Locale-specific formatting.
+
+Prepare verification instructions only. Do not execute tests, scripts, queries, or application commands.
+
+## 5. IMPROVE INFORMATION ORGANIZATION
+
+Improve how inventory information is distributed and displayed.
+
+Base the layout on the actual fields and workflows found in the repository:
+- Prioritize identification, stock availability, location, criticality, and common inventory actions where those fields exist.
+- Include estimated remaining availability where the consumption-history feature supports it, without overwhelming the main inventory view.
+- Group related information logically.
+- Reduce visual clutter and unnecessary repetition.
+- Make important information easy to scan without opening multiple screens unnecessarily.
+- Preserve access to all existing functionality and essential fields.
+- Keep terminology consistent across pages, forms, tables, and dialogs.
+- Do not invent metrics, workflows, charts, or data.
+
+## 6. PERFORMANCE, LOADING STATES, AND SUBTLE MOTION
+
+Make the application feel fast without claiming unmeasured performance improvements.
+
+Inspect for avoidable issues such as redundant requests, unnecessary rerenders, repeated database queries, oversized responses, and client-side work that could be reduced.
+
+Make focused improvements supported by the existing architecture. Do not introduce broad architectural changes solely for speculative performance gains.
+
+Loading requirements:
+- Add skeleton loading states that resemble the shape and layout of the actual content before data appears.
+- Use skeletons for appropriate tables, detail panels, and other data-driven sections.
+- Keep dimensions stable to reduce layout shifts.
+- Distinguish initial loading, background refresh, empty results, and errors.
+- Do not replace valid existing content with a full-page skeleton during every background update.
+- Provide accessible loading feedback and avoid excessive announcements.
+- Prevent duplicate submissions while preserving existing form behavior.
+
+Motion requirements:
+- Use short, subtle transitions only where they improve clarity.
+- Avoid decorative or continuous animation.
+- Respect reduced-motion preferences, including skeleton shimmer.
+- Do not delay navigation, data visibility, or common actions for animation.
+
+## 7. COMPLETE SPANISH / ENGLISH / KOREAN LOCALIZATION
+
+Review the entire application for incomplete or inconsistent localization.
+
+Cover:
+- Navigation, headings, buttons, forms, placeholders, validation messages, dialogs, notifications, filters, table headers, loading states, empty states, errors, and accessibility labels.
+- User-facing backend messages where applicable.
+- Dates, numbers, currencies, and pluralization using the application's locale and existing business settings.
+- Language selection and persistence using the existing implementation wherever possible.
+- Criticality labels and all material-consumption and stock-depletion estimation content.
+
+Do not translate code identifiers, database identifiers, API field names, or internal constants merely for presentation.
+
+Use a maintainable localization structure and eliminate unnecessary hardcoded UI strings in affected code.
+
+### AUTOMATIC TRANSLATION OF USER-ENTERED DATA
+
+Users enter data in Spanish. I also want relevant user-entered descriptive content to be available automatically in English and Korean.
+
+Treat interface localization and database-content translation as separate concerns.
+
+Before implementing automatic translation:
+- Identify which fields contain natural-language content that should be translated.
+- Identify fields that must never be translated, including SKUs, part numbers, serial numbers, product codes, brand/model identifiers, quantities, and other exact technical identifiers.
+- Check whether the project already has a translation provider, credentials configuration, background-job mechanism, or caching approach.
+- If no suitable provider exists, explain the available integration approach and ask me to approve the provider, cost implications, credentials, and data-sharing scope before integrating it.
+- Do not assume any provider is free or that external transmission of inventory data is approved.
+
+Implementation requirements:
+- Preserve the original Spanish value as the source of truth.
+- Store or cache translations separately from the original data.
+- Avoid translating the same unchanged content repeatedly.
+- Track source changes so outdated translations can be identified and refreshed.
+- Do not block saving or normal inventory use when translation fails or is unavailable.
+- Fall back to the original Spanish text when a translation is missing.
+- Keep credentials server-side and out of the repository and browser.
+- Translate only approved fields, not complete records indiscriminately.
+- Do not automatically send the existing database to a translation service.
+- Propose a separately approved backfill process for existing records, with batching, rate limits, estimated cost considerations, and failure handling.
+- Explain how specialized inventory terminology will remain consistent.
+- If provider approval or credentials are missing, clearly identify the remaining integration step instead of pretending automatic translation is operational.
+
+## 8. FRONTEND DESIGN DIRECTION
+
+Redesign the frontend so it feels like a thoughtfully designed business tool, not a generic AI-generated dashboard.
+
+Preserve existing functionality, business rules, and API integrations except for the explicitly approved feature and database changes described above. Do not treat “preserve existing data structures” as a reason to skip the requested database redesign; instead, coordinate all approved schema and API changes carefully across the application.
+
+Reuse the existing frontend framework, components, styling approach, and design conventions wherever practical.
+
+Visual direction:
+- Create a restrained, professional interface built for daily inventory work.
+- Do not use emojis, decorative illustrations, or generic icons beside every heading, menu item, button, or metric.
+- Use clear text labels by default. Use icons only when they meaningfully improve usability, with a consistent style.
+- Avoid stereotypical AI-generated styling: purple gradients, glowing effects, glassmorphism, excessive rounded cards, oversized headings, floating decorative shapes, and unnecessary animations.
+- Do not turn every section into a card. Use layout, spacing, subtle dividers, and typography to establish hierarchy.
+- Choose a cohesive neutral palette with one restrained accent color.
+- Reserve status colors for meaningful states such as low stock, out of stock, criticality, errors, and successful actions. Make distinct states understandable without color alone.
+- Use readable typography, consistent spacing, subtle borders, and modest corner radii.
+- Avoid excessive shadows and large empty areas.
+- Ensure Spanish, English, and Korean text fit naturally without clipping or broken layouts.
+
+Inventory-focused layout:
+- Prioritize the inventory table, search, filters, and primary actions over decorative dashboard summaries.
+- Make tables compact but readable, with aligned columns, consistent row heights, and right-aligned quantities and prices.
+- Make product names, SKUs, stock levels, locations, criticality, and other existing inventory fields easy to scan.
+- Present estimated remaining availability clearly as an approximation, separate from current stock status and criticality.
+- Give primary and secondary actions a clear hierarchy.
+- Keep common actions accessible without cluttering each row.
+- Make search, filtering, sorting, and pagination visually consistent wherever those features exist.
+- Use status labels with text, not color alone.
+- Keep navigation straightforward and make the current section obvious.
+
+Interaction and accessibility:
+- Apply consistent styling to buttons, forms, tables, menus, dialogs, and notifications.
+- Provide clear hover, focus, active, disabled, loading, empty, and error states.
+- Preserve keyboard accessibility, visible focus indicators, readable contrast, and associated form labels.
+- Maintain appropriate focus behavior in dialogs and interactive controls.
+- Make the layout responsive without hiding essential inventory information.
+- Allow horizontal table scrolling when necessary.
+- Use short, practical interface copy.
+- Avoid marketing language and unnecessary welcome messages.
+- Do not add placeholder metrics, fake charts, invented data, or unrelated features.
+- Implement everything within the real application.
+
+The result should feel specific to this inventory application: functional, polished, visually coherent, and deliberately designed rather than template-driven.
+
+## 9. IMPLEMENTATION DISCIPLINE
+
+- Make focused, traceable changes.
+- Reuse existing abstractions where appropriate.
+- Do not perform unrelated refactoring.
+- Do not overwrite unrelated or uncommitted work.
+- Keep frontend, backend, validation, database scripts, and translations consistent.
+- Preserve existing API contracts unless a change is necessary and explicitly documented.
+- Follow existing security patterns, parameterized query practices, and permission checks.
+- Do not expose sensitive internal errors or configuration.
+- Review imports, references, callers, response shapes, and affected code paths through static inspection.
+- Identify assumptions and unresolved issues explicitly.
+- Never substitute fabricated data or a mock integration for a working implementation without clearly labeling the limitation.
+- Keep stock-depletion estimates explainable and traceable to their calculation inputs and observation period.
+- Do not present historical averages as guaranteed future consumption.
+
+## 10. REQUIRED DELIVERABLES
+
+### At the analysis checkpoint
+
+1. Architecture and workflow summary.
+2. Evidence-based findings with file paths.
+3. Missing schema information and screenshots needed.
+4. Proposed implementation phases.
+5. Decisions requiring my approval.
+6. Feasibility assessment for the consumption and stock-depletion estimation feature, including available movement data, limitations, proposed calculation policy, and affected modules.
+
+### For the database approval checkpoint
+
+1. Proposed schema and relationships.
+2. Old-to-new table and column mapping.
+3. Data-preservation strategy.
+4. Migration, validation, cutover, and rollback plan.
+5. Compatibility impacts on application code.
+6. Any proposed movement-history, classification, or indexing changes needed for reliable stock-depletion estimation.
+
+### After implementing approved changes
+
+1. A concise summary of what changed.
+2. Files changed, grouped by feature.
+3. Database and API changes, clearly distinguishing prepared scripts from executed actions.
+4. Localization coverage and automatic-translation integration status.
+5. Configuration or credentials I must supply.
+6. A step-by-step manual verification checklist for me to run.
+7. Known limitations, unverified behavior, and remaining decisions.
+8. Documentation of the stock-depletion formula, included and excluded movement types, observation period, minimum history requirements, scope, units, rounding rules, refresh behavior, and fallback states.
+
+Explicitly state that you did not run installations, builds, tests, migrations, or deployment commands.
+
+## START NOW
+
+Begin with read-only repository inspection. Do not edit files yet.
+
+First return the architecture summary, findings, phased plan, and the exact database information you need from me. Include your initial assessment of whether the existing stock-movement history supports approximate material-depletion estimates and identify the calculation-policy decisions that require my approval.
+
+Then wait for my confirmation and the table screenshots before proceeding with changes that depend on the database redesign.
