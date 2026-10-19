@@ -3,7 +3,7 @@
 // Quick test to verify role logic works correctly
 import { ROLE_GROUPS, canEdit, canAdminister, normalizeRole } from '../src/middleware/roles.js';
 
-console.log('🧪 Testing Role Authorization Logic\n');
+console.log('Testing Role Authorization Logic\n');
 
 // Test cases - Updated roles (The Goat removed)
 const testCases = [
@@ -44,11 +44,11 @@ testCases.forEach(({ role, expectEdit, expectAdmin, description }) => {
   const adminMatch = actualAdmin === expectAdmin;
   const allMatch = editMatch && adminMatch;
 
-  const status = allMatch ? '✅ PASS' : '❌ FAIL';
+  const status = allMatch ? 'PASS' : 'FAIL';
   console.log(`${status} | ${description}`);
   console.log(`   Role: "${role}" (normalized: "${normalizeRole(role)}")`);
-  console.log(`   canEdit: ${actualEdit} (expected: ${expectEdit}) ${editMatch ? '✓' : '✗'}`);
-  console.log(`   canAdminister: ${actualAdmin} (expected: ${expectAdmin}) ${adminMatch ? '✓' : '✗'}`);
+  console.log(`   canEdit: ${actualEdit} (expected: ${expectEdit}) ${editMatch ? 'OK' : 'MISMATCH'}`);
+  console.log(`   canAdminister: ${actualAdmin} (expected: ${expectAdmin}) ${adminMatch ? 'OK' : 'MISMATCH'}`);
   console.log();
 
   if (allMatch) passed++;
@@ -58,9 +58,9 @@ testCases.forEach(({ role, expectEdit, expectAdmin, description }) => {
 console.log('='.repeat(60));
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 if (failed === 0) {
-  console.log('🎉 All tests passed!');
+  console.log('All tests passed!');
   process.exit(0);
 } else {
-  console.log('💥 Some tests failed!');
+  console.log('Some tests failed!');
   process.exit(1);
 }

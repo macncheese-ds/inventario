@@ -7,66 +7,31 @@
 @layer base {
   html, body, #root { height: 100%; }
   body { 
-    background: #f8fafc;
-    color: #0f172a; 
+    background: #f7f8fa;
+    color: #171b22; 
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   .dark body {
-    background: #0f172a;
-    color: #f8fafc;
+    background: #0f1217;
+    color: #dfe3e8;
   }
+  .dark input::placeholder,
+  .dark textarea::placeholder { color: #6b7482; }
+  .dark ::selection { background: #115e59; color: #fff; }
 }
 
 @layer components {
-  /* Glassmorphism card - High Contrast Minimalist */
-  .glass-card {
-    @apply bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800;
-  }
   
-  /* Gradient backgrounds - Grayscale / Monochrome */
-  .gradient-primary {
-    @apply bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 text-white;
-  }
   
-  .gradient-success {
-    @apply bg-slate-800 text-white;
-  }
   
-  .gradient-danger {
-    @apply bg-slate-800 text-white;
-  }
   
-  .gradient-warning {
-    @apply bg-slate-800 text-white;
-  }
   
-  /* Minimalist border */
-  .gradient-border {
-    position: relative;
-    background: linear-gradient(135deg, #cbd5e1, #94a3b8, #64748b);
-    padding: 1px;
-    border-radius: 12px;
-  }
   
-  .gradient-border > * {
-    background: white;
-    border-radius: 11px;
-  }
   
-  .dark .gradient-border > * {
-    background: #0f172a;
-  }
   
-  /* Glow effects - subtle */
-  .glow-indigo {
-    box-shadow: 0 0 15px rgba(100, 116, 139, 0.2), 0 0 30px rgba(100, 116, 139, 0.1);
-  }
   
-  .glow-emerald {
-    box-shadow: 0 0 15px rgba(148, 163, 184, 0.2), 0 0 30px rgba(148, 163, 184, 0.1);
-  }
   
   /* Smooth animations */
   .animate-fade-in {
@@ -81,74 +46,28 @@
     animation: scaleIn 0.2s ease-out;
   }
   
-  .animate-pulse-soft {
-    animation: pulseSoft 2s infinite;
-  }
   
   /* Shimmer loading effect */
   .shimmer {
-    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background: linear-gradient(90deg, #eef0f3 25%, #dfe3e8 50%, #eef0f3 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
-  
   .dark .shimmer {
-    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background: linear-gradient(90deg, #232933 25%, #2e3542 50%, #232933 75%);
     background-size: 200% 100%;
   }
   
-  /* Status indicators - Keep structural but monochrome theming if wanted, we'll keep semantic colors just barely for statuses to make them readable. */
-  .status-dot {
-    @apply w-2 h-2 rounded-full;
-  }
   
-  .status-dot-success {
-    @apply bg-slate-400;
-  }
   
-  .status-dot-warning {
-    @apply bg-slate-300;
-  }
   
-  .status-dot-danger {
-    @apply bg-slate-600;
-  }
   
-  /* Table improvements */
-  .table-row-hover {
-    @apply transition-none;
-  }
   
-  .table-row-hover:hover {
-    @apply bg-slate-50 dark:bg-slate-800/50;
-  }
   
-  /* Button ripple effect */
-  .btn-ripple {
-    position: relative;
-    overflow: hidden;
-  }
   
-  .btn-ripple::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-    transform: scale(0);
-    opacity: 0;
-    transition: transform 0.5s, opacity 0.3s;
-  }
   
-  .btn-ripple:active::after {
-    transform: scale(2.5);
-    opacity: 1;
-    transition: transform 0s, opacity 0s;
-  }
   
-  /* Input focus ring */
-  .input-glow:focus {
-    box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.2);
-  }
+  
   
   /* Scrollbar styling */
   .custom-scrollbar::-webkit-scrollbar {
@@ -161,7 +80,7 @@
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+    @apply bg-slate-300 rounded-full dark:bg-slate-700;
     transition: background 0.2s;
   }
   
@@ -197,25 +116,12 @@
   }
 }
 
-@keyframes pulseSoft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
 
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* Floating animation for cards */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import Card from './ui/Card.jsx';
 import Button from './ui/Button.jsx';
+import { trLocal } from '../i18n/index.js';
 
 // Tamaños predefinidos para impresión
 const SIZES = {
@@ -292,7 +293,7 @@ export default function QRBulkModal({ open, items, onClose, allItems = [] }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[60]">
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">
@@ -300,11 +301,9 @@ export default function QRBulkModal({ open, items, onClose, allItems = [] }) {
           </h3>
           <button 
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            {trLocal('close')}
           </button>
         </div>
 
@@ -404,27 +403,21 @@ export default function QRBulkModal({ open, items, onClose, allItems = [] }) {
         {/* Botones */}
         <div className="flex flex-wrap gap-2 flex-shrink-0">
           <Button variant="secondary" onClick={onClose}>
-            Cerrar
+            {trLocal('close')}
           </Button>
           <div className="flex-1"></div>
           <Button 
             onClick={handleDownloadAllPNG}
             disabled={selectedItems.length === 0 || downloading}
-            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white"
+            variant="secondary"
           >
-            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            {downloading ? 'Descargando...' : `Descargar PNG (${selectedItems.length})`}
+            {downloading ? trLocal('loading') : `PNG (${selectedItems.length})`}
           </Button>
           <Button 
             onClick={handlePrintBulk}
             disabled={selectedItems.length === 0}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white"
+            variant="primary"
           >
-            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
             Imprimir ({selectedItems.length})
           </Button>
         </div>

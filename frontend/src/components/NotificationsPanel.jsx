@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
 import api from '../api.js';
+import { trLocal } from '../i18n/index.js';
 
 function resolveNotifImageUrl(link) {
   if (!link) return null;
@@ -39,9 +40,7 @@ export default function NotificationsPanel({ notifications = [], fetchNotificati
   return (
     <div className="relative inline-block">
       <div className="relative inline-flex">
-        <Button variant="secondary" size="md" onClick={() => setOpen(s => !s)} icon={(
-          <svg className="w-4 h-4 text-slate-600 dark:text-slate-200" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-        )}>
+        <Button variant="secondary" size="md" onClick={() => setOpen(s => !s)}>
           Notificaciones
         </Button>
         {count > 0 && (
@@ -91,12 +90,12 @@ export default function NotificationsPanel({ notifications = [], fetchNotificati
 
       {/* Detail modal similar to PrestarModal */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
               <h3 className="text-lg font-bold">Detalle de ítem</h3>
-              <button onClick={() => setSelectedItem(null)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-all">
-                ✕
+              <button onClick={() => setSelectedItem(null)} className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150">
+                {trLocal('close')}
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

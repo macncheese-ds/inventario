@@ -20,7 +20,7 @@ export default function Input({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
           {label}
           {required && <span className="text-rose-500 ml-1">*</span>}
         </label>
@@ -42,25 +42,22 @@ export default function Input({
           step={step}
           name={name}
           className={`
-            w-full rounded-xl border-2 bg-white/10 dark:bg-slate-900/50 backdrop-blur-sm
-            text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500
-            px-4 py-2.5 shadow-sm
-            transition-all duration-200
+            w-full rounded-md border bg-white dark:bg-slate-950
+            text-slate-900 dark:text-slate-100 placeholder-slate-400
+            px-3 py-2 text-sm
+            transition-colors duration-150
             ${icon ? 'pl-11' : ''}
             ${error 
-              ? 'border-rose-300 dark:border-rose-600 focus:ring-rose-500/20 focus:border-rose-500' 
-              : 'border-slate-200 dark:border-slate-700 focus:ring-slate-400/20 focus:border-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
+              ? 'border-rose-400 focus:ring-rose-500/20 focus:border-rose-500' 
+              : 'border-slate-300 dark:border-slate-700 focus:ring-teal-600/20 focus:border-teal-600 dark:focus:border-teal-500 hover:border-slate-400 dark:hover:border-slate-600'
             }
-            focus:ring-4 focus:outline-none
+            focus:ring-2 focus:outline-none
           `}
           {...props}
         />
       </div>
       {error && (
-        <p className="mt-1.5 text-sm text-rose-600 dark:text-rose-400 flex items-center gap-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
+        <p className="mt-1.5 text-sm text-rose-600 dark:text-rose-400">
           {error}
         </p>
       )}

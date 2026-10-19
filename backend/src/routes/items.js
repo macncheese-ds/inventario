@@ -433,10 +433,10 @@ router.delete('/:id', authenticateToken, authorizeRoles('admin', 'toolroom'), as
 
 // Endpoint para exportar a Excel (solo operadores y admins)
 router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admin']), async (req, res) => {
-  console.log('🔍 Export Excel - User:', req.user);
-  console.log('🔍 Export Excel - User role:', req.user?.rol);
-  console.log('🔍 Export Excel - User area:', req.user?.area);
-  console.log('🔍 Export Excel - Query params:', req.query);
+  console.log('Export Excel - User:', req.user);
+  console.log('Export Excel - User role:', req.user?.rol);
+  console.log('Export Excel - User area:', req.user?.area);
+  console.log('Export Excel - Query params:', req.query);
   
   try {
     const { q, gaveta } = req.query;
@@ -460,7 +460,7 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
     const whereSql = ` WHERE ${where.join(' AND ')} ${search.clause}`;
     Object.assign(params, search.params);
 
-    console.log('🔍 Export Excel - SQL params:', params);
+    console.log('Export Excel - SQL params:', params);
 
     // Obtener datos filtrados por área del usuario
     const [rows] = await pool.query(
@@ -476,7 +476,7 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
 
     const estimates = await getConsumptionEstimates({ userArea, days: 30 });
 
-    console.log('🔍 Export Excel - Found rows:', rows.length);
+    console.log('Export Excel - Found rows:', rows.length);
 
     // Crear workbook con ExcelJS
     const workbook = new ExcelJS.Workbook();
@@ -608,7 +608,7 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Length', buffer.length);
 
-    console.log('🔍 Export Excel - Sending file:', filename);
+    console.log('Export Excel - Sending file:', filename);
 
     // Registrar la exportación en el historial
     await logCambio(
@@ -622,7 +622,7 @@ router.get('/export/excel', authenticateToken, authorizeRoles(['toolroom', 'admi
 
     res.send(buffer);
   } catch (e) {
-    console.error('❌ Error exportando a Excel:', e);
+    console.error('Error exportando a Excel:', e);
     res.status(500).json({ message: 'Error exportando datos a Excel' });
   }
 });

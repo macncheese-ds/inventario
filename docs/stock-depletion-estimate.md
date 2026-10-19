@@ -76,8 +76,10 @@ Source of truth: the `stock_movements` table, written in the same transaction as
 
 - Languages: Spanish (`es`, default), English (`en`), Korean (`ko`). The selector is in the inventory header and the choice is stored in `localStorage` under `inv_lang`.
 - UI strings are static files in `frontend/src/i18n/`.
-- Item names are translated **in the browser only**. The database is not modified and no external service is called. `frontend/src/i18n/articulo.js` holds a glossary of about 150 terms and translates word by word. Words not in the glossary stay in Spanish.
-- Limits: this is a glossary, not machine translation. Word order is not adjusted, so Korean output can read awkwardly. The `ko` glossary has not been reviewed by a native speaker.
+- Item names, equipment, level and TDE text are translated **in the browser only**. The database is not modified and no external service is called.
+  1. `frontend/src/i18n/autotranslate.js` uses the browser's on-device Translator API (Chrome/Edge 138+) when available. Changing the language selector lets the browser download the language model once. Results are cached in `localStorage` (`inv_tr_cache_v1`).
+  2. If the browser has no Translator API, or the model is not downloaded, `frontend/src/i18n/articulo.js` is used: a glossary of about 150 terms that translates word by word. Words not in the glossary stay in Spanish.
+- Limits: the glossary is not machine translation, so word order is not adjusted and Korean output can read awkwardly. The `ko` glossary has not been reviewed by a native speaker. The Translator API is not available in Firefox or Safari, which fall back to the glossary.
 - Follow-up options if the quality is not enough: a larger glossary maintained by the team, or a local translation model. Either is a separate decision.
 
 ## Known limitations

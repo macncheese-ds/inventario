@@ -15,7 +15,7 @@ export default function QuantityPromptModal({ open, max, onClose, onSubmit, load
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-xs">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">¿Cuántas unidades quieres quitar?</h3>
         <form onSubmit={handleSubmit} className="space-y-4">

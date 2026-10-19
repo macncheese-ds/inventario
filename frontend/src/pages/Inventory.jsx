@@ -4,10 +4,8 @@ import LoginModal from '../components/LoginModal.jsx';
 import QuantityPromptModal from '../components/QuantityPromptModal.jsx';
 import QRModal from '../components/QRModal.jsx';
 import QRBulkModal from '../components/QRBulkModal.jsx';
-import { FaCog } from 'react-icons/fa';
 import api, { setAuthToken } from '../api.js';
 import { jwtDecode } from 'jwt-decode';
-import { toggleTheme } from '../theme.js';
 import Layout from '../components/Layout.jsx';
 import NotificationsModal from '../components/NotificationsModal.jsx';
 import Card from '../components/ui/Card.jsx';
@@ -15,7 +13,7 @@ import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
 
 import { trLocal, localeFor, getLang } from '../i18n/index.js';
-import { traducirArticulo, articuloOriginal } from '../i18n/articulo.js';
+import { prepareAutoTranslate, useDataTranslation } from '../i18n/autotranslate.js';
 
 // Formatos comunes
 function formatCurrency(value) {
@@ -442,7 +440,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal de confirmación para eliminar */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[70]">
           <Card className="w-full max-w-md border-rose-200 dark:border-rose-900">
             <div className="mb-4 text-lg font-bold text-rose-600 dark:text-rose-400">
               {trLocal('delete_confirm')}
@@ -466,7 +464,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal para agregar usuario */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[70]">
           <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('add_new_user')}</h3>
             
@@ -515,8 +513,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
                   Área
                 </label>
                 {isAdministrador ? (
-                  <div className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 px-4 py-2.5 text-sm flex items-center gap-2">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <div className="w-full rounded-md border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 px-3 py-2 text-sm">
                     {adminArea || 'Sin área'}
                   </div>
                 ) : (
@@ -558,7 +555,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 
       {/* Modal para editar usuario */}
       {editingUser && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[70]">
           <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('edit_item')}</h3>
             
@@ -638,6 +635,7 @@ function UsuariosAdmin({ onClose, onPasswordPrompt }) {
 }
 
 function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
+  const tr = useDataTranslation();
   return (
     <div className="bg-slate-50 dark:bg-slate-900/20 border-b border-slate-100 dark:border-slate-900/30">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -646,18 +644,12 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
             <h3 className="text-lg font-bold text-slate-900 dark:text-slate-200">
               {trLocal('loans_active')} ({prestamos.length})
             </h3>
-            {/* Area badge */}
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-              Mostrando préstamos del área actual
-            </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150"
           >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            {trLocal('close')}
           </button>
         </div>
         
@@ -685,7 +677,7 @@ function PrestamosPanel({ prestamos, onDevolver, onClose, loading }) {
                   <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
                     <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">{p.empleado}</td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-300 hidden sm:table-cell">{p.num_empleado}</td>
-                    <td className="px-4 py-3 text-slate-900 dark:text-white">{p.articulo}</td>
+                    <td className="px-4 py-3 text-slate-900 dark:text-white">{tr(p.articulo)}</td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">{p.ndp}</td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden md:table-cell">{p.gaveta}</td>
                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400 hidden lg:table-cell">{p.empleado1}</td>
@@ -748,12 +740,14 @@ function ConsumoDetail({ consumo }) {
   );
 }
 
+const FILTER_INPUT = 'w-full text-xs px-2 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600/30';
+
 function TableSkeleton({ columns, rows = 6 }) {
   return Array.from({ length: rows }, (_, r) => (
     <tr key={r} className="border-b border-slate-100 dark:border-slate-700/50" aria-hidden="true">
       {Array.from({ length: columns }, (_, c) => (
         <td key={c} className="px-4 py-3.5 h-[52px]">
-          <div className="h-4 rounded bg-slate-200 dark:bg-slate-700 motion-safe:animate-pulse" />
+          <div className="h-4 rounded shimmer" />
         </td>
       ))}
     </tr>
@@ -761,123 +755,106 @@ function TableSkeleton({ columns, rows = 6 }) {
 }
 
 function ItemRow({ item, role, area, consumo, onEdit, onDelete, onDoubleClick, onDecrement, onPrestar, onShowQR }) {
+  const tr = useDataTranslation();
   // Determine stock status
   const stockStatus = item.cantidad < item.min ? 'low' : item.cantidad > item.max ? 'high' : 'normal';
-  const statusStyles = {
-    low: 'text-rose-600 dark:text-rose-400',
-    high: 'text-amber-600 dark:text-amber-400', 
-    normal: 'text-emerald-600 dark:text-emerald-400'
-  };
   const statusBadge = {
-    low: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800',
-    high: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
-    normal: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+    low: 'text-rose-700 dark:text-rose-300',
+    high: 'text-amber-700 dark:text-amber-300',
+    normal: 'text-slate-900 dark:text-slate-100'
   };
+  const actionBtn = 'px-2 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150';
   const isMantenimiento = area === 'Ensamble';
   
   return (
     <tr 
       onDoubleClick={() => onDoubleClick && onDoubleClick(item)} 
-      className="group border-b border-slate-100 dark:border-slate-700/50 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-gray-50/30 dark:hover:from-slate-900/10 dark:hover:to-gray-900/10 transition-all duration-200 cursor-pointer"
+      className="group border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 cursor-pointer"
     >
-      <td className="px-4 py-3.5">
-        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 font-mono">{item.ndp || '-'}</span>
+      <td className="px-4 py-3">
+        <span className="text-sm font-medium text-slate-800 dark:text-slate-200 font-mono">{item.ndp || '-'}</span>
       </td>
-      <td className="px-4 py-3.5">
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300" title={articuloOriginal(item.articulo)}>{traducirArticulo(item.articulo)}</span>
+      <td className="px-4 py-3">
+        <span className="text-sm font-medium text-slate-800 dark:text-slate-100" title={item.articulo}>{tr(item.articulo)}</span>
         {Number(item.critico) === 1 && (
-          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800">
+          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wide text-rose-700 border border-rose-300 dark:text-rose-300 dark:border-rose-800">
             {trLocal('critical_part')}
           </span>
         )}
       </td>
-      <td className="px-4 py-3.5 hidden md:table-cell">
-        <span className="text-sm text-slate-500 dark:text-slate-400">{item.equipo || '-'}</span>
+      <td className="px-4 py-3 hidden md:table-cell">
+        <span className="text-sm text-slate-500 dark:text-slate-400">{tr(item.equipo) || '-'}</span>
       </td>
-      <td className="px-4 py-3.5">
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-          {item.gaveta}
-        </span>
+      <td className="px-4 py-3">
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300 tabular-nums">{item.gaveta}</span>
       </td>
-      <td className="px-4 py-3.5">
-        <span className="text-sm text-slate-500 dark:text-slate-400">{item.nivel || '-'}</span>
+      <td className="px-4 py-3">
+        <span className="text-sm text-slate-500 dark:text-slate-400">{tr(item.nivel) || '-'}</span>
       </td>
       {isMantenimiento && (
-        <td className="px-4 py-3.5">
+        <td className="px-4 py-3">
           <span className="text-sm text-slate-500 dark:text-slate-400">{item.linea || '-'}</span>
         </td>
       )}
-      <td className="px-4 py-3.5">
+      <td className="px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${statusBadge[stockStatus]}`}>
+          <span className={`text-sm font-semibold tabular-nums ${statusBadge[stockStatus]}`}>
             {item.cantidad}
           </span>
           {canEditInventory(role, area) && item.cantidad > 0 && (
             <button 
               onClick={(e) => { e.stopPropagation(); onDecrement(item); }} 
-              className="opacity-0 group-hover:opacity-100 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 dark:text-amber-400 w-6 h-6 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm"
-              title="Quitar unidades"
+              className="opacity-0 group-hover:opacity-100 focus:opacity-100 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-700 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
+              title={trLocal('remove_units')}
+              aria-label={trLocal('remove_units')}
             >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-              </svg>
+              -1
             </button>
           )}
         </div>
       </td>
-      <td className="px-4 py-3.5">
+      <td className="px-4 py-3">
         <ConsumoCell consumo={consumo} />
       </td>
-      <td className="px-4 py-3.5">
-        <span className="text-sm text-slate-600 dark:text-slate-400">{item.tde || '-'}</span>
+      <td className="px-4 py-3">
+        <span className="text-sm text-slate-600 dark:text-slate-400">{tr(item.tde) || '-'}</span>
       </td>
-      <td className="px-4 py-3.5 text-right">
-        <span className="text-sm text-slate-600 dark:text-slate-400 font-mono">{formatCurrency(item.precio)}</span>
+      <td className="px-4 py-3 text-right">
+        <span className="text-sm text-slate-600 dark:text-slate-400 tabular-nums">{formatCurrency(item.precio)}</span>
       </td>
-      <td className="px-4 py-3.5 text-right">
-        <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 font-mono">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</span>
+      <td className="px-4 py-3 text-right">
+        <span className="text-sm font-medium text-slate-800 dark:text-slate-200 tabular-nums">{formatCurrency((Number(item.precio || 0) * Number(item.cantidad || 0)).toFixed(2))}</span>
       </td>
       
       {canEditInventory(role, area) && (
-        <td className="px-4 py-3.5 text-right">
-          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <td className="px-4 py-3 text-right">
+          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
             <button
               onClick={(e) => { e.stopPropagation(); onShowQR(item); }}
-              className="p-2 text-slate-500 hover:text-slate-600 hover:bg-slate-50 rounded-lg dark:text-slate-400 dark:hover:text-slate-400 dark:hover:bg-slate-900/30 transition-all duration-200 hover:scale-110"
-              title="Generar QR"
+              className={actionBtn}
+              title={trLocal('generate_qr')}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-              </svg>
+              QR
             </button>
             {canLendItems(role, area) && (
               <button
                 onClick={(e) => { e.stopPropagation(); onPrestar(item); }}
-                className="p-2 text-slate-500 hover:text-gray-600 hover:bg-gray-50 rounded-lg dark:text-slate-400 dark:hover:text-gray-400 dark:hover:bg-gray-900/30 transition-all duration-200 hover:scale-110"
-                title="Prestar"
+                className={actionBtn}
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
+                {trLocal('lend_item')}
               </button>
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(item); }}
-              className="p-2 text-slate-500 hover:text-slate-600 hover:bg-slate-50 rounded-lg dark:text-slate-400 dark:hover:text-slate-400 dark:hover:bg-slate-900/30 transition-all duration-200 hover:scale-110"
-              title="Editar"
+              className={actionBtn}
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
+              {trLocal('edit')}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(item); }}
-              className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-900/30 transition-all duration-200 hover:scale-110"
-              title="Eliminar"
+              className="px-2 py-1 text-xs font-medium rounded text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-950/40 transition-colors duration-150"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+              {trLocal('delete')}
             </button>
           </div>
         </td>
@@ -995,7 +972,7 @@ function PasswordModal({ onClose }) {
   };
   
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-md">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('change_password')}</h3>
         <form onSubmit={handleChange} className="space-y-4">
@@ -1022,7 +999,7 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
   useEffect(() => { if (!open) setPassword(''); }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[80]">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[80]">
       <Card className="w-full max-w-md">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{label}</h3>
         <form onSubmit={e => { e.preventDefault(); onSubmit(password); }} className="space-y-4">
@@ -1043,6 +1020,7 @@ function PasswordPromptModal({ open, onClose, onSubmit, label = 'Contraseña', l
 // Paso 2: Selección de ítems (carrito)
 // Paso 3: Autorización (Administrador o Ingeniero)
 function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, currentUser, allItems }) {
+  const tr = useDataTranslation();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -1202,26 +1180,21 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
   const totalItems = cart.reduce((s, c) => s + c.cantidad, 0);
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex flex-col z-[60]">
+    <div className="fixed inset-0 bg-slate-900/70 flex flex-col z-[60]">
       {/* ── Header pinned ── */}
-      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-white flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-white dark:text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </div>
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Nuevo Préstamo</h2>
             <div className="flex items-center gap-2 mt-0.5">
               {[1, 2, 3].map(s => (
                 <div key={s} className="flex items-center gap-1">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    step === s ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' :
-                    step > s ? 'bg-emerald-500 text-white' :
-                    'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                  }`}>{step > s ? <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg> : s}</div>
-                  {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'}`} />}
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+                    step === s ? 'bg-teal-700 dark:bg-teal-600 text-white' :
+                    step > s ? 'bg-slate-300 dark:bg-slate-600 text-slate-800 dark:text-white' :
+                    'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  }`}>{s}</div>
+                  {s < 3 && <div className={`w-8 h-px ${step > s ? 'bg-slate-400 dark:bg-slate-500' : 'bg-slate-200 dark:bg-slate-700'}`} />}
                 </div>
               ))}
               <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
@@ -1230,10 +1203,8 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
             </div>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+        <button onClick={onClose} className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150">
+          {trLocal('close')}
         </button>
       </div>
 
@@ -1251,12 +1222,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Número de Empleado
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
+                <div>
                   <input
                     ref={inputRef}
                     type="text"
@@ -1264,7 +1230,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                     onChange={e => setNumEmpleado(e.target.value)}
                     placeholder="Ej: 1234A"
                     required
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-all duration-200 text-base"
+                    className="w-full px-3 py-2.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600 transition-colors text-base"
                   />
                 </div>
               </div>
@@ -1278,7 +1244,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
               <div className="flex justify-end gap-3 pt-2">
                 <Button variant="secondary" onClick={onClose} type="button">Cancelar</Button>
                 <Button type="submit" disabled={loading || !numEmpleado.trim()}>
-                  {loading ? 'Buscando...' : 'Continuar →'}
+                  {loading ? 'Buscando...' : 'Continuar'}
                 </Button>
               </div>
             </form>
@@ -1313,7 +1279,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                     {cart.map(({ item, cantidad }) => (
                       <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate" title={articuloOriginal(item.articulo)}>{traducirArticulo(item.articulo)}</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate" title={item.articulo}>{tr(item.articulo)}</p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">{item.ndp || ''} · Gav. {item.gaveta} · Disp: {item.cantidad}</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -1338,18 +1304,13 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
               {/* Búsqueda de artículos */}
               <div>
                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Buscar artículos del inventario</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
+                <div>
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={e => handleSearch(e.target.value)}
                     placeholder="N° parte, artículo, equipo..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700 focus:border-slate-400 dark:focus:border-slate-500 text-sm transition-all"
+                    className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600 text-sm transition-colors"
                   />
                 </div>
                 {searchLoading && <p className="text-xs text-slate-400 mt-1">Buscando...</p>}
@@ -1360,7 +1321,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                       return (
                         <div key={it.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700/50 last:border-0 transition-colors">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate" title={articuloOriginal(it.articulo)}>{traducirArticulo(it.articulo)}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white truncate" title={it.articulo}>{tr(it.articulo)}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400">{it.ndp || ''} · Gav. {it.gaveta} · {it.cantidad} disp.</p>
                           </div>
                           <button
@@ -1390,9 +1351,9 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
               )}
 
               <div className="flex justify-between gap-3 pt-2">
-                <Button variant="secondary" onClick={() => { setStep(1); setError(''); }} type="button">← Atrás</Button>
+                <Button variant="secondary" onClick={() => { setStep(1); setError(''); }} type="button">Atrás</Button>
                 <Button onClick={handleProceedToAuth} disabled={cart.length === 0}>
-                  Autorizar ({cart.length} artículo{cart.length !== 1 ? 's' : ''}) →
+                  Autorizar ({cart.length} artículo{cart.length !== 1 ? 's' : ''})
                 </Button>
               </div>
             </div>
@@ -1408,7 +1369,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                 <div className="pt-1 space-y-0.5">
                   {cart.map(({ item, cantidad }) => (
                     <p key={item.id} className="text-slate-500 dark:text-slate-400 text-xs">
-                      · {item.articulo} ×{cantidad}
+                      · {tr(item.articulo)} ×{cantidad}
                     </p>
                   ))}
                 </div>
@@ -1421,11 +1382,6 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
 
                 {authInfo ? (
                   <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-sm flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
                     <div>
                       <p className="font-semibold text-emerald-800 dark:text-emerald-300">Autorizado por {authInfo.nombre}</p>
                       <p className="text-emerald-600 dark:text-emerald-400 text-xs">{authInfo.rol} · N° {authInfo.num_empleado}</p>
@@ -1436,12 +1392,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                   <form onSubmit={handleVerifyAuthorizer} className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Número de Empleado del Autorizador</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                        </div>
+                      <div>
                         <input
                           ref={authRef}
                           type="text"
@@ -1449,25 +1400,20 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
                           onChange={e => setAuthNumEmpleado(e.target.value)}
                           placeholder="Número de empleado"
                           required
-                          className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-all text-base"
+                          className="w-full px-3 py-2.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600 transition-colors text-base"
                         />
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Contraseña</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                        </div>
+                      <div>
                         <input
                           type="password"
                           value={authPassword}
                           onChange={e => setAuthPassword(e.target.value)}
                           placeholder="············"
                           required
-                          className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-4 focus:ring-slate-100 dark:focus:ring-slate-800 focus:border-slate-400 dark:focus:border-slate-500 transition-all text-base"
+                          className="w-full px-3 py-2.5 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600 transition-colors text-base"
                         />
                       </div>
                     </div>
@@ -1490,7 +1436,7 @@ function PrestarModal({ open, item: initialItem, onClose, onSubmit, turno, curre
               )}
 
               <div className="flex justify-between gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
-                <Button variant="secondary" onClick={() => { setStep(2); setAuthInfo(null); setError(''); }} type="button">← Atrás</Button>
+                <Button variant="secondary" onClick={() => { setStep(2); setAuthInfo(null); setError(''); }} type="button">Atrás</Button>
                 <Button
                   onClick={handleSubmitPrestamo}
                   disabled={!authInfo || loading}
@@ -1542,7 +1488,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-[70]">
       <Card className="w-full max-w-md">
         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{trLocal('confirm_return')}</h3>
 
@@ -1581,6 +1527,7 @@ function DevolverModal({ open, prestamo, onClose, onSubmit, turno, currentUser }
 }
 
 export default function Inventory() {
+  const tr = useDataTranslation();
   // --- NUEVO FLUJO: primero pedir cantidad, luego contraseña ---
   const [qtyPrompt, setQtyPrompt] = useState({ open: false, item: null });
   const [pendingQty, setPendingQty] = useState(null);
@@ -2070,101 +2017,77 @@ export default function Inventory() {
       {/* Main Control Header */}
       <div className="mb-6 flex flex-col gap-4">
         {/* Top Control Bar: App Settings & Quick Actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-slate-200 pb-3">
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {/* Quick Actions / Modes */}
             {canEditInventory(user?.rol, user?.area) && (
               <Button variant="primary" onClick={() => setModal({ mode: 'add' })} className="whitespace-nowrap">
-                <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
                 {trLocal('agregar')}
               </Button>
             )}
             {canLendItems(user?.rol, user?.area) && (
               <Button variant="secondary" onClick={() => setShowPrestamos(true)}>
-                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
                 {trLocal('prestamos')}
               </Button>
             )}
             {canViewHistory(user?.rol, user?.area) && (
               <Button variant="secondary" onClick={() => setModal({ mode: 'historial' })}>
-                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
                 {trLocal('ver_historial')}
               </Button>
             )}
             {canAdministerUsers(user?.rol, user?.area) && (
               <Button variant="secondary" onClick={() => setModal({ mode: 'usuarios' })}>
-                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
                 {trLocal('administrar_usuarios')}
               </Button>
             )}
             {canViewHistory(user?.rol, user?.area) && (
               <Button variant="secondary" onClick={() => setShowNotifModal(true)} className="relative">
-                <svg className="w-5 h-5 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                Notificaciones
+                {trLocal('notifications')}
               </Button>
             )}
           </div>
           
           <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
             {canEditInventory(user?.rol, user?.area) && (
-              <Button variant="outline" onClick={() => setQrBulkModal(true)} title="Generar QR en lote">
-                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-                QR Lote
+              <Button variant="outline" onClick={() => setQrBulkModal(true)} title={trLocal('qr_bulk')}>
+                {trLocal('qr_bulk')}
               </Button>
             )}
             {canViewHistory(user?.rol, user?.area) && (
-              <Button variant="outline" onClick={handleExportExcel} title="Exportar a Excel">
-                <svg className="w-4 h-4 mr-1 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-                Excel
+              <Button variant="outline" onClick={handleExportExcel} title={trLocal('export_excel')}>
+                {trLocal('export_excel')}
               </Button>
             )}
             <select
               value={lang}
               aria-label={trLocal('idioma')}
               title={trLocal('idioma')}
-              onChange={e => { localStorage.setItem('inv_lang', e.target.value); setLang(e.target.value); }}
-              className="h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 px-2"
+              onChange={e => { localStorage.setItem('inv_lang', e.target.value); prepareAutoTranslate(e.target.value); setLang(e.target.value); }}
+              className="h-9 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 px-2"
             >
-              <option value="es">ES</option>
-              <option value="en">EN</option>
+              <option value="es">Español</option>
+              <option value="en">English</option>
               <option value="ko">한국어</option>
             </select>
-            <Button variant="ghost" onClick={() => setShowInfoModal(true)} title="Información del sistema">
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <Button variant="ghost" onClick={() => setShowInfoModal(true)} title={trLocal('system_info')}>
+              {trLocal('system_info')}
             </Button>
             <Button variant="ghost" onClick={() => { loadGavetas(); loadItems(); loadTotals(); }} title={trLocal('refresh')}>
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
+              {trLocal('refresh')}
             </Button>
           </div>
         </div>
 
         {/* Filters and Search Bar */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 bg-white/50 dark:bg-slate-900/50 p-2 rounded-2xl border border-slate-200/50 dark:border-slate-800/50 backdrop-blur-sm">
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-3">
           {/* Dropdown Control for Gavetas */}
-          <div className="flex w-full lg:w-auto items-center bg-white dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/50 shadow-sm">
-            <div className="relative w-full lg:w-64">
+          <div className="flex w-full lg:w-auto items-center">
+            <div className="w-full lg:w-64">
               <select
                 value={activeGaveta || ''}
                 onChange={(e) => setActiveGaveta(e.target.value)}
-                className="appearance-none w-full py-2 pl-10 pr-10 rounded-lg text-sm font-semibold bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500/30 cursor-pointer transition-all border-none"
+                aria-label={trLocal('drawer_label')}
+                className="w-full py-2 px-3 rounded-md text-sm font-medium bg-white text-slate-800 border border-slate-300 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600 cursor-pointer"
               >
                 {gavetas.map((g) => (
                   <option key={g} value={g} className="font-medium bg-white dark:bg-slate-800">
@@ -2172,55 +2095,32 @@ export default function Inventory() {
                   </option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                </svg>
-              </div>
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                <svg className="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
             </div>
           </div>
 
           {/* Search Input */}
-          <div className="relative w-full lg:w-96">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+          <div className="w-full lg:w-96">
             <input
               type="text"
               placeholder={trLocal('search_placeholder')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-slate-500/20 focus:border-slate-400 transition-all font-medium placeholder:font-normal"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal-600/20 focus:border-teal-600 placeholder:text-slate-400"
             />
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card hover className="p-5 flex items-center justify-between group">
-          <div>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('turno_prefix')}</p>
-            <p className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-zinc-600 bg-clip-text text-transparent">{turno}</p>
-          </div>
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-slate-500 to-zinc-500 flex items-center justify-center text-white shadow-lg shadow-slate-500/30 group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <Card className="px-4 py-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{trLocal('turno_prefix')}</p>
+          <p className="text-xl font-semibold text-slate-900 dark:text-white tabular-nums">{turno}</p>
         </Card>
         
-        <Card hover className="p-5 flex items-center justify-between group">
-          <div>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('totals_by_gaveta')}</p>
-            <p className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+        <Card className="px-4 py-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{trLocal('totals_by_gaveta')}</p>
+          <p className="text-xl font-semibold text-slate-900 dark:text-white tabular-nums">
               {activeGaveta ? (
                 (() => {
                   const sel = gavetaTotals.find(gt => String(gt.gaveta) === String(activeGaveta));
@@ -2228,24 +2128,11 @@ export default function Inventory() {
                 })()
               ) : '-'}
             </p>
-          </div>
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
         </Card>
 
-        <Card hover className="p-5 flex items-center justify-between group">
-          <div>
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">{trLocal('showing_label')}</p>
-            <p className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">{itemsFiltrados.length} / {total}</p>
-          </div>
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-slate-500 to-gray-500 flex items-center justify-center text-white shadow-lg shadow-slate-500/30 group-hover:scale-110 transition-transform duration-300">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
+        <Card className="px-4 py-3">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{trLocal('showing_label')}</p>
+          <p className="text-xl font-semibold text-slate-900 dark:text-white tabular-nums">{itemsFiltrados.length} / {total}</p>
         </Card>
       </div>
 
@@ -2273,7 +2160,7 @@ export default function Inventory() {
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-b border-slate-200 dark:border-slate-600">
+            <thead className="bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('part_number')}</th>
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300">{trLocal('item_label')}</th>
@@ -2288,13 +2175,13 @@ export default function Inventory() {
                 <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('total_label')}</th>
                 {canEditInventory(user?.rol, user?.area) && <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 text-right">{trLocal('col_actions')}</th>}
               </tr>
-              <tr className="bg-white/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-700/50">
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
-                <th className="px-2 py-2 hidden md:table-cell"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
-                <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
-                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className="w-full text-xs p-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20 transition-all" value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>}
+              <tr className="border-b border-slate-200 dark:border-slate-800">
+                <th className="px-2 py-2"><input className={FILTER_INPUT} value={filtroNdp} onChange={e => setFiltroNdp(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2"><input className={FILTER_INPUT} value={filtroArticulo} onChange={e => setFiltroArticulo(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2 hidden md:table-cell"><input className={FILTER_INPUT} value={filtroEquipo} onChange={e => setFiltroEquipo(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2"><input className={FILTER_INPUT} value={filtroGaveta} onChange={e => setFiltroGaveta(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                <th className="px-2 py-2"><input className={FILTER_INPUT} value={filtroNivel} onChange={e => setFiltroNivel(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>
+                {user?.area === 'Ensamble' && <th className="px-2 py-2"><input className={FILTER_INPUT} value={filtroLinea} onChange={e => setFiltroLinea(e.target.value)} placeholder={trLocal('filter_placeholder')} /></th>}
                 <th colSpan={canEditInventory(user?.rol, user?.area) ? 6 : 5}></th>
               </tr>
             </thead>
@@ -2321,13 +2208,7 @@ export default function Inventory() {
           </table>
           {!loading && itemsFiltrados.length === 0 && (
             <div className="p-16 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-                <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
-              </div>
-              <p className="text-slate-500 dark:text-slate-400 font-medium">No se encontraron resultados</p>
-              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Intenta ajustar los filtros de busqueda</p>
+              <p className="text-slate-700 dark:text-slate-300 font-medium">{trLocal('no_results')}</p>
             </div>
           )}
         </div>
@@ -2338,22 +2219,15 @@ export default function Inventory() {
         <div className="mt-6">
           <button
             onClick={() => setShowZeroQuantity(!showZeroQuantity)}
-            className="w-full flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 hover:border-amber-300 dark:hover:border-amber-700"
+            className="w-full flex items-center justify-between px-5 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg transition-colors duration-150 hover:border-slate-300 dark:hover:border-slate-700"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m0-6v-2m0 0V7a2 2 0 012-2h2.586a1 1 0 00.707-.293l3.414-3.414A1 1 0 0022 4.586V9m-9 0a9 9 0 00-9 9v3.586a1 1 0 001 1h.173l.86 2.581A2 2 0 004.5 22h15a2 2 0 001.967-1.656l.86-2.581h.173a1 1 0 001-1v-3.586a9 9 0 00-9-9z" />
-                </svg>
-              </div>
-              <div className="text-left">
-                <h4 className="text-lg font-bold text-slate-900 dark:text-white">{trLocal('zero_stock_title')}</h4>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{itemsZeroQuantity.length} artículos con cantidad 0</p>
-              </div>
+            <div className="text-left">
+              <h4 className="text-base font-semibold text-slate-900 dark:text-white">{trLocal('zero_stock_title')}</h4>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{itemsZeroQuantity.length}</p>
             </div>
-            <svg className={`w-6 h-6 text-slate-600 dark:text-slate-400 transition-transform duration-300 ${showZeroQuantity ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            <span className="text-sm font-medium text-teal-700 dark:text-teal-400">
+              {showZeroQuantity ? trLocal('collapse') : trLocal('expand')}
+            </span>
           </button>
 
           {/* Zero Quantity Items Table */}
@@ -2361,7 +2235,7 @@ export default function Inventory() {
             <Card className="overflow-hidden p-0 mt-4">
               <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-slate-800 dark:to-slate-700 border-b border-amber-200 dark:border-slate-600">
+                  <thead className="bg-amber-50 border-b border-amber-200">
                     <tr>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('part_number')}</th>
                       <th className="px-4 py-4 font-bold text-xs uppercase tracking-wider text-amber-700 dark:text-amber-300">{trLocal('item_label')}</th>
@@ -2402,16 +2276,14 @@ export default function Inventory() {
       )}
 
       {modal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center p-4 z-50 overflow-y-auto animate-fade-in">
+          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in">
             <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                {modal.mode === 'edit' ? 'Editar Item' : modal.mode === 'historial' ? 'Historial' : modal.mode === 'usuarios' ? 'Usuarios' : modal.mode === 'detail' ? 'Detalle' : 'Agregar Item'}
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {modal.mode === 'edit' ? trLocal('edit_item') : modal.mode === 'historial' ? trLocal('ver_historial') : modal.mode === 'usuarios' ? trLocal('manage_users') : modal.mode === 'detail' ? trLocal('item_detail') : trLocal('add_item')}
               </h3>
-              <button onClick={() => setModal(null)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-all duration-200">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => setModal(null)} className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150">
+                {trLocal('close')}
               </button>
             </div>
              
@@ -2420,17 +2292,17 @@ export default function Inventory() {
               modal.mode === 'detail' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h4 className="text-lg font-semibold mb-2" title={articuloOriginal(modal.item.articulo)}>{traducirArticulo(modal.item.articulo)}</h4>
+                    <h4 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white" title={modal.item.articulo}>{tr(modal.item.articulo)}</h4>
                     <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-                      <p><b>N° Parte:</b> {modal.item.ndp}</p>
-                      <p><b>Equipo:</b> {modal.item.equipo}</p>
-                      <p><b>Ubicación:</b> Gaveta {modal.item.gaveta}, Nivel {modal.item.nivel}</p>
-                      <p><b>Stock:</b> {modal.item.cantidad} (Min: {modal.item.min}, Max: {modal.item.max})</p>
-                      <p><b>Precio:</b> {formatCurrency(modal.item.precio)}</p>
-                      <p><b>TDE:</b> {modal.item.tde || '-'}</p>
+                      <p><b>{trLocal('part_number')}:</b> {modal.item.ndp}</p>
+                      <p><b>{trLocal('equipment')}:</b> {tr(modal.item.equipo)}</p>
+                      <p><b>{trLocal('drawer_label')}:</b> {modal.item.gaveta} / <b>{trLocal('level_label')}:</b> {tr(modal.item.nivel)}</p>
+                      <p><b>{trLocal('quantity_label')}:</b> {modal.item.cantidad} ({trLocal('min_label')}: {modal.item.min}, {trLocal('max_label')}: {modal.item.max})</p>
+                      <p><b>{trLocal('price_label')}:</b> {formatCurrency(modal.item.precio)}</p>
+                      <p><b>{trLocal('tde_label')}:</b> {tr(modal.item.tde) || '-'}</p>
                       {/* Mostrar línea solo si el usuario es del área Ensamble y existe el valor */}
                       {user?.area === 'Ensamble' && modal.item.linea && (
-                        <p><b>Línea:</b> {modal.item.linea}</p>
+                        <p><b>{trLocal('col_line')}:</b> {modal.item.linea}</p>
                       )}
                       {consumoMap[String(modal.item.id)] && (
                         <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-700">
@@ -2476,29 +2348,20 @@ export default function Inventory() {
       <QRModal open={qrModal.open} item={qrModal.item} onClose={() => setQrModal({ open: false, item: null })} />
       
       {showPrestamos && (
-        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex flex-col z-50">
+        <div className="fixed inset-0 bg-slate-900/70 flex flex-col z-50">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-slate-900 dark:bg-white flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white dark:text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Préstamos Activos</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {prestamos.length} préstamo{prestamos.length !== 1 ? 's' : ''} · {user?.area ? `Área: ${user.area}` : 'Todos los préstamos'}
-                </p>
-              </div>
+          <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">{trLocal('loans_active')}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {prestamos.length} · {user?.area ? `${user.area}` : ''}
+              </p>
             </div>
             <button
               onClick={() => setShowPrestamos(false)}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-all"
+              className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              {trLocal('close')}
             </button>
           </div>
 
@@ -2506,26 +2369,17 @@ export default function Inventory() {
           <div className="flex-1 overflow-auto p-6">
             {prestamosLoading ? (
               <div className="flex items-center justify-center h-full">
-                <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-                  <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Cargando préstamos...
+                <div className="text-slate-500 dark:text-slate-400">
+                  {trLocal('loading')}
                 </div>
               </div>
             ) : prestamos.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No hay préstamos activos</p>
-                <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">{user?.area ? `Área: ${user.area}` : ''}</p>
+                <p className="text-slate-700 dark:text-slate-300 font-medium">{trLocal('no_active_loans')}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{user?.area ? `${user.area}` : ''}</p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
                     <tr>
@@ -2545,7 +2399,7 @@ export default function Inventory() {
                         <td className="px-5 py-4 font-medium text-slate-900 dark:text-white">{p.empleado}</td>
                         <td className="px-5 py-4 text-slate-500 dark:text-slate-400 font-mono hidden sm:table-cell">{p.num_empleado}</td>
                         <td className="px-5 py-4 text-slate-800 dark:text-slate-200">
-                          <div className="font-medium">{p.articulo}</div>
+                          <div className="font-medium">{tr(p.articulo)}</div>
                           {p.cantidad > 1 && <div className="text-xs text-slate-400 mt-0.5">×{p.cantidad} unidades</div>}
                         </td>
                         <td className="px-5 py-4 text-slate-500 dark:text-slate-400 font-mono text-xs hidden md:table-cell">{p.ndp || '—'}</td>
@@ -2563,12 +2417,9 @@ export default function Inventory() {
                         <td className="px-5 py-4 text-right">
                           <button
                             onClick={() => handleDevolver(p)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-xs font-semibold transition-all border border-emerald-200 dark:border-emerald-800"
+                            className="px-3 py-1.5 rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium transition-colors duration-150"
                           >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                            </svg>
-                            Devolver
+                            {trLocal('return_item')}
                           </button>
                         </td>
                       </tr>
@@ -2590,14 +2441,12 @@ export default function Inventory() {
 
       {/* Info Modal */}
       {showInfoModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Información del Sistema</h3>
-              <button onClick={() => setShowInfoModal(false)} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-all">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">{trLocal('system_info')}</h3>
+              <button onClick={() => setShowInfoModal(false)} className="px-2.5 py-1 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors duration-150">
+                {trLocal('close')}
               </button>
             </div>
             <div className="space-y-4">
@@ -2618,7 +2467,7 @@ export default function Inventory() {
               </div>
             </div>
             <div className="mt-6 flex justify-end">
-              <Button variant="secondary" onClick={() => setShowInfoModal(false)}>Cerrar</Button>
+              <Button variant="secondary" onClick={() => setShowInfoModal(false)}>{trLocal('close')}</Button>
             </div>
           </Card>
         </div>

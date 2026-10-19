@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react';
 import Card from './ui/Card.jsx';
 import Button from './ui/Button.jsx';
 import Input from './ui/Input.jsx';
+import { trLocal } from '../i18n/index.js';
+import { useDataTranslation } from '../i18n/autotranslate.js';
 
 export default function NotificationsModal({ open, onClose, notifications = [], fetchNotifications, toggleOrdered, onOpenItem }) {
+  const tr = useDataTranslation();
   const [q, setQ] = useState('');
   const [filterArticulo, setFilterArticulo] = useState('');
   const [filterGaveta, setFilterGaveta] = useState('');
@@ -36,12 +39,12 @@ export default function NotificationsModal({ open, onClose, notifications = [], 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-stretch justify-center p-0 z-50">
+    <div className="fixed inset-0 bg-slate-900/80 flex items-stretch justify-center p-0 z-50">
       <Card className="w-full h-full max-h-full overflow-y-auto p-6">
         <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-xl font-bold">Notificaciones</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">{trLocal('notifications')}</h3>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={onClose}>Cerrar</Button>
+            <Button variant="secondary" onClick={onClose}>{trLocal('close')}</Button>
           </div>
         </div>
 
@@ -50,8 +53,8 @@ export default function NotificationsModal({ open, onClose, notifications = [], 
           <Input value={filterArticulo} onChange={e => setFilterArticulo(e.target.value)} placeholder="Filtrar por artículo" />
           <Input value={filterGaveta} onChange={e => setFilterGaveta(e.target.value)} placeholder="Filtrar por gaveta" />
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={() => { setQ(''); setFilterArticulo(''); setFilterGaveta(''); }}>{'Limpiar'}</Button>
-            <Button onClick={() => fetchNotifications && fetchNotifications()} variant="primary">Refresh</Button>
+            <Button variant="secondary" onClick={() => { setQ(''); setFilterArticulo(''); setFilterGaveta(''); }}>{trLocal('clear_filters')}</Button>
+            <Button onClick={() => fetchNotifications && fetchNotifications()} variant="primary">{trLocal('refresh')}</Button>
           </div>
           <div className="flex items-center">
             <Button variant="secondary" onClick={() => {
@@ -87,9 +90,9 @@ export default function NotificationsModal({ open, onClose, notifications = [], 
                 <tr key={`${it.id}-${idx}`} className="border-b border-slate-100 dark:border-slate-700">
                   <td className="px-4 py-2 text-xs text-slate-500">{idx + 1}</td>
                   <td className="px-4 py-2">{it.ndp || 'N/A'}</td>
-                  <td className="px-4 py-2">{it.articulo}</td>
+                  <td className="px-4 py-2">{tr(it.articulo)}</td>
                   <td className="px-4 py-2">{it.gaveta}</td>
-                  <td className="px-4 py-2">{it.nivel}</td>
+                  <td className="px-4 py-2">{tr(it.nivel)}</td>
                   <td className="px-4 py-2">{it.cantidad}</td>
                   <td className="px-4 py-2">{it.min}</td>
                   <td className="px-4 py-2">{it.__state === 'ordered' ? <span className="text-amber-600">Ordenado</span> : <span className="text-rose-600">Pendiente</span>}</td>
@@ -97,11 +100,11 @@ export default function NotificationsModal({ open, onClose, notifications = [], 
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       {it.__state === 'ordered' ? (
-                        <Button variant="secondary" size="xs" onClick={() => toggleOrdered(it.id, false)}>Unmark</Button>
+                        <Button variant="secondary" size="sm" onClick={() => toggleOrdered(it.id, false)}>{trLocal('unmark_ordered')}</Button>
                       ) : (
-                        <Button variant="primary" size="xs" onClick={() => toggleOrdered(it.id, true)}>Mark</Button>
+                        <Button variant="primary" size="sm" onClick={() => toggleOrdered(it.id, true)}>{trLocal('mark_ordered')}</Button>
                       )}
-                      <Button variant="secondary" size="xs" onClick={() => onOpenItem && onOpenItem(it)}>Go to item</Button>
+                      <Button variant="secondary" size="sm" onClick={() => onOpenItem && onOpenItem(it)}>{trLocal('go_to_item')}</Button>
                     </div>
                   </td>
                 </tr>

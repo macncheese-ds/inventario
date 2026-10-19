@@ -177,7 +177,7 @@ export default function LoginModal({ visible, defaultEmployee = '', onClose, onC
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
       <Card className="w-full max-w-sm">
         {/* Simple scanner box (animation removed as requested) */}
         <style>{`
@@ -258,7 +258,7 @@ export default function LoginModal({ visible, defaultEmployee = '', onClose, onC
               {status && <div className="text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-2 rounded">{status}</div>}
 
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-2">
-                <Button variant="secondary" onClick={() => { setPhase('scan'); setPassword(''); }}>← Volver</Button>
+                <Button variant="secondary" onClick={() => { setPhase('scan'); setPassword(''); }}>Volver</Button>
                 <Button type="submit" disabled={busy}>{busy ? 'Verificando...' : 'Confirmar'}</Button>
               </div>
             </form>

@@ -81,13 +81,13 @@ CREATE TABLE IF NOT EXISTS areas (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO areas (nombre) VALUES ('SMT'), ('Ensamble')
-  ON DUPLICATE KEY UPDATE nombre = nombre;
+  ON DUPLICATE KEY UPDATE areas.nombre = areas.nombre;
 
 INSERT INTO areas (nombre)
 SELECT DISTINCT TRIM(g.area)
   FROM gavetas g
  WHERE TRIM(COALESCE(g.area, '')) <> ''
-ON DUPLICATE KEY UPDATE nombre = nombre;
+ON DUPLICATE KEY UPDATE areas.nombre = areas.nombre;
 
 -- 4b) Catálogo de ubicaciones: una gaveta dentro de un área. Único por (área, nombre).
 --     Con collation _ci, 'Gaveta 425' y 'GAVETA 425' son la misma ubicación.
@@ -106,7 +106,7 @@ SELECT DISTINCT a.id, TRIM(g.gaveta)
   FROM gavetas g
   JOIN areas a ON a.nombre = TRIM(g.area)
  WHERE TRIM(COALESCE(g.gaveta, '')) <> ''
-ON DUPLICATE KEY UPDATE nombre = nombre;
+ON DUPLICATE KEY UPDATE ubicaciones.nombre = ubicaciones.nombre;
 
 -- 4c) Columnas nuevas en gavetas. Quedan en NULL hasta el backfill; las filas sin área siguen en NULL.
 ALTER TABLE gavetas

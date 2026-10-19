@@ -34,7 +34,7 @@ export default function PrestarModal({ open, item, onClose, onSubmit }) {
     if (!open || !item) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 border border-gray-100 dark:border-gray-700">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Prestar Artículo</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
